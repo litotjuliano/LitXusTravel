@@ -109,7 +109,7 @@ app.UseHttpsRedirection();
 // Add Permissions-Policy header
 app.Use(async (context, next) =>
 {
-    context.Response.Headers.Add("Permissions-Policy", "unload=()");
+    context.Response.Headers.Append("Permissions-Policy", "unload=()");
     await next();
 });
 

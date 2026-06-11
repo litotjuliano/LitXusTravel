@@ -28,7 +28,10 @@ public class IndependentAgentConfiguration : IEntityTypeConfiguration<Independen
                 v => string.Join(",", v),
                 v => v.Split(",", System.StringSplitOptions.RemoveEmptyEntries)
                     .Select(Guid.Parse)
-                    .ToList())
+                    .ToList(),
+                new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<List<Guid>>(
+                    (c1, c2) => c1.SequenceEqual(c2),
+                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode()))))
             .HasMaxLength(1000);
 
         builder.HasIndex(i => i.IsActive);
