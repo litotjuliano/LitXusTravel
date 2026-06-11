@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using LitXusTravel.Application.DTOs.Response;
 using LitXusTravel.Application.UseCases.AdminUsers.CreateAdminUser;
 using LitXusTravel.Application.UseCases.AdminUsers.GetAdminById;
+using LitXusTravel.Domain.Entities;
 
 namespace LitXusTravel.API.Controllers.v1.Admin;
 
@@ -44,7 +45,7 @@ public class AdminUsersController : ControllerBase
         if (!result.IsSuccess)
             return BadRequest(new { errors = result.Errors });
 
-        return CreatedAtAction(nameof(GetAdminById), new { id = result.Data }, result.Data);
+        return CreatedAtAction(nameof(GetAdminById), new { id = result.Value }, result.Value);
     }
 
     /// <summary>
@@ -61,7 +62,7 @@ public class AdminUsersController : ControllerBase
         if (!result.IsSuccess)
             return NotFound(new { errors = result.Errors });
 
-        return Ok(result.Data);
+        return Ok(result.Value);
     }
 }
 

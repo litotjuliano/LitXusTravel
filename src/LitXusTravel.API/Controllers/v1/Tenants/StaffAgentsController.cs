@@ -39,7 +39,7 @@ public class StaffAgentsController : ControllerBase
         if (!result.IsSuccess)
             return BadRequest(new { errors = result.Errors });
 
-        return CreatedAtAction(null, new { id = result.Data });
+        return CreatedAtAction(null, new { id = result.Value });
     }
 }
 

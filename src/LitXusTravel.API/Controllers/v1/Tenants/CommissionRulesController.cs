@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using LitXusTravel.Application.UseCases.CommissionRules.ConfigureCommissionRule;
+using LitXusTravel.Domain.Entities;
 
 namespace LitXusTravel.API.Controllers.v1.Tenants;
 
@@ -54,7 +55,7 @@ public class CommissionRulesController : ControllerBase
         if (!result.IsSuccess)
             return BadRequest(new { errors = result.Errors });
 
-        return CreatedAtAction(null, new { id = result.Data });
+        return CreatedAtAction(null, new { id = result.Value });
     }
 }
 
