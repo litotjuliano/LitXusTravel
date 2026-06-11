@@ -33,7 +33,7 @@ public class CreateStaffAgentCommandHandler : IRequestHandler<CreateStaffAgentCo
             await _unitOfWork.SaveChangesAsync(ct);
 
             // Log audit trail
-            await _auditService.LogActionAsync(
+            await _auditService.LogAsync(
                 action: AuditActions.CreateAdmin,
                 affectedEntityType: nameof(StaffAgent),
                 affectedEntityId: agent.Id,

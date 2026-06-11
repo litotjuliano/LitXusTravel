@@ -1,70 +1,60 @@
-using MediatR;
 using LitXusTravel.Application.Common.Models;
 using LitXusTravel.Application.Interfaces.Persistence;
 using LitXusTravel.Application.Interfaces.Services;
 using LitXusTravel.Domain.Entities;
+using MediatR;
 
-namespace LitXusTravel.Application.UseCases.Packages.SyncPackageToTenant;
+namespace LitXusTravel.Application.UseCases.CommissionRules.ConfigureCommissionRule;
 
-public class SyncPackagesCommandHandler(IUnitOfWork uow, IAuditService audit)
-    : IRequestHandler<SyncPackagesCommand, Result<SyncPackagesResult>>
+public class ConfigureCommissionRuleCommandHandler : IRequestHandler<ConfigureCommissionRuleCommand, Result<Guid>>
 {
-    public async Task<Result<SyncPackagesResult>> Handle(SyncPackagesCommand request, CancellationToken ct)
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAuditService _auditService;
+
+    public ConfigureCommissionRuleCommandHandler(IUnitOfWork unitOfWork, IAuditService auditService)
     {
-        if (request.MasterPackageIds.Count == 0)
-            return Result<SyncPackagesResult>.Failure("At least one package ID is required.");
+        _unitOfWork = unitOfWork;
+        _auditService = auditService;
+    }
 
-        var tenant = await uow.Tenants.GetByIdAsync(request.TenantId, ct);
-        if (tenant is null)
-            return Result<SyncPackagesResult>.Failure("Tenant not found.");
-
-        var synced = new List<SyncedPackageItem>();
-        var failed = new List<FailedSyncItem>();
-
-        foreach (var masterPackageId in request.MasterPackageIds)
+    public async Task<Result<Guid>> Handle(ConfigureCommissionRuleCommand request, CancellationToken ct)
+    {
+        try
         {
-            var package = await uow.Packages.GetByIdAsync(masterPackageId, ct);
+            CommissionRule rule = request.AgentId.HasValue
+                ? CommissionRule.CreateForAgent(
+                    request.TenantId,
+                    request.AgentId.Value,
+                    request.Trigger,
+                    request.Amount,
+                    request.IsPercentage,
+                    request.MinimumThreshold)
+                : CommissionRule.CreateDefault(
+                    request.TenantId,
+                    request.Trigger,
+                    request.Amount,
+                    request.IsPercentage,
+                    request.MinimumThreshold);
 
-            if (package is null)
-            {
-                failed.Add(new(masterPackageId, "Package not found."));
-                continue;
-            }
+            await _unitOfWork.CommissionRules.AddAsync(rule, ct);
+            await _unitOfWork.SaveChangesAsync(ct);
 
-            if (package.Visibility != PackageVisibility.Published)
-            {
-                failed.Add(new(masterPackageId, "Only published packages can be synced."));
-                continue;
-            }
-
-            var alreadySynced = await uow.TenantPackages.AnyAsync(
-                tp => tp.TenantId == request.TenantId && tp.MasterPackageId == masterPackageId, ct);
-
-            if (alreadySynced)
-            {
-                failed.Add(new(masterPackageId, "Package is already synced to this tenant."));
-                continue;
-            }
-
-            var tenantPackage = TenantPackage.Create(request.TenantId, masterPackageId);
-            var emptyOverride = PackageOverride.CreateEmpty(request.TenantId, tenantPackage.Id);
-
-            await uow.TenantPackages.AddAsync(tenantPackage, ct);
-            await uow.PackageOverrides.AddAsync(emptyOverride, ct);
-
-            synced.Add(new(tenantPackage.Id, masterPackageId, tenantPackage.LastSyncedAt!.Value));
-        }
-
-        if (synced.Count > 0)
-        {
-            await uow.SaveChangesAsync(ct);
-
-            await audit.LogAsync(AuditAction.Synced, nameof(TenantPackage), request.TenantId,
-                tenantId: request.TenantId,
-                newValues: new { SyncedCount = synced.Count, PackageIds = synced.Select(s => s.MasterPackageId) },
+            // Log audit trail
+            var ruleType = request.AgentId.HasValue ? "Agent-specific" : "Default";
+            await _auditService.LogAsync(
+                action: AuditActions.CreateCommissionRule,
+                affectedEntityType: nameof(CommissionRule),
+                affectedEntityId: rule.Id,
+                affectedTenantId: request.TenantId,
+                affectedAgentId: request.AgentId,
+                reason: $"Configured {ruleType} commission rule: {(request.IsPercentage ? request.Amount + "%" : "$" + request.Amount)}",
                 ct: ct);
-        }
 
-        return Result<SyncPackagesResult>.Success(new SyncPackagesResult(synced, failed));
+            return Result<Guid>.Success(rule.Id);
+        }
+        catch (DomainException ex)
+        {
+            return Result<Guid>.Failure(ex.Message);
+        }
     }
 }

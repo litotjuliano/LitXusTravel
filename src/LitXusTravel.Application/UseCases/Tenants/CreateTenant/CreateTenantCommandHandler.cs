@@ -1,56 +1,51 @@
-using MediatR;
 using LitXusTravel.Application.Common.Models;
-using LitXusTravel.Application.DTOs.Response;
 using LitXusTravel.Application.Interfaces.Persistence;
 using LitXusTravel.Application.Interfaces.Services;
 using LitXusTravel.Domain.Entities;
+using MediatR;
 
-namespace LitXusTravel.Application.UseCases.Tenants.CreateTenant;
+namespace LitXusTravel.Application.UseCases.StaffAgents.CreateStaffAgent;
 
-public class CreateTenantCommandHandler(
-    IUnitOfWork uow,
-    IWebsiteProvisioner provisioner,
-    IAuditService audit)
-    : IRequestHandler<CreateTenantCommand, Result<TenantResponse>>
+public class CreateStaffAgentCommandHandler : IRequestHandler<CreateStaffAgentCommand, Result<Guid>>
 {
-    public async Task<Result<TenantResponse>> Handle(CreateTenantCommand request, CancellationToken ct)
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAuditService _auditService;
+
+    public CreateStaffAgentCommandHandler(IUnitOfWork unitOfWork, IAuditService auditService)
     {
-        var existing = await uow.Tenants
-            .FirstOrDefaultAsync(t => t.ContactEmail.Value == request.Email.ToLowerInvariant(), ct);
-
-        if (existing is not null)
-            return Result<TenantResponse>.Failure("A tenant with this email already exists.");
-
-        var tenant = Tenant.Create(request.Name, request.Email, request.Phone, request.Country);
-
-        var trial = TenantSubscription.CreateTrial(tenant.Id);
-        tenant.Subscriptions.Add(trial);
-
-        await uow.Tenants.AddAsync(tenant, ct);
-        await uow.SaveChangesAsync(ct);
-
-        // Provision website (generates subdomain, non-blocking failure acceptable)
-        try
-        {
-            var subdomain = await provisioner.ProvisionForTenantAsync(tenant.Id, tenant.Name, ct);
-            tenant.AssignSubdomain(subdomain);
-            tenant.MarkProvisioningComplete();
-        }
-        catch
-        {
-            tenant.MarkProvisioningFailed();
-        }
-
-        await uow.SaveChangesAsync(ct);
-
-        await audit.LogAsync(AuditAction.Created, nameof(Tenant), tenant.Id,
-            newValues: new { tenant.Name, tenant.ContactEmail.Value }, ct: ct);
-
-        return Result<TenantResponse>.Success(MapToResponse(tenant));
+        _unitOfWork = unitOfWork;
+        _auditService = auditService;
     }
 
-    private static TenantResponse MapToResponse(Tenant t) => new(
-        t.Id, t.Name, t.Slug, t.Subdomain, t.ContactEmail.Value,
-        t.ContactPhone, t.LogoUrl, t.IsActive,
-        t.ProvisioningStatus.ToString(), t.WebsiteUrl, t.CreatedAt);
+    public async Task<Result<Guid>> Handle(CreateStaffAgentCommand request, CancellationToken ct)
+    {
+        // Check if email already exists for this tenant
+        var existingAgent = await _unitOfWork.StaffAgents.GetByEmailAsync(
+            new Email(request.Email), request.TenantId, ct);
+        if (existingAgent != null)
+            return Result<Guid>.Failure($"Staff agent with email {request.Email} already exists for this tenant");
+
+        try
+        {
+            var agent = StaffAgent.Create(request.TenantId, request.Name, new Email(request.Email));
+
+            await _unitOfWork.StaffAgents.AddAsync(agent, ct);
+            await _unitOfWork.SaveChangesAsync(ct);
+
+            // Log audit trail
+            await _auditService.LogAsync(
+                action: AuditActions.CreateAdmin,
+                affectedEntityType: nameof(StaffAgent),
+                affectedEntityId: agent.Id,
+                affectedTenantId: request.TenantId,
+                reason: $"Created staff agent with code {agent.UniqueCode}",
+                ct: ct);
+
+            return Result<Guid>.Success(agent.Id);
+        }
+        catch (DomainException ex)
+        {
+            return Result<Guid>.Failure(ex.Message);
+        }
+    }
 }

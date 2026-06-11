@@ -43,7 +43,7 @@ public class CreateAdminUserCommandHandler : IRequestHandler<CreateAdminUserComm
             await _unitOfWork.SaveChangesAsync(ct);
 
             // Log audit trail
-            await _auditService.LogActionAsync(
+            await _auditService.LogAsync(
                 action: AuditActions.CreateAdmin,
                 affectedEntityType: nameof(AdminUser),
                 affectedEntityId: admin.Id,

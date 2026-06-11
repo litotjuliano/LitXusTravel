@@ -1,44 +1,60 @@
-using MediatR;
 using LitXusTravel.Application.Common.Models;
-using LitXusTravel.Application.DTOs.Response;
 using LitXusTravel.Application.Interfaces.Persistence;
 using LitXusTravel.Application.Interfaces.Services;
 using LitXusTravel.Domain.Entities;
+using MediatR;
 
-namespace LitXusTravel.Application.UseCases.Packages.PublishPackage;
+namespace LitXusTravel.Application.UseCases.CommissionRules.ConfigureCommissionRule;
 
-public class PublishPackageCommandHandler(IUnitOfWork uow, IAuditService audit, INotificationService notifications)
-    : IRequestHandler<PublishPackageCommand, Result<PackageResponse>>
+public class ConfigureCommissionRuleCommandHandler : IRequestHandler<ConfigureCommissionRuleCommand, Result<Guid>>
 {
-    public async Task<Result<PackageResponse>> Handle(PublishPackageCommand request, CancellationToken ct)
-    {
-        var package = await uow.Packages.GetByIdAsync(request.PackageId, ct);
-        if (package is null)
-            return Result<PackageResponse>.Failure("Package not found.");
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAuditService _auditService;
 
+    public ConfigureCommissionRuleCommandHandler(IUnitOfWork unitOfWork, IAuditService auditService)
+    {
+        _unitOfWork = unitOfWork;
+        _auditService = auditService;
+    }
+
+    public async Task<Result<Guid>> Handle(ConfigureCommissionRuleCommand request, CancellationToken ct)
+    {
         try
         {
-            package.Publish();
+            CommissionRule rule = request.AgentId.HasValue
+                ? CommissionRule.CreateForAgent(
+                    request.TenantId,
+                    request.AgentId.Value,
+                    request.Trigger,
+                    request.Amount,
+                    request.IsPercentage,
+                    request.MinimumThreshold)
+                : CommissionRule.CreateDefault(
+                    request.TenantId,
+                    request.Trigger,
+                    request.Amount,
+                    request.IsPercentage,
+                    request.MinimumThreshold);
+
+            await _unitOfWork.CommissionRules.AddAsync(rule, ct);
+            await _unitOfWork.SaveChangesAsync(ct);
+
+            // Log audit trail
+            var ruleType = request.AgentId.HasValue ? "Agent-specific" : "Default";
+            await _auditService.LogAsync(
+                action: AuditActions.CreateCommissionRule,
+                affectedEntityType: nameof(CommissionRule),
+                affectedEntityId: rule.Id,
+                affectedTenantId: request.TenantId,
+                affectedAgentId: request.AgentId,
+                reason: $"Configured {ruleType} commission rule: {(request.IsPercentage ? request.Amount + "%" : "$" + request.Amount)}",
+                ct: ct);
+
+            return Result<Guid>.Success(rule.Id);
         }
-        catch (Domain.Exceptions.DomainException ex)
+        catch (DomainException ex)
         {
-            return Result<PackageResponse>.Failure(ex.Message);
+            return Result<Guid>.Failure(ex.Message);
         }
-
-        await uow.SaveChangesAsync(ct);
-
-        await audit.LogAsync(AuditAction.Published, nameof(Package), package.Id,
-            newValues: new { package.Visibility }, ct: ct);
-
-        await notifications.SendPackagePublishedAsync(package.Id, package.Title, ct);
-
-        return Result<PackageResponse>.Success(new PackageResponse(
-            package.Id, package.Title, package.Description, package.ShortDescription,
-            package.Category, package.BasePrice, package.Currency, package.DurationDays,
-            package.Destination, package.Region, package.FeaturedImageUrl, package.ImagesJson,
-            package.ItineraryJson, package.HighlightsJson, package.InclusionsJson,
-            package.ExclusionsJson, package.Rating, package.ReviewCount,
-            package.Visibility.ToString(), package.IsPopular, package.IsFeatured,
-            package.CreatedAt, package.UpdatedAt));
     }
 }

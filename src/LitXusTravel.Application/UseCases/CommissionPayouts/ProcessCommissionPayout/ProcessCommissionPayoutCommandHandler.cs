@@ -55,7 +55,7 @@ public class ProcessCommissionPayoutCommandHandler : IRequestHandler<ProcessComm
             await _unitOfWork.SaveChangesAsync(ct);
 
             // Log audit trail
-            await _auditService.LogActionAsync(
+            await _auditService.LogAsync(
                 action: AuditActions.ProcessCommissionPayout,
                 affectedEntityType: nameof(CommissionPayout),
                 affectedEntityId: payout.Id,
