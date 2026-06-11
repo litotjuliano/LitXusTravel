@@ -59,6 +59,7 @@ export default function LoginPage() {
                 {...register("email")}
                 type="email"
                 placeholder="superadmin@litxustravel.com"
+                autoComplete="email"
                 className="w-full px-3 py-2.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue]"
               />
               {errors.email && <p className="text-xs text-destructive mt-1">{errors.email.message}</p>}
@@ -70,6 +71,7 @@ export default function LoginPage() {
                 {...register("password")}
                 type="password"
                 placeholder="••••••••"
+                autoComplete="current-password"
                 className="w-full px-3 py-2.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue]"
               />
               {errors.password && <p className="text-xs text-destructive mt-1">{errors.password.message}</p>}

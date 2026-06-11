@@ -105,6 +105,14 @@ if (app.Environment.IsDevelopment())
 
 app.UseSerilogRequestLogging();
 app.UseHttpsRedirection();
+
+// Add Permissions-Policy header
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Add("Permissions-Policy", "unload=()");
+    await next();
+});
+
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
