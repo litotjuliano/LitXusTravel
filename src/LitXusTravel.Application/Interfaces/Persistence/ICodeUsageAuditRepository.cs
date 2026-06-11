@@ -9,5 +9,5 @@ public interface ICodeUsageAuditRepository : IRepository<CodeUsageAudit>
     Task<IEnumerable<CodeUsageAudit>> GetByAgentAsync(Guid agentId, CancellationToken ct = default);
     Task<IEnumerable<CodeUsageAudit>> GetAnomalousUsageAsync(Guid tenantId, DateTime startDate, CancellationToken ct = default);
     Task<int> GetUsageCountAsync(string code, DateTime startDate, DateTime endDate, CancellationToken ct = default);
-    Task<IEnumerable<CodeUsageAudit>> GetByLocationAnomalyAsync(string code, DateTime lookbackDays = 7, CancellationToken ct = default);
+    Task<IEnumerable<CodeUsageAudit>> GetByLocationAnomalyAsync(string code, int lookbackDays = 7, CancellationToken ct = default);
 }
