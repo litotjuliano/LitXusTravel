@@ -24,7 +24,7 @@ public class CreateAdminUserCommandHandler : IRequestHandler<CreateAdminUserComm
         // Check if email already exists
         var existingAdmin = await _unitOfWork.AdminUsers.ExistsByEmailAsync(new Email(request.Email), ct);
         if (existingAdmin)
-            return Result.Failure($"Admin with email {request.Email} already exists");
+            return Result<Guid>.Failure($"Admin with email {request.Email} already exists");
 
         try
         {
@@ -51,11 +51,11 @@ public class CreateAdminUserCommandHandler : IRequestHandler<CreateAdminUserComm
                 reason: $"Created {request.Scope} admin",
                 ct: ct);
 
-            return Result.Success(admin.Id);
+            return Result<Guid>.Success(admin.Id);
         }
         catch (DomainException ex)
         {
-            return Result.Failure(ex.Message);
+            return Result<Guid>.Failure(ex.Message);
         }
     }
 }

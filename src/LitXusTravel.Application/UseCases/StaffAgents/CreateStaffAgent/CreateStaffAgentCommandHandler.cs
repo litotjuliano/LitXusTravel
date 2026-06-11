@@ -1,3 +1,9 @@
+using LitXusTravel.Application.Common.Models;
+using LitXusTravel.Application.Interfaces.Persistence;
+using LitXusTravel.Application.Interfaces.Services;
+using LitXusTravel.Domain.Entities;
+using MediatR;
+
 namespace LitXusTravel.Application.UseCases.StaffAgents.CreateStaffAgent;
 
 public class CreateStaffAgentCommandHandler : IRequestHandler<CreateStaffAgentCommand, Result<Guid>>
@@ -17,7 +23,7 @@ public class CreateStaffAgentCommandHandler : IRequestHandler<CreateStaffAgentCo
         var existingAgent = await _unitOfWork.StaffAgents.GetByEmailAsync(
             new Email(request.Email), request.TenantId, ct);
         if (existingAgent != null)
-            return Result.Failure($"Staff agent with email {request.Email} already exists for this tenant");
+            return Result<Guid>.Failure($"Staff agent with email {request.Email} already exists for this tenant");
 
         try
         {
@@ -35,11 +41,11 @@ public class CreateStaffAgentCommandHandler : IRequestHandler<CreateStaffAgentCo
                 reason: $"Created staff agent with code {agent.UniqueCode}",
                 ct: ct);
 
-            return Result.Success(agent.Id);
+            return Result<Guid>.Success(agent.Id);
         }
         catch (DomainException ex)
         {
-            return Result.Failure(ex.Message);
+            return Result<Guid>.Failure(ex.Message);
         }
     }
 }

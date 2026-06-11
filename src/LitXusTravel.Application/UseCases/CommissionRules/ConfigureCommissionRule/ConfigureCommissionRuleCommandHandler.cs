@@ -1,3 +1,9 @@
+using LitXusTravel.Application.Common.Models;
+using LitXusTravel.Application.Interfaces.Persistence;
+using LitXusTravel.Application.Interfaces.Services;
+using LitXusTravel.Domain.Entities;
+using MediatR;
+
 namespace LitXusTravel.Application.UseCases.CommissionRules.ConfigureCommissionRule;
 
 public class ConfigureCommissionRuleCommandHandler : IRequestHandler<ConfigureCommissionRuleCommand, Result<Guid>>
@@ -44,11 +50,11 @@ public class ConfigureCommissionRuleCommandHandler : IRequestHandler<ConfigureCo
                 reason: $"Configured {ruleType} commission rule: {(request.IsPercentage ? request.Amount + "%" : "$" + request.Amount)}",
                 ct: ct);
 
-            return Result.Success(rule.Id);
+            return Result<Guid>.Success(rule.Id);
         }
         catch (DomainException ex)
         {
-            return Result.Failure(ex.Message);
+            return Result<Guid>.Failure(ex.Message);
         }
     }
 }

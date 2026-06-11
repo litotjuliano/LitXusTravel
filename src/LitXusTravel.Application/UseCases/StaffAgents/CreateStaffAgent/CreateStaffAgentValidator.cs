@@ -1,3 +1,5 @@
+using FluentValidation;
+
 namespace LitXusTravel.Application.UseCases.StaffAgents.CreateStaffAgent;
 
 public class CreateStaffAgentValidator : AbstractValidator<CreateStaffAgentCommand>

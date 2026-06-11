@@ -1,3 +1,6 @@
+using LitXusTravel.Application.Common.Models;
+using MediatR;
+
 namespace LitXusTravel.Application.UseCases.StaffAgents.CreateStaffAgent;
 
 public record CreateStaffAgentCommand(

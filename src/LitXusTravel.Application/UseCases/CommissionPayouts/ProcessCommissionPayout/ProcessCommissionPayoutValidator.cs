@@ -1,3 +1,5 @@
+using FluentValidation;
+
 namespace LitXusTravel.Application.UseCases.CommissionPayouts.ProcessCommissionPayout;
 
 public class ProcessCommissionPayoutValidator : AbstractValidator<ProcessCommissionPayoutCommand>

@@ -1,3 +1,7 @@
+using LitXusTravel.Application.Common.Models;
+using LitXusTravel.Domain.Entities;
+using MediatR;
+
 namespace LitXusTravel.Application.UseCases.AdminUsers.CreateAdminUser;
 
 public record CreateAdminUserCommand(

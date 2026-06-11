@@ -1,3 +1,9 @@
+using LitXusTravel.Application.Common.Models;
+using LitXusTravel.Application.DTOs;
+using LitXusTravel.Application.Interfaces.Persistence;
+using LitXusTravel.Domain.Entities;
+using MediatR;
+
 namespace LitXusTravel.Application.UseCases.CommissionAccruals.GetCommissionStatement;
 
 public class GetCommissionStatementQueryHandler : IRequestHandler<GetCommissionStatementQuery, Result<CommissionStatementDto>>
@@ -13,7 +19,7 @@ public class GetCommissionStatementQueryHandler : IRequestHandler<GetCommissionS
     {
         var agent = await _unitOfWork.StaffAgents.GetByIdAsync(request.AgentId, ct);
         if (agent == null)
-            return Result.Failure($"Staff agent with ID {request.AgentId} not found");
+            return Result<CommissionStatementDto>.Failure($"Staff agent with ID {request.AgentId} not found");
 
         var periodStart = request.PeriodStart ?? DateTime.UtcNow.AddMonths(-1).AddDays(-(DateTime.UtcNow.Day - 1));
         var periodEnd = request.PeriodEnd ?? DateTime.UtcNow;
@@ -53,6 +59,6 @@ public class GetCommissionStatementQueryHandler : IRequestHandler<GetCommissionS
             periodAccruals.Count(a => a.Status == CommissionStatus.Finalized || a.Status == CommissionStatus.Paid),
             lineItems);
 
-        return Result.Success(statement);
+        return Result<CommissionStatementDto>.Success(statement);
     }
 }

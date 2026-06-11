@@ -1,3 +1,5 @@
+using FluentValidation;
+
 namespace LitXusTravel.Application.UseCases.CommissionRules.ConfigureCommissionRule;
 
 public class ConfigureCommissionRuleValidator : AbstractValidator<ConfigureCommissionRuleCommand>

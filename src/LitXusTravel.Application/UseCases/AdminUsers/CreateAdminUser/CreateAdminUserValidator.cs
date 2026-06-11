@@ -1,3 +1,6 @@
+using FluentValidation;
+using LitXusTravel.Domain.Entities;
+
 namespace LitXusTravel.Application.UseCases.AdminUsers.CreateAdminUser;
 
 public class CreateAdminUserValidator : AbstractValidator<CreateAdminUserCommand>

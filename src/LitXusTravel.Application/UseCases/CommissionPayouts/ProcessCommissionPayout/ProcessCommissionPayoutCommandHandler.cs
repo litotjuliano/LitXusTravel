@@ -1,3 +1,9 @@
+using LitXusTravel.Application.Common.Models;
+using LitXusTravel.Application.Interfaces.Persistence;
+using LitXusTravel.Application.Interfaces.Services;
+using LitXusTravel.Domain.Entities;
+using MediatR;
+
 namespace LitXusTravel.Application.UseCases.CommissionPayouts.ProcessCommissionPayout;
 
 public class ProcessCommissionPayoutCommandHandler : IRequestHandler<ProcessCommissionPayoutCommand, Result<Guid>>
@@ -20,7 +26,7 @@ public class ProcessCommissionPayoutCommandHandler : IRequestHandler<ProcessComm
                 request.TenantId, request.PeriodStart, request.PeriodEnd, ct);
 
             if (!accruals.Any())
-                return Result.Failure($"No finalized commissions found for period {request.PeriodStart:yyyy-MM-dd} to {request.PeriodEnd:yyyy-MM-dd}");
+                return Result<Guid>.Failure($"No finalized commissions found for period {request.PeriodStart:yyyy-MM-dd} to {request.PeriodEnd:yyyy-MM-dd}");
 
             // Group by agent and calculate totals
             var commissionsByAgent = accruals
@@ -57,11 +63,11 @@ public class ProcessCommissionPayoutCommandHandler : IRequestHandler<ProcessComm
                 reason: $"Processed payout for {commissionsByAgent.Count} agents, total: ${totalAmount:F2}",
                 ct: ct);
 
-            return Result.Success(payout.Id);
+            return Result<Guid>.Success(payout.Id);
         }
         catch (Exception ex)
         {
-            return Result.Failure($"Error processing payout: {ex.Message}");
+            return Result<Guid>.Failure($"Error processing payout: {ex.Message}");
         }
     }
 }
