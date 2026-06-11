@@ -11,8 +11,7 @@ namespace LitXusTravel.Domain.Entities;
 /// </summary>
 public class StaffAgent : AggregateRoot
 {
-    public Guid Id { get; private set; }
-    public Guid TenantId { get; private set; }
+        public Guid TenantId { get; private set; }
     public string Name { get; private set; } = string.Empty;
     public Email Email { get; private set; } = null!;
     public string UniqueCode { get; private set; } = string.Empty;
@@ -21,9 +20,7 @@ public class StaffAgent : AggregateRoot
     public bool IsActive { get; private set; }
     public DateTime JoinedAt { get; private set; }
     public DateTime? DepartedAt { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime? UpdatedAt { get; private set; }
-
+        
     private StaffAgent() { }
 
     /// <summary>

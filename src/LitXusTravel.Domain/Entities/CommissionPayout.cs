@@ -10,8 +10,7 @@ namespace LitXusTravel.Domain.Entities;
 /// </summary>
 public class CommissionPayout : AggregateRoot
 {
-    public Guid Id { get; private set; }
-    public Guid? AgentId { get; private set; }
+        public Guid? AgentId { get; private set; }
     public Guid TenantId { get; private set; }
     public DateTime PayoutPeriodStart { get; private set; }
     public DateTime PayoutPeriodEnd { get; private set; }
@@ -20,9 +19,7 @@ public class CommissionPayout : AggregateRoot
     public PayoutStatus Status { get; private set; }
     public DateTime? ProcessedAt { get; private set; }
     public string? TransactionId { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime? UpdatedAt { get; private set; }
-
+        
     private CommissionPayout() { }
 
     /// <summary>

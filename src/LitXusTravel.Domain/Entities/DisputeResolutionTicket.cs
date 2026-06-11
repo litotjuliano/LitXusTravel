@@ -11,20 +11,17 @@ namespace LitXusTravel.Domain.Entities;
 /// </summary>
 public class DisputeResolutionTicket : AggregateRoot
 {
-    public Guid Id { get; private set; }
-    public Guid SuperAdminId { get; private set; }
+        public Guid SuperAdminId { get; private set; }
     public Guid CommissionAccrualId { get; private set; }
     public string Description { get; private set; } = string.Empty;
     public string ProposedFix { get; private set; } = string.Empty;
     public DisputeReasonCode ReasonCode { get; private set; }
     public DisputeStatus Status { get; private set; }
     public Guid? ReviewedByTenantAdminId { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime? ResolvedAt { get; private set; }
+        public DateTime? ResolvedAt { get; private set; }
     public decimal? OriginalAmount { get; private set; }
     public decimal? AdjustedAmount { get; private set; }
-    public DateTime? UpdatedAt { get; private set; }
-
+    
     private DisputeResolutionTicket() { }
 
     /// <summary>

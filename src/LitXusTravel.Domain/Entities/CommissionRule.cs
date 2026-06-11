@@ -11,8 +11,7 @@ namespace LitXusTravel.Domain.Entities;
 /// </summary>
 public class CommissionRule : AggregateRoot
 {
-    public Guid Id { get; private set; }
-    public Guid TenantId { get; private set; }
+        public Guid TenantId { get; private set; }
     public Guid? AgentId { get; private set; }
     public CommissionTrigger Trigger { get; private set; }
     public decimal Amount { get; private set; }
@@ -23,9 +22,7 @@ public class CommissionRule : AggregateRoot
     public DateTime EffectiveFrom { get; private set; }
     public DateTime? EffectiveTo { get; private set; }
     public bool IsActive { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime? UpdatedAt { get; private set; }
-
+        
     private CommissionRule() { }
 
     /// <summary>

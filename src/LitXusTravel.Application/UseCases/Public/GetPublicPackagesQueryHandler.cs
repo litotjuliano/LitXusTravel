@@ -50,14 +50,14 @@ public class GetPublicPackagesQueryHandler(IUnitOfWork uow)
         var responses = paginated.Select(p => new PublicPackageResponse(
             Id: p.Id,
             Title: p.Title,
-            ShortDescription: p.ShortDescription ?? p.Description,
-            Category: p.Category,
+            ShortDescription: p.ShortDescription ?? p.Description ?? "",
+            Category: p.Category ?? "",
             Price: p.BasePrice,
             Currency: p.Currency,
             DurationDays: p.DurationDays,
             Destination: p.Destination,
-            Region: p.Region,
-            FeaturedImageUrl: p.FeaturedImageUrl,
+            Region: p.Region ?? "",
+            FeaturedImageUrl: p.FeaturedImageUrl ?? "",
             IsFeatured: p.IsFeatured,
             IsPopular: p.IsPopular
         )).ToList();
