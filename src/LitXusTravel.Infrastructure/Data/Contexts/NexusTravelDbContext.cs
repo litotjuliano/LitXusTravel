@@ -1,0 +1,71 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using LitXusTravel.Application.Interfaces.Services;
+using LitXusTravel.Domain.Entities;
+using LitXusTravel.Infrastructure.Identity;
+
+namespace LitXusTravel.Infrastructure.Data.Contexts;
+
+public class LitXusTravelDbContext(
+    DbContextOptions<LitXusTravelDbContext> options,
+    ICurrentTenant currentTenant)
+    : IdentityDbContext<ApplicationUser>(options)
+{
+    public DbSet<Tenant> Tenants => Set<Tenant>();
+    public DbSet<TenantSubscription> TenantSubscriptions => Set<TenantSubscription>();
+    public DbSet<Package> Packages => Set<Package>();
+    public DbSet<TenantPackage> TenantPackages => Set<TenantPackage>();
+    public DbSet<PackageOverride> PackageOverrides => Set<PackageOverride>();
+    public DbSet<Inquiry> Inquiries => Set<Inquiry>();
+    public DbSet<CrmActivity> CrmActivities => Set<CrmActivity>();
+    public DbSet<Quotation> Quotations => Set<Quotation>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        base.OnModelCreating(builder);
+        builder.ApplyConfigurationsFromAssembly(typeof(LitXusTravelDbContext).Assembly);
+
+        // Soft-delete filters for admin-accessible tables (no tenant scope)
+        builder.Entity<Tenant>().HasQueryFilter(e => !e.DeletedAt.HasValue);
+        builder.Entity<Package>().HasQueryFilter(e => !e.DeletedAt.HasValue);
+
+        // Tenant-scoped filters — closure captures currentTenant so the filter
+        // is re-evaluated per query. When Id is null (admin / design-time) the
+        // condition short-circuits and all rows are visible.
+        builder.Entity<TenantPackage>()
+            .HasQueryFilter(e => !e.DeletedAt.HasValue
+                && (!currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.Value));
+
+        builder.Entity<PackageOverride>()
+            .HasQueryFilter(e =>
+                !currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.Value);
+
+        builder.Entity<Inquiry>()
+            .HasQueryFilter(e => !e.DeletedAt.HasValue
+                && (!currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.Value));
+
+        builder.Entity<CrmActivity>()
+            .HasQueryFilter(e =>
+                !currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.Value);
+
+        builder.Entity<Quotation>()
+            .HasQueryFilter(e => !e.DeletedAt.HasValue
+                && (!currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.Value));
+
+        builder.Entity<Notification>()
+            .HasQueryFilter(e =>
+                !currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.Value);
+    }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
+    {
+        foreach (var entry in ChangeTracker.Entries<Domain.Common.BaseEntity>())
+        {
+            if (entry.State == EntityState.Modified)
+                entry.Entity.SetUpdatedBy(entry.Entity.UpdatedBy ?? "system");
+        }
+        return await base.SaveChangesAsync(ct);
+    }
+}

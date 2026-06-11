@@ -1,0 +1,449 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop, feature/**]
+  pull_request:
+    branches: [main, develop]
+  release:
+    types: [published]
+
+env:
+  REGISTRY: nexustravel.azurecr.io
+  API_IMAGE: nexustravel-api
+  ADMIN_IMAGE: nexustravel-admin
+  WEBSITE_IMAGE: nexustravel-website
+
+jobs:
+  # ============================================================================
+  # BUILD & TEST JOBS
+  # ============================================================================
+
+  test-backend:
+    name: Test Backend
+    runs-on: ubuntu-latest
+
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          SA_PASSWORD: TestPassword123!
+          MSSQL_PID: Express
+        options: >-
+          --health-cmd "sqlcmd -S localhost -U sa -P TestPassword123! -Q 'SELECT 1'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 1433:1433
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0'
+          cache: true
+          cache-dependency-path: '**/*.csproj'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Run unit tests
+        run: dotnet test --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results-backend
+          path: '**/test-results.trx'
+
+      - name: Publish test results
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: '**/test-results.trx'
+          check_name: Backend Test Results
+
+  build-api:
+    name: Build API Docker Image
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'release'
+    needs: test-backend
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.API_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./src/LitXusTravel.API/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-admin:
+    name: Build Admin Portal Image
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'release'
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.ADMIN_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./web/admin-portal
+          file: ./web/admin-portal/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-website:
+    name: Build Public Website Image
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'release'
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.WEBSITE_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./web/public-website
+          file: ./web/public-website/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ============================================================================
+  # STAGING DEPLOYMENT
+  # ============================================================================
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    needs: [build-api, build-admin, build-website]
+
+    environment:
+      name: staging
+      url: https://staging.nexustravel.com
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy API to App Service
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: nexustravel-api-staging
+          images: ${{ env.REGISTRY }}/${{ env.API_IMAGE }}:${{ github.sha }}
+
+      - name: Deploy Admin Portal to App Service
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: nexustravel-admin-staging
+          images: ${{ env.REGISTRY }}/${{ env.ADMIN_IMAGE }}:${{ github.sha }}
+
+      - name: Deploy Website to App Service
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: nexustravel-website-staging
+          images: ${{ env.REGISTRY }}/${{ env.WEBSITE_IMAGE }}:${{ github.sha }}
+
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests against staging..."
+          # API health check
+          curl -f https://api-staging.nexustravel.com/health || exit 1
+          echo "✓ API health check passed"
+
+          # Admin portal accessibility
+          curl -f https://staging.nexustravel.com/admin/login || exit 1
+          echo "✓ Admin portal accessible"
+
+      - name: Notify Slack
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Staging deployment: ${{ job.status }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_STAGING }}
+
+  # ============================================================================
+  # PRODUCTION DEPLOYMENT (Blue-Green)
+  # ============================================================================
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') && github.event_name == 'push'
+    needs: [build-api, build-admin, build-website]
+
+    environment:
+      name: production
+      url: https://nexustravel.com
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Get current slot
+        id: current-slot
+        run: |
+          SLOT=$(az webapp deployment slot list -g nexustravel-prod -n nexustravel-api --query "[?name=='blue'] | [0].name" -o tsv)
+          if [ "$SLOT" == "blue" ]; then
+            echo "target-slot=green" >> $GITHUB_OUTPUT
+            echo "current-slot=blue" >> $GITHUB_OUTPUT
+          else
+            echo "target-slot=blue" >> $GITHUB_OUTPUT
+            echo "current-slot=green" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy to green slot
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: nexustravel-api
+          slot-name: ${{ steps.current-slot.outputs.target-slot }}
+          images: ${{ env.REGISTRY }}/${{ env.API_IMAGE }}:${{ github.ref_name }}
+
+      - name: Deploy Admin to green slot
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: nexustravel-admin
+          slot-name: ${{ steps.current-slot.outputs.target-slot }}
+          images: ${{ env.REGISTRY }}/${{ env.ADMIN_IMAGE }}:${{ github.ref_name }}
+
+      - name: Deploy Website to green slot
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: nexustravel-website
+          slot-name: ${{ steps.current-slot.outputs.target-slot }}
+          images: ${{ env.REGISTRY }}/${{ env.WEBSITE_IMAGE }}:${{ github.ref_name }}
+
+      - name: Smoke tests on green slot
+        id: smoke-tests
+        run: |
+          echo "Waiting for green slot to be ready..."
+          sleep 30
+
+          # Get green slot URL
+          GREEN_URL=$(az webapp show -g nexustravel-prod -n nexustravel-api --slot ${{ steps.current-slot.outputs.target-slot }} --query defaultHostName -o tsv)
+
+          echo "Testing API on green slot..."
+          curl -f https://${GREEN_URL}/health || exit 1
+          echo "✓ API health check passed"
+
+      - name: Swap slots
+        if: steps.smoke-tests.outcome == 'success'
+        run: |
+          az webapp deployment slot swap \
+            -g nexustravel-prod \
+            -n nexustravel-api \
+            --slot ${{ steps.current-slot.outputs.target-slot }}
+
+      - name: Verify production
+        run: |
+          echo "Running production smoke tests..."
+          curl -f https://api.nexustravel.com/health || exit 1
+          echo "✓ Production API is live"
+
+      - name: Notify on success
+        if: success()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: 'success'
+          text: 'Production deployment successful: ${{ github.ref_name }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_PROD }}
+
+      - name: Notify on failure
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: 'failure'
+          text: 'Production deployment failed! Manual intervention may be needed.'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_PROD }}
+
+  # ============================================================================
+  # CODE QUALITY & ANALYSIS
+  # ============================================================================
+
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0'
+
+      - name: Setup SonarCloud
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONARCLOUD_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
+
+  lint-frontend:
+    name: Lint Frontend Code
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: |
+            web/admin-portal/package-lock.json
+            web/public-website/package-lock.json
+
+      - name: Lint Admin Portal
+        working-directory: web/admin-portal
+        run: |
+          npm ci
+          npm run lint
+
+      - name: Lint Website
+        working-directory: web/public-website
+        run: |
+          npm ci
+          npm run lint
+
+  # ============================================================================
+  # RELEASE NOTES
+  # ============================================================================
+
+  create-release-notes:
+    name: Create Release Notes
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') && github.event_name == 'release'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        uses: orhun/git-cliff-action@v2
+        with:
+          config: cliff.toml
+          args: -vv
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body: ${{ steps.changelog.outputs.content }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

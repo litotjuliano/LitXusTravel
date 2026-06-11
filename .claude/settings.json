@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Bash(git *)",
+      "Bash(dotnet *)",
+      "Bash(npm *)",
+      "PowerShell(git *)",
+      "PowerShell(dotnet *)",
+      "PowerShell(npm *)",
+      "Edit",
+      "Write"
+    ],
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git reset --hard*)",
+      "PowerShell(git push --force*)",
+      "PowerShell(git reset --hard*)"
+    ]
+  }
+}

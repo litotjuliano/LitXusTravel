@@ -1,0 +1,51 @@
+namespace LitXusTravel.Application.DTOs.Response;
+
+public record PackageResponse(
+    Guid Id,
+    string Title,
+    string? Description,
+    string? ShortDescription,
+    string? Category,
+    decimal BasePrice,
+    string Currency,
+    int DurationDays,
+    string Destination,
+    string? Region,
+    string? FeaturedImageUrl,
+    string? ImagesJson,
+    string? ItineraryJson,
+    string? HighlightsJson,
+    string? InclusionsJson,
+    string? ExclusionsJson,
+    decimal? Rating,
+    int ReviewCount,
+    string Visibility,
+    bool IsPopular,
+    bool IsFeatured,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt
+);
+
+public record ResolvedPackageResponse(
+    Guid Id,
+    Guid MasterPackageId,
+    string Title,
+    string? Description,
+    string? ShortDescription,
+    string? Category,
+    decimal Price,
+    string Currency,
+    int DurationDays,
+    string Destination,
+    string? Region,
+    string? FeaturedImageUrl,
+    string? ImagesJson,
+    string? ItineraryJson,
+    string? HighlightsJson,
+    string? InclusionsJson,
+    string? ExclusionsJson,
+    string? ContactPhone,
+    string? ContactWhatsapp,
+    bool IsCustomized,
+    DateTimeOffset LastSyncedAt
+);

@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/LitXusTravel.API/LitXusTravel.API.csproj" />
+    <Project Path="src/LitXusTravel.Application/LitXusTravel.Application.csproj" />
+    <Project Path="src/LitXusTravel.Domain/LitXusTravel.Domain.csproj" />
+    <Project Path="src/LitXusTravel.Infrastructure/LitXusTravel.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/LitXusTravel.Tests.Integration/LitXusTravel.Tests.Integration.csproj" />
+    <Project Path="tests/LitXusTravel.Tests/LitXusTravel.Tests.csproj" />
+  </Folder>
+</Solution>

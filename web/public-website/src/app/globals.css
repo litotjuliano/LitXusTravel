@@ -1,0 +1,95 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ── NexusTravel brand tokens ──────────────────────────────────── */
+@theme inline {
+  --color-background:          var(--background);
+  --color-foreground:          var(--foreground);
+  --color-card:                var(--card);
+  --color-card-foreground:     var(--card-foreground);
+  --color-primary:             var(--primary);
+  --color-primary-foreground:  var(--primary-foreground);
+  --color-secondary:           var(--secondary);
+  --color-secondary-foreground:var(--secondary-foreground);
+  --color-muted:               var(--muted);
+  --color-muted-foreground:    var(--muted-foreground);
+  --color-accent:              var(--accent);
+  --color-accent-foreground:   var(--accent-foreground);
+  --color-destructive:         var(--destructive);
+  --color-border:              var(--border);
+  --color-input:               var(--input);
+  --color-ring:                var(--ring);
+  --color-popover:             var(--popover);
+  --color-popover-foreground:  var(--popover-foreground);
+
+  /* Brand colours used directly in components */
+  --color-brand-blue:    #0066CC;
+  --color-brand-teal:    #00A89A;
+  --color-brand-orange:  #FF6B35;
+  --color-brand-success: #2ECC71;
+  --color-brand-warning: #F39C12;
+  --color-brand-error:   #E74C3C;
+
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-geist-mono);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+}
+
+:root {
+  --primary:            #0066CC;
+  --primary-foreground: #ffffff;
+  --secondary:          #F0F7FF;
+  --secondary-foreground: #0066CC;
+  --accent:             #00A89A;
+  --accent-foreground:  #ffffff;
+  --background:         #ffffff;
+  --foreground:         #1A1A1A;
+  --card:               #ffffff;
+  --card-foreground:    #1A1A1A;
+  --popover:            #ffffff;
+  --popover-foreground: #1A1A1A;
+  --muted:              #F8F9FA;
+  --muted-foreground:   #666666;
+  --border:             #E0E0E0;
+  --input:              #E0E0E0;
+  --ring:               #0066CC;
+  --destructive:        #E74C3C;
+  --radius:             0.625rem;
+}
+
+.dark {
+  --primary:            #3B82F6;
+  --primary-foreground: #ffffff;
+  --background:         #0F0F0F;
+  --foreground:         #ffffff;
+  --card:               #1A1A1A;
+  --card-foreground:    #ffffff;
+  --popover:            #1A1A1A;
+  --popover-foreground: #ffffff;
+  --muted:              #2D2D2D;
+  --muted-foreground:   #A0A0A0;
+  --secondary:          #2D2D2D;
+  --secondary-foreground: #ffffff;
+  --accent:             #00A89A;
+  --accent-foreground:  #ffffff;
+  --border:             #333333;
+  --input:              #333333;
+  --ring:               #3B82F6;
+  --destructive:        #E74C3C;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
