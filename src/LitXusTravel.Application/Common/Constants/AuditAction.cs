@@ -11,7 +11,12 @@ public enum AuditAction
     CreateStaffAgent = 6,
     CreateCommissionRule = 7,
     UpdateCommissionRule = 8,
-    ProcessPayout = 9,
+    ProcessCommissionPayout = 9,
     CreateDispute = 10,
-    ResolveDispute = 11
+    ResolveDispute = 11,
+    CreateInquiry = 12,
+    CreatePackage = 13,
+    PublishPackage = 14,
+    SyncPackages = 15,
+    CreateTenant = 16
 }

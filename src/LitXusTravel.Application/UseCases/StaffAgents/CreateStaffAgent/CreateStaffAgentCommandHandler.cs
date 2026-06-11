@@ -34,7 +34,7 @@ public class CreateStaffAgentCommandHandler : IRequestHandler<CreateStaffAgentCo
 
             // Log audit trail
             await _auditService.LogAsync(
-                action: AuditActions.CreateAdmin,
+                action: AuditAction.CreateAdmin,
                 affectedEntityType: nameof(StaffAgent),
                 affectedEntityId: agent.Id,
                 affectedTenantId: request.TenantId,

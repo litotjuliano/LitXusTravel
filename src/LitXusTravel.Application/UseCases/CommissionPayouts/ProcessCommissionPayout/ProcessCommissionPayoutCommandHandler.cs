@@ -56,7 +56,7 @@ public class ProcessCommissionPayoutCommandHandler : IRequestHandler<ProcessComm
 
             // Log audit trail
             await _auditService.LogAsync(
-                action: AuditActions.ProcessCommissionPayout,
+                action: AuditAction.ProcessCommissionPayout,
                 affectedEntityType: nameof(CommissionPayout),
                 affectedEntityId: payout.Id,
                 affectedTenantId: request.TenantId,

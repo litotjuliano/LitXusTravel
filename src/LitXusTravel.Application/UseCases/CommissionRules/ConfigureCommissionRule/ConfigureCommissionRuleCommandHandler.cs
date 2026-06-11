@@ -42,7 +42,7 @@ public class ConfigureCommissionRuleCommandHandler : IRequestHandler<ConfigureCo
             // Log audit trail
             var ruleType = request.AgentId.HasValue ? "Agent-specific" : "Default";
             await _auditService.LogAsync(
-                action: AuditActions.CreateCommissionRule,
+                action: AuditAction.CreateCommissionRule,
                 affectedEntityType: nameof(CommissionRule),
                 affectedEntityId: rule.Id,
                 affectedTenantId: request.TenantId,

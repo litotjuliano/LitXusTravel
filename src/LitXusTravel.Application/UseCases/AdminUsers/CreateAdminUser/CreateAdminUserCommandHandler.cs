@@ -1,9 +1,11 @@
 using MediatR;
+using LitXusTravel.Application.Common.Constants;
 using LitXusTravel.Application.Common.Models;
 using LitXusTravel.Application.Interfaces.Persistence;
 using LitXusTravel.Application.Interfaces.Services;
 using LitXusTravel.Domain.Common;
 using LitXusTravel.Domain.Entities;
+using LitXusTravel.Domain.Exceptions;
 using LitXusTravel.Domain.ValueObjects;
 
 namespace LitXusTravel.Application.UseCases.AdminUsers.CreateAdminUser;
@@ -44,7 +46,7 @@ public class CreateAdminUserCommandHandler : IRequestHandler<CreateAdminUserComm
 
             // Log audit trail
             await _auditService.LogAsync(
-                action: AuditActions.CreateAdmin,
+                action: AuditAction.CreateAdmin,
                 affectedEntityType: nameof(AdminUser),
                 affectedEntityId: admin.Id,
                 affectedTenantId: request.AssignedTenantId,
