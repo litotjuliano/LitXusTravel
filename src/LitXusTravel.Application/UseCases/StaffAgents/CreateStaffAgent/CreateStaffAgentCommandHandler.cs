@@ -2,6 +2,8 @@ using LitXusTravel.Application.Common.Models;
 using LitXusTravel.Application.Interfaces.Persistence;
 using LitXusTravel.Application.Interfaces.Services;
 using LitXusTravel.Domain.Entities;
+using LitXusTravel.Domain.Exceptions;
+using LitXusTravel.Domain.ValueObjects;
 using MediatR;
 
 namespace LitXusTravel.Application.UseCases.StaffAgents.CreateStaffAgent;
@@ -34,11 +36,10 @@ public class CreateStaffAgentCommandHandler : IRequestHandler<CreateStaffAgentCo
 
             // Log audit trail
             await _auditService.LogAsync(
-                action: AuditAction.CreateAdmin,
-                affectedEntityType: nameof(StaffAgent),
-                affectedEntityId: agent.Id,
-                affectedTenantId: request.TenantId,
-                reason: $"Created staff agent with code {agent.UniqueCode}",
+                action: AuditAction.Created,
+                entityType: nameof(StaffAgent),
+                entityId: agent.Id,
+                tenantId: request.TenantId,
                 ct: ct);
 
             return Result<Guid>.Success(agent.Id);

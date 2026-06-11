@@ -2,6 +2,7 @@ using LitXusTravel.Application.Common.Models;
 using LitXusTravel.Application.Interfaces.Persistence;
 using LitXusTravel.Application.Interfaces.Services;
 using LitXusTravel.Domain.Entities;
+using LitXusTravel.Domain.Exceptions;
 using MediatR;
 
 namespace LitXusTravel.Application.UseCases.CommissionRules.ConfigureCommissionRule;
@@ -40,14 +41,11 @@ public class ConfigureCommissionRuleCommandHandler : IRequestHandler<ConfigureCo
             await _unitOfWork.SaveChangesAsync(ct);
 
             // Log audit trail
-            var ruleType = request.AgentId.HasValue ? "Agent-specific" : "Default";
             await _auditService.LogAsync(
-                action: AuditAction.CreateCommissionRule,
-                affectedEntityType: nameof(CommissionRule),
-                affectedEntityId: rule.Id,
-                affectedTenantId: request.TenantId,
-                affectedAgentId: request.AgentId,
-                reason: $"Configured {ruleType} commission rule: {(request.IsPercentage ? request.Amount + "%" : "$" + request.Amount)}",
+                action: AuditAction.Created,
+                entityType: nameof(CommissionRule),
+                entityId: rule.Id,
+                tenantId: request.TenantId,
                 ct: ct);
 
             return Result<Guid>.Success(rule.Id);

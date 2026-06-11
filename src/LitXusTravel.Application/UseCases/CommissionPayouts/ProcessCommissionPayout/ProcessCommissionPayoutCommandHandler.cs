@@ -56,11 +56,10 @@ public class ProcessCommissionPayoutCommandHandler : IRequestHandler<ProcessComm
 
             // Log audit trail
             await _auditService.LogAsync(
-                action: AuditAction.ProcessCommissionPayout,
-                affectedEntityType: nameof(CommissionPayout),
-                affectedEntityId: payout.Id,
-                affectedTenantId: request.TenantId,
-                reason: $"Processed payout for {commissionsByAgent.Count} agents, total: ${totalAmount:F2}",
+                action: AuditAction.Created,
+                entityType: nameof(CommissionPayout),
+                entityId: payout.Id,
+                tenantId: request.TenantId,
                 ct: ct);
 
             return Result<Guid>.Success(payout.Id);
