@@ -19,6 +19,16 @@ public class UnitOfWork(LitXusTravelDbContext context) : IUnitOfWork
     public IRepository<Notification> Notifications { get; } = new Repository<Notification>(context);
     public IRepository<AuditLog> AuditLogs { get; } = new Repository<AuditLog>(context);
 
+    // Role Hierarchy & Commission System Repositories
+    public IAdminUserRepository AdminUsers { get; } = new AdminUserRepository(context);
+    public IStaffAgentRepository StaffAgents { get; } = new StaffAgentRepository(context);
+    public IIndependentAgentRepository IndependentAgents { get; } = new IndependentAgentRepository(context);
+    public ICommissionRuleRepository CommissionRules { get; } = new CommissionRuleRepository(context);
+    public ICommissionAccrualRepository CommissionAccruals { get; } = new CommissionAccrualRepository(context);
+    public ICommissionPayoutRepository CommissionPayouts { get; } = new CommissionPayoutRepository(context);
+    public ICodeUsageAuditRepository CodeUsageAudits { get; } = new CodeUsageAuditRepository(context);
+    public IDisputeResolutionRepository DisputeResolutionTickets { get; } = new DisputeResolutionRepository(context);
+
     public async Task<int> SaveChangesAsync(CancellationToken ct = default)
     {
         DispatchDomainEvents();

@@ -15,6 +15,16 @@ public interface IUnitOfWork : IAsyncDisposable
     IRepository<Notification> Notifications { get; }
     IRepository<AuditLog> AuditLogs { get; }
 
+    // Role Hierarchy & Commission System Repositories
+    IAdminUserRepository AdminUsers { get; }
+    IStaffAgentRepository StaffAgents { get; }
+    IIndependentAgentRepository IndependentAgents { get; }
+    ICommissionRuleRepository CommissionRules { get; }
+    ICommissionAccrualRepository CommissionAccruals { get; }
+    ICommissionPayoutRepository CommissionPayouts { get; }
+    ICodeUsageAuditRepository CodeUsageAudits { get; }
+    IDisputeResolutionRepository DisputeResolutionTickets { get; }
+
     Task<int> SaveChangesAsync(CancellationToken ct = default);
     Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken ct = default);
 }

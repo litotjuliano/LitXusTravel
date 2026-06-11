@@ -22,6 +22,16 @@ public class LitXusTravelDbContext(
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
+    // Role Hierarchy & Commission System
+    public DbSet<AdminUser> AdminUsers => Set<AdminUser>();
+    public DbSet<StaffAgent> StaffAgents => Set<StaffAgent>();
+    public DbSet<IndependentAgent> IndependentAgents => Set<IndependentAgent>();
+    public DbSet<CommissionRule> CommissionRules => Set<CommissionRule>();
+    public DbSet<CommissionAccrual> CommissionAccruals => Set<CommissionAccrual>();
+    public DbSet<CommissionPayout> CommissionPayouts => Set<CommissionPayout>();
+    public DbSet<CodeUsageAudit> CodeUsageAudits => Set<CodeUsageAudit>();
+    public DbSet<DisputeResolutionTicket> DisputeResolutionTickets => Set<DisputeResolutionTicket>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
