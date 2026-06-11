@@ -1,3 +1,5 @@
+using LitXusTravel.Domain.Common;
+using LitXusTravel.Domain.Entities;
 namespace LitXusTravel.Domain.Events;
 
 public record CommissionRuleCreatedEvent(
@@ -8,8 +10,8 @@ public record CommissionRuleCreatedEvent(
     decimal Amount,
     bool IsPercentage) : IDomainEvent
 {
-    public Guid AggregateId => RuleId;
-    public DateTime OccurredAt => DateTime.UtcNow;
+    public Guid EventId => RuleId;
+    public DateTimeOffset OccurredAt => DateTimeOffset.UtcNow;
 }
 
 public record CommissionRuleUpdatedEvent(
@@ -18,12 +20,12 @@ public record CommissionRuleUpdatedEvent(
     decimal Amount,
     bool IsPercentage) : IDomainEvent
 {
-    public Guid AggregateId => RuleId;
-    public DateTime OccurredAt => DateTime.UtcNow;
+    public Guid EventId => RuleId;
+    public DateTimeOffset OccurredAt => DateTimeOffset.UtcNow;
 }
 
 public record CommissionRuleDeactivatedEvent(Guid RuleId, Guid TenantId) : IDomainEvent
 {
-    public Guid AggregateId => RuleId;
-    public DateTime OccurredAt => DateTime.UtcNow;
+    public Guid EventId => RuleId;
+    public DateTimeOffset OccurredAt => DateTimeOffset.UtcNow;
 }

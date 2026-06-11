@@ -1,3 +1,5 @@
+using LitXusTravel.Domain.Common;
+using LitXusTravel.Domain.Entities;
 namespace LitXusTravel.Domain.Events;
 
 public record CommissionAccruedEvent(
@@ -6,8 +8,8 @@ public record CommissionAccruedEvent(
     Guid TenantId,
     decimal Amount) : IDomainEvent
 {
-    public Guid AggregateId => AccrualId;
-    public DateTime OccurredAt => DateTime.UtcNow;
+    public Guid EventId => AccrualId;
+    public DateTimeOffset OccurredAt => DateTimeOffset.UtcNow;
 }
 
 public record CommissionFinalizedEvent(
@@ -16,8 +18,8 @@ public record CommissionFinalizedEvent(
     Guid TenantId,
     decimal Amount) : IDomainEvent
 {
-    public Guid AggregateId => AccrualId;
-    public DateTime OccurredAt => DateTime.UtcNow;
+    public Guid EventId => AccrualId;
+    public DateTimeOffset OccurredAt => DateTimeOffset.UtcNow;
 }
 
 public record CommissionReversedEvent(
@@ -27,14 +29,14 @@ public record CommissionReversedEvent(
     decimal Amount,
     string Reason) : IDomainEvent
 {
-    public Guid AggregateId => AccrualId;
-    public DateTime OccurredAt => DateTime.UtcNow;
+    public Guid EventId => AccrualId;
+    public DateTimeOffset OccurredAt => DateTimeOffset.UtcNow;
 }
 
 public record CommissionPendingPayoutEvent(Guid AccrualId, Guid AgentId, Guid TenantId) : IDomainEvent
 {
-    public Guid AggregateId => AccrualId;
-    public DateTime OccurredAt => DateTime.UtcNow;
+    public Guid EventId => AccrualId;
+    public DateTimeOffset OccurredAt => DateTimeOffset.UtcNow;
 }
 
 public record CommissionPaidEvent(
@@ -43,6 +45,6 @@ public record CommissionPaidEvent(
     Guid TenantId,
     decimal Amount) : IDomainEvent
 {
-    public Guid AggregateId => AccrualId;
-    public DateTime OccurredAt => DateTime.UtcNow;
+    public Guid EventId => AccrualId;
+    public DateTimeOffset OccurredAt => DateTimeOffset.UtcNow;
 }

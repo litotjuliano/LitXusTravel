@@ -1,3 +1,7 @@
+using LitXusTravel.Domain.Common;
+using LitXusTravel.Domain.Events;
+using LitXusTravel.Domain.ValueObjects;
+
 namespace LitXusTravel.Domain.Entities;
 
 /// <summary>
