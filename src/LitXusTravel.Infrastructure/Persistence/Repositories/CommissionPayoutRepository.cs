@@ -1,6 +1,13 @@
+using LitXusTravel.Application.Interfaces.Persistence;
+using LitXusTravel.Domain.Entities;
+using LitXusTravel.Domain.ValueObjects;
+using LitXusTravel.Infrastructure.Data.Contexts;
+using LitXusTravel.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
+
 namespace LitXusTravel.Infrastructure.Persistence.Repositories;
 
-public class CommissionPayoutRepository : RepositoryBase<CommissionPayout>, ICommissionPayoutRepository
+public class CommissionPayoutRepository : Repository<CommissionPayout>, ICommissionPayoutRepository
 {
     public CommissionPayoutRepository(LitXusTravelDbContext context) : base(context)
     {

@@ -1,6 +1,13 @@
+using LitXusTravel.Application.Interfaces.Persistence;
+using LitXusTravel.Domain.Entities;
+using LitXusTravel.Domain.ValueObjects;
+using LitXusTravel.Infrastructure.Data.Contexts;
+using LitXusTravel.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
+
 namespace LitXusTravel.Infrastructure.Persistence.Repositories;
 
-public class CodeUsageAuditRepository : RepositoryBase<CodeUsageAudit>, ICodeUsageAuditRepository
+public class CodeUsageAuditRepository : Repository<CodeUsageAudit>, ICodeUsageAuditRepository
 {
     public CodeUsageAuditRepository(LitXusTravelDbContext context) : base(context)
     {
@@ -45,7 +52,7 @@ public class CodeUsageAuditRepository : RepositoryBase<CodeUsageAudit>, ICodeUsa
             .CountAsync(c => c.Code == code && c.UsedAt >= startDate && c.UsedAt <= endDate, ct);
     }
 
-    public async Task<IEnumerable<CodeUsageAudit>> GetByLocationAnomalyAsync(string code, DateTime lookbackDays = 7, CancellationToken ct = default)
+    public async Task<IEnumerable<CodeUsageAudit>> GetByLocationAnomalyAsync(string code, int lookbackDays = 7, CancellationToken ct = default)
     {
         // Safeguard 3: Detect geographic impossibilities
         var cutoffDate = DateTime.UtcNow.AddDays(-lookbackDays);

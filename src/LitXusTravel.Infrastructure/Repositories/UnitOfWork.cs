@@ -3,6 +3,7 @@ using LitXusTravel.Application.Interfaces.Persistence;
 using LitXusTravel.Domain.Common;
 using LitXusTravel.Domain.Entities;
 using LitXusTravel.Infrastructure.Data.Contexts;
+using LitXusTravel.Infrastructure.Persistence.Repositories;
 
 namespace LitXusTravel.Infrastructure.Repositories;
 

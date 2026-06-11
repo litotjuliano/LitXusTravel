@@ -1,6 +1,13 @@
+using LitXusTravel.Application.Interfaces.Persistence;
+using LitXusTravel.Domain.Entities;
+using LitXusTravel.Domain.ValueObjects;
+using LitXusTravel.Infrastructure.Data.Contexts;
+using LitXusTravel.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
+
 namespace LitXusTravel.Infrastructure.Persistence.Repositories;
 
-public class StaffAgentRepository : RepositoryBase<StaffAgent>, IStaffAgentRepository
+public class StaffAgentRepository : Repository<StaffAgent>, IStaffAgentRepository
 {
     public StaffAgentRepository(LitXusTravelDbContext context) : base(context)
     {
