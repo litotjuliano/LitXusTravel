@@ -28,7 +28,8 @@ public record PackageResponse(
 
 public record ResolvedPackageResponse(
     Guid Id,
-    Guid MasterPackageId,
+    Guid? MasterPackageId,
+    bool IsOwnedPackage,
     string Title,
     string? Description,
     string? ShortDescription,
@@ -47,5 +48,6 @@ public record ResolvedPackageResponse(
     string? ContactPhone,
     string? ContactWhatsapp,
     bool IsCustomized,
-    DateTimeOffset LastSyncedAt
+    DateTimeOffset LastSyncedAt,
+    string? SyncSource
 );

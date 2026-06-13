@@ -10,6 +10,7 @@ public record PackageListResponse(
     int DurationDays,
     string Visibility,
     int syncedTenantsCount,
+    IReadOnlyList<string> Tenants,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt
 );

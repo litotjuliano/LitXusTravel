@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using LitXusTravel.Application.DTOs.Response;
 using LitXusTravel.Application.UseCases.AdminUsers.CreateAdminUser;
 using LitXusTravel.Application.UseCases.AdminUsers.GetAdminById;
+using LitXusTravel.Application.UseCases.AdminUsers.GetAdminUsers;
 using LitXusTravel.Domain.Entities;
 
 namespace LitXusTravel.API.Controllers.v1.Admin;
@@ -10,29 +11,28 @@ namespace LitXusTravel.API.Controllers.v1.Admin;
 [ApiController]
 [Route("api/v1/admin/users")]
 [Tags("Admin Users")]
-public class AdminUsersController : ControllerBase
+public class AdminUsersController(IMediator mediator) : ControllerBase
 {
-    private readonly IMediator _mediator;
-
-    public AdminUsersController(IMediator mediator)
+    /// <summary>List admin users. Optionally filter by tenant or active status.</summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<AdminUserListDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAdminUsers(
+        [FromQuery] Guid? tenantId = null,
+        [FromQuery] bool activeOnly = false,
+        CancellationToken ct = default)
     {
-        _mediator = mediator;
+        var result = await mediator.Send(new GetAdminUsersQuery(tenantId, activeOnly), ct);
+        return Ok(result.Value);
     }
 
     /// <summary>
     /// Create a new admin user (SuperAdmin or Platform Admin).
-    /// Tenant Admins are created separately.
+    /// Only SuperAdmin can create other admins. Triggers an audit log entry.
     /// </summary>
-    /// <remarks>
-    /// Only SuperAdmin can create other admins.
-    /// - Role must be "Admin"
-    /// - Scope must be "Platform" (for Platform Admins)
-    /// - This triggers an audit log entry
-    /// </remarks>
     [HttpPost]
     [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> CreateAdmin(CreateAdminUserRequest request)
+    public async Task<IActionResult> CreateAdmin(CreateAdminUserRequest request, CancellationToken ct = default)
     {
         var command = new CreateAdminUserCommand(
             request.Name,
@@ -41,24 +41,20 @@ public class AdminUsersController : ControllerBase
             Enum.Parse<AdminScope>(request.Scope),
             request.AssignedTenantId);
 
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command, ct);
         if (!result.IsSuccess)
             return BadRequest(new { errors = result.Errors });
 
-        return CreatedAtAction(nameof(GetAdminById), new { id = result.Value }, result.Value);
+        return CreatedAtAction(nameof(GetAdminById), new { id = result.Value }, new { id = result.Value });
     }
 
-    /// <summary>
-    /// Get admin user by ID.
-    /// </summary>
+    /// <summary>Get admin user by ID.</summary>
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(AdminUserDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetAdminById(Guid id)
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetAdminById(Guid id, CancellationToken ct = default)
     {
-        var query = new GetAdminByIdQuery(id);
-        var result = await _mediator.Send(query);
-
+        var result = await mediator.Send(new GetAdminByIdQuery(id), ct);
         if (!result.IsSuccess)
             return NotFound(new { errors = result.Errors });
 

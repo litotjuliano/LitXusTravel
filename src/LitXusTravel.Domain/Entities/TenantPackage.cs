@@ -9,7 +9,8 @@ public enum SyncStatus { Synced, Conflict, Pending }
 public class TenantPackage : AggregateRoot
 {
     public Guid TenantId { get; private set; }
-    public Guid MasterPackageId { get; private set; }
+    public Guid? MasterPackageId { get; private set; }
+    public bool IsOwnedPackage { get; private set; }
     public SyncStatus SyncStatus { get; private set; } = SyncStatus.Synced;
     public DateTimeOffset? LastSyncedAt { get; private set; }
     public DateTimeOffset? LastMasterSyncAt { get; private set; }
@@ -30,12 +31,25 @@ public class TenantPackage : AggregateRoot
         {
             TenantId = tenantId,
             MasterPackageId = masterPackageId,
+            IsOwnedPackage = false,
             SyncStatus = SyncStatus.Synced,
             LastSyncedAt = DateTimeOffset.UtcNow
         };
 
         tp.RaiseDomainEvent(new PackageSynchronizedEvent(tenantId, masterPackageId, tp.Id));
         return tp;
+    }
+
+    public static TenantPackage CreateOwned(Guid tenantId)
+    {
+        return new TenantPackage
+        {
+            TenantId = tenantId,
+            MasterPackageId = null,
+            IsOwnedPackage = true,
+            SyncStatus = SyncStatus.Synced,
+            LastSyncedAt = DateTimeOffset.UtcNow
+        };
     }
 
     public void MarkMasterSynced()

@@ -22,6 +22,10 @@ public class LitXusTravelDbContext(
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
+    // Booking & Tour
+    public DbSet<Tour> Tours => Set<Tour>();
+    public DbSet<Booking> Bookings => Set<Booking>();
+
     // Role Hierarchy & Commission System
     public DbSet<AdminUser> AdminUsers => Set<AdminUser>();
     public DbSet<StaffAgent> StaffAgents => Set<StaffAgent>();
@@ -44,29 +48,32 @@ public class LitXusTravelDbContext(
         // Tenant-scoped filters — closure captures currentTenant so the filter
         // is re-evaluated per query. When Id is null (admin / design-time) the
         // condition short-circuits and all rows are visible.
+        // NOTE: .GetValueOrDefault() is used instead of .Value to avoid
+        // InvalidOperationException when EF Core evaluates the expression tree
+        // for SQL parameter extraction (it does not respect || short-circuit).
         builder.Entity<TenantPackage>()
             .HasQueryFilter(e => !e.DeletedAt.HasValue
-                && (!currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.Value));
+                && (!currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.GetValueOrDefault()));
 
         builder.Entity<PackageOverride>()
             .HasQueryFilter(e =>
-                !currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.Value);
+                !currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.GetValueOrDefault());
 
         builder.Entity<Inquiry>()
             .HasQueryFilter(e => !e.DeletedAt.HasValue
-                && (!currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.Value));
+                && (!currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.GetValueOrDefault()));
 
         builder.Entity<CrmActivity>()
             .HasQueryFilter(e =>
-                !currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.Value);
+                !currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.GetValueOrDefault());
 
         builder.Entity<Quotation>()
             .HasQueryFilter(e => !e.DeletedAt.HasValue
-                && (!currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.Value));
+                && (!currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.GetValueOrDefault()));
 
         builder.Entity<Notification>()
             .HasQueryFilter(e =>
-                !currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.Value);
+                !currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.GetValueOrDefault());
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken ct = default)

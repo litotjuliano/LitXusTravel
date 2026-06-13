@@ -1,13 +1,12 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { adminApi } from "@/lib/api"
 import { formatCurrency } from "@/lib/utils"
-import { toast } from "sonner"
 import {
   Loader2, MapPin, Clock, Star, CheckCircle2, XCircle,
-  ChevronDown, ChevronUp, ImageOff, Calendar, Users, Camera,
+  ChevronDown, ChevronUp, ImageOff, Calendar, Users,
 } from "lucide-react"
 
 interface PackageDetail {
@@ -54,8 +53,6 @@ export function PackageViewModal({ packageId, open, onOpenChange }: Props) {
   const [pkg, setPkg] = useState<PackageDetail | null>(null)
   const [loading, setLoading] = useState(false)
   const [showMore, setShowMore] = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!open || !packageId) return
@@ -67,22 +64,6 @@ export function PackageViewModal({ packageId, open, onOpenChange }: Props) {
       .catch(() => setPkg(null))
       .finally(() => setLoading(false))
   }, [open, packageId])
-
-  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file || !pkg) return
-    setUploading(true)
-    try {
-      const res = await adminApi.uploadPackageImage(pkg.id, file)
-      setPkg((prev) => prev ? { ...prev, featuredImageUrl: res.data.imageUrl } : prev)
-      toast.success("Image updated")
-    } catch {
-      toast.error("Upload failed")
-    } finally {
-      setUploading(false)
-      if (fileInputRef.current) fileInputRef.current.value = ""
-    }
-  }
 
   const highlights = parseJson<string[]>(pkg?.highlightsJson, [])
   const inclusions = parseJson<string[]>(pkg?.inclusionsJson, [])
@@ -99,7 +80,7 @@ export function PackageViewModal({ packageId, open, onOpenChange }: Props) {
         <div className="bg-card rounded-3xl overflow-hidden shadow-2xl border border-border">
 
           {/* ── Hero image ── */}
-          <div className="group relative h-52 bg-muted overflow-hidden">
+          <div className="relative h-52 bg-muted overflow-hidden">
             {loading ? (
               <div className="absolute inset-0 flex items-center justify-center">
                 <Loader2 className="animate-spin text-muted-foreground" size={28} />
@@ -115,36 +96,6 @@ export function PackageViewModal({ packageId, open, onOpenChange }: Props) {
 
             {/* Gradient overlay */}
             {!loading && <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />}
-
-            {/* Upload overlay — visible on hover or when no image */}
-            {!loading && pkg && (
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className={`absolute inset-0 flex flex-col items-center justify-center gap-2 transition-opacity
-                  ${heroImage ? "opacity-0 group-hover:opacity-100 bg-black/40" : "opacity-100 bg-black/20"}
-                `}
-              >
-                {uploading ? (
-                  <Loader2 size={22} className="text-white animate-spin" />
-                ) : (
-                  <>
-                    <Camera size={22} className="text-white drop-shadow" />
-                    <span className="text-xs font-medium text-white drop-shadow">
-                      {heroImage ? "Change image" : "Upload image"}
-                    </span>
-                  </>
-                )}
-              </button>
-            )}
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="hidden"
-              onChange={handleImageUpload}
-            />
 
             {/* Badges */}
             {pkg?.isFeatured && (

@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { adminApi } from "@/lib/api"
+import { getTokenClaims } from "@/lib/utils"
 
 export interface Package {
   id: string
@@ -11,6 +12,9 @@ export interface Package {
   durationDays: number
   visibility: string
   syncedTenantsCount: number
+  tenants: string[]
+  isOwnedPackage?: boolean
+  syncSource?: string
 }
 
 export interface UsePackagesResult {
@@ -45,22 +49,63 @@ export const usePackages = (
     hasPreviousPage: false,
   })
 
+  // Read token only after mount — localStorage is unavailable during SSR
+  const tenantIdRef = useRef<string | undefined>(undefined)
+  useEffect(() => {
+    tenantIdRef.current = getTokenClaims().tenantId
+  }, [])
+
   const fetchPackages = async () => {
+    const tenantId = tenantIdRef.current
     try {
       setLoading(true)
-      const response = await adminApi.getPackages({
-        page,
-        pageSize,
-        status: filters?.status,
-        sortBy: filters?.sortBy,
-        sortOrder: filters?.sortOrder,
-      })
 
-      const result = response.data
-      setPackages(result.data || [])
-      if (result.pagination) {
-        setPagination(result.pagination)
+      if (tenantId) {
+        // Tenant Admin: fetch own synced packages from /tenants/{id}/packages
+        const response = await adminApi.getTenantPackages(tenantId, { page, pageSize })
+        const result = response.data
+        const items: Package[] = (result.data || []).map((r: {
+          id: string; title: string; category?: string; destination: string
+          price: number; currency: string; durationDays: number
+          isCustomized: boolean; isOwnedPackage: boolean
+        }) => ({
+          id: r.id,
+          title: r.title,
+          category: r.category ?? "",
+          destination: r.destination,
+          basePrice: r.price,
+          currency: r.currency,
+          durationDays: r.durationDays,
+          visibility: r.isOwnedPackage ? "Owned" : r.isCustomized ? "Customized" : "Synced",
+          syncedTenantsCount: 0,
+          isOwnedPackage: r.isOwnedPackage,
+          syncSource: r.syncSource ?? undefined,
+        }))
+        setPackages(items)
+        if (result.pagination) setPagination(result.pagination)
+      } else {
+        // SuperAdmin / Platform Admin: fetch all master packages
+        const response = await adminApi.getPackages({
+          page,
+          pageSize,
+          status: filters?.status,
+          sortBy: filters?.sortBy,
+          sortOrder: filters?.sortOrder,
+        })
+        const result = response.data
+        const mapped = (result.data || []).map((p: {
+          id: string; title: string; category?: string; destination: string
+          basePrice: number; currency: string; durationDays: number
+          visibility: string; syncedTenantsCount: number; tenants?: string[]
+        }) => ({
+          ...p,
+          category: p.category ?? "",
+          tenants: p.tenants ?? [],
+        }))
+        setPackages(mapped)
+        if (result.pagination) setPagination(result.pagination)
       }
+
       setError(null)
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to fetch packages"

@@ -88,7 +88,7 @@ export default function TopBar({ title, onMenuClick }: Props) {
   }
 
   return (
-    <header className="h-16 bg-card border-b border-border flex items-center justify-between px-4 sm:px-6 shrink-0">
+    <header className="sticky top-0 z-20 h-16 bg-card border-b border-border flex items-center justify-between px-4 sm:px-6 shrink-0">
       <div className="flex items-center gap-4">
         <button onClick={onMenuClick} className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors">
           <Menu size={20} />

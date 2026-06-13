@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using LitXusTravel.Application.UseCases.Packages.CreateTenantPackage;
 using LitXusTravel.Application.UseCases.Packages.GetTenantPackages;
 using LitXusTravel.Application.UseCases.Packages.SyncPackageToTenant;
 using LitXusTravel.Application.UseCases.Packages.UnsyncPackage;
@@ -13,6 +14,29 @@ namespace LitXusTravel.API.Controllers.v1.Tenants;
 [Authorize(Roles = "Agent,Admin")]
 public class MyPackagesController(IMediator mediator) : ControllerBase
 {
+    /// <summary>Create a tenant-owned package (SPEC-TENANT-006)</summary>
+    [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> Create(Guid tenantId, [FromBody] CreateTenantPackageRequest request, CancellationToken ct)
+    {
+        if (!IsAuthorizedForTenant(tenantId))
+            return Forbid();
+
+        var command = new CreateTenantPackageCommand(
+            tenantId,
+            request.Title, request.Destination, request.DurationDays,
+            request.Price, request.Currency, request.Category, request.Region,
+            request.Description, request.ShortDescription,
+            request.FeaturedImageUrl, request.ContactPhone, request.ContactWhatsapp,
+            request.ExtendToMaster);
+
+        var result = await mediator.Send(command, ct);
+        if (!result.IsSuccess) return BadRequest(new { result.Errors });
+        return StatusCode(StatusCodes.Status201Created, new { id = result.Value });
+    }
+
     /// <summary>Sync master packages to tenant (SPEC-TENANT-001)</summary>
     [HttpPost("sync")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -106,6 +130,21 @@ public class MyPackagesController(IMediator mediator) : ControllerBase
 }
 
 public record SyncRequest(IReadOnlyList<Guid> MasterPackageIds);
+
+public record CreateTenantPackageRequest(
+    string Title,
+    string Destination,
+    int DurationDays,
+    decimal Price,
+    string Currency,
+    string? Category,
+    string? Region,
+    string? Description,
+    string? ShortDescription,
+    string? FeaturedImageUrl,
+    string? ContactPhone,
+    string? ContactWhatsapp,
+    bool ExtendToMaster);
 
 public record UpdateOverrideRequest(
     string? Title, decimal? Price, string? Currency,

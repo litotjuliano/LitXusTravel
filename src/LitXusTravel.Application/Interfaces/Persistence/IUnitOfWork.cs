@@ -7,13 +7,17 @@ public interface IUnitOfWork : IAsyncDisposable
     IRepository<Tenant> Tenants { get; }
     IRepository<TenantSubscription> TenantSubscriptions { get; }
     IRepository<Package> Packages { get; }
-    IRepository<TenantPackage> TenantPackages { get; }
+    ITenantPackageRepository TenantPackages { get; }
     IRepository<PackageOverride> PackageOverrides { get; }
     IRepository<Inquiry> Inquiries { get; }
     IRepository<CrmActivity> CrmActivities { get; }
     IRepository<Quotation> Quotations { get; }
     IRepository<Notification> Notifications { get; }
     IRepository<AuditLog> AuditLogs { get; }
+
+    // Booking & Tour
+    ITourRepository Tours { get; }
+    IBookingRepository Bookings { get; }
 
     // Role Hierarchy & Commission System Repositories
     IAdminUserRepository AdminUsers { get; }

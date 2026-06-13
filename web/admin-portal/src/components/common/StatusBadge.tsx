@@ -1,11 +1,11 @@
 import { cn, getStatusColor } from "@/lib/utils"
 
-interface Props { status: string; className?: string }
+interface Props { status: string; label?: string; className?: string }
 
-export default function StatusBadge({ status, className }: Props) {
+export default function StatusBadge({ status, label, className }: Props) {
   return (
     <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold", getStatusColor(status), className)}>
-      {status}
+      {label ?? status}
     </span>
   )
 }

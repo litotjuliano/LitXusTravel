@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using LitXusTravel.Application.UseCases.CommissionRules.ConfigureCommissionRule;
+using LitXusTravel.Application.UseCases.CommissionRules.GetCommissionRules;
 using LitXusTravel.Domain.Entities;
 
 namespace LitXusTravel.API.Controllers.v1.Tenants;
@@ -8,39 +9,26 @@ namespace LitXusTravel.API.Controllers.v1.Tenants;
 [ApiController]
 [Route("api/v1/tenants/{tenantId:guid}/commission-rules")]
 [Tags("Commission Rules")]
-public class CommissionRulesController : ControllerBase
+public class CommissionRulesController(IMediator mediator) : ControllerBase
 {
-    private readonly IMediator _mediator;
-
-    public CommissionRulesController(IMediator mediator)
+    /// <summary>List commission rules for a tenant. Optionally filter by agent.</summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<CommissionRuleDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetRules(Guid tenantId, [FromQuery] Guid? agentId = null, CancellationToken ct = default)
     {
-        _mediator = mediator;
+        var result = await mediator.Send(new GetCommissionRulesQuery(tenantId, agentId), ct);
+        return Ok(result.Value);
     }
 
     /// <summary>
     /// Configure a commission rule (default or agent-specific).
+    /// Rules can be Default (all agents) or AgentSpecific. Percentage capped at 30% (Safeguard 9).
+    /// Triggers: TourBooked, TourCompleted, RevenueGenerated.
     /// </summary>
-    /// <remarks>
-    /// Rules can be:
-    /// - Default: Apply to all agents in the tenant
-    /// - Agent-specific: Apply only to a specific agent
-    ///
-    /// Safeguards:
-    /// - Percentage capped at 30% (Safeguard 9)
-    /// - Fixed amounts must be positive
-    /// - Only Tenant Admins can configure rules
-    ///
-    /// Triggers:
-    /// - TourBooked: Commission when tour is booked
-    /// - TourCompleted: Commission when tour is completed
-    /// - RevenueGenerated: Commission based on revenue
-    /// </remarks>
     [HttpPost]
     [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> ConfigureRule(
-        Guid tenantId,
-        ConfigureCommissionRuleRequest request)
+    public async Task<IActionResult> ConfigureRule(Guid tenantId, ConfigureCommissionRuleRequest request, CancellationToken ct = default)
     {
         var command = new ConfigureCommissionRuleCommand(
             tenantId,
@@ -51,11 +39,11 @@ public class CommissionRulesController : ControllerBase
             request.MinimumThreshold ?? 100,
             request.PayoutFrequency ?? "Monthly");
 
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command, ct);
         if (!result.IsSuccess)
             return BadRequest(new { errors = result.Errors });
 
-        return CreatedAtAction(null, new { id = result.Value });
+        return CreatedAtAction(nameof(GetRules), new { tenantId }, new { id = result.Value });
     }
 }
 

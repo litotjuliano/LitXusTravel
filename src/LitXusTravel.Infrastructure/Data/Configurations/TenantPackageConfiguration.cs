@@ -14,11 +14,15 @@ public class TenantPackageConfiguration : IEntityTypeConfiguration<TenantPackage
 
         builder.HasIndex(tp => tp.TenantId);
         builder.HasIndex(tp => tp.MasterPackageId);
-        builder.HasIndex(tp => new { tp.TenantId, tp.MasterPackageId }).IsUnique();
+        // Unique only when MasterPackageId is set (owned packages have no master)
+        builder.HasIndex(tp => new { tp.TenantId, tp.MasterPackageId })
+            .IsUnique()
+            .HasFilter("[MasterPackageId] IS NOT NULL");
 
         builder.HasOne(tp => tp.MasterPackage)
             .WithMany(p => p.TenantPackages)
             .HasForeignKey(tp => tp.MasterPackageId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(tp => tp.Tenant)
