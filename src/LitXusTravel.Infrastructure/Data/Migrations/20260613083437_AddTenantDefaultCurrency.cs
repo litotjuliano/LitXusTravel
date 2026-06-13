@@ -15,7 +15,7 @@ namespace LitXusTravel.Infrastructure.Data.Migrations
                 table: "Tenants",
                 type: "nvarchar(max)",
                 nullable: false,
-                defaultValue: "");
+                defaultValue: "MYR");
         }
 
         /// <inheritdoc />

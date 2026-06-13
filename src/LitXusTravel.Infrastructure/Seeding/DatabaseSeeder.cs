@@ -39,6 +39,7 @@ public class DatabaseSeeder(
         await SeedTenantOwnedPackagesAsync();
         await BackfillPackageCreatorsAsync();
         await CleanupCrossTenantSyncAsync();
+        await BackfillTenantDefaultCurrencyAsync();
         await SeedCommissionTestDataAsync();
     }
 
@@ -173,6 +174,21 @@ public class DatabaseSeeder(
         ["Wanderlust Tours"]  = "wanderlust",
         ["Adventure Seekers"] = "adventure",
     };
+
+    private async Task BackfillTenantDefaultCurrencyAsync()
+    {
+        var tenants = await dbContext.Tenants
+            .Where(t => t.DefaultCurrency == "")
+            .ToListAsync();
+
+        if (tenants.Count == 0) return;
+
+        foreach (var tenant in tenants)
+            tenant.UpdateSettings("MYR");
+
+        await dbContext.SaveChangesAsync();
+        logger.LogInformation("✅ Backfilled DefaultCurrency=MYR for {Count} tenants", tenants.Count);
+    }
 
     private async Task PatchTenantSubdomainsAsync()
     {

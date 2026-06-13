@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { adminApi } from "@/lib/api"
@@ -57,13 +57,46 @@ function Err({ msg }: { msg?: string }) {
   return msg ? <p className="text-xs text-red-500 mt-0.5">{msg}</p> : null
 }
 
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"]
+const MAX_FILE_SIZE_MB = 5
+const MAX_DIM = 1200
+
+function optimizeImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new window.Image()
+      img.onload = () => {
+        let { width, height } = img
+        if (width > MAX_DIM || height > MAX_DIM) {
+          if (width >= height) { height = Math.round(height * MAX_DIM / width); width = MAX_DIM }
+          else { width = Math.round(width * MAX_DIM / height); height = MAX_DIM }
+        }
+        const canvas = document.createElement("canvas")
+        canvas.width = width
+        canvas.height = height
+        canvas.getContext("2d")!.drawImage(img, 0, 0, width, height)
+        resolve(canvas.toDataURL("image/jpeg", 0.82))
+      }
+      img.onerror = reject
+      img.src = e.target?.result as string
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
 export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, defaultCurrency, editPackageId, initialData }: PackageEditorModalProps) {
-  const resolvedCurrency = defaultCurrency ?? "MYR"
+  const resolvedCurrency = defaultCurrency || "MYR"
   const isTenantMode = !!tenantId
   const isEditMode = !!editPackageId
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [extendToMaster, setExtendToMaster] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [imgProcessing, setImgProcessing] = useState(false)
+  const [imgInfo, setImgInfo] = useState<{ name: string; kb: number } | null>(null)
+  const [imgError, setImgError] = useState<string | null>(null)
   const [form, setForm] = useState({
     title: "", destination: "", basePrice: "", durationDays: "",
     category: "", description: "", shortDescription: "",
@@ -89,6 +122,8 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, de
         contactWhatsapp: initialData.contactWhatsapp,
       })
       setErrors({})
+      setImgInfo(null)
+      setImgError(null)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editPackageId])
@@ -117,6 +152,34 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, de
     })
     setExtendToMaster(false)
     setErrors({})
+    setImgInfo(null)
+    setImgError(null)
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImgError(null)
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      setImgError("Only JPEG, PNG, or WEBP images are accepted.")
+      return
+    }
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      setImgError(`File exceeds ${MAX_FILE_SIZE_MB}MB limit.`)
+      return
+    }
+    setImgProcessing(true)
+    try {
+      const dataUrl = await optimizeImage(file)
+      const kb = Math.round(dataUrl.length * 0.75 / 1024)
+      setForm((prev) => ({ ...prev, featuredImageUrl: dataUrl }))
+      setImgInfo({ name: file.name, kb })
+    } catch {
+      setImgError("Failed to process image. Try another file.")
+    } finally {
+      setImgProcessing(false)
+      e.target.value = ""
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -337,12 +400,18 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, de
 
                 <Card title="Media">
                   <Fld>
-                    <Lbl>Featured Image URL</Lbl>
-                    <input type="url" name="featuredImageUrl" value={form.featuredImageUrl} onChange={set}
-                      placeholder="https://example.com/image.jpg"
-                      className={inputCls()} />
+                    <Lbl>Featured Image</Lbl>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+
+                    {/* Preview */}
                     {form.featuredImageUrl && (
-                      <div className="mt-2 rounded-lg overflow-hidden border border-border aspect-video bg-muted">
+                      <div className="relative rounded-lg overflow-hidden border border-border aspect-video bg-muted mb-2">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={form.featuredImageUrl}
@@ -350,8 +419,51 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, de
                           className="w-full h-full object-cover"
                           onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }}
                         />
+                        <button
+                          type="button"
+                          onClick={() => { setForm((p) => ({ ...p, featuredImageUrl: "" })); setImgInfo(null) }}
+                          className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center"
+                          title="Remove image"
+                        >✕</button>
                       </div>
                     )}
+
+                    {/* Upload zone */}
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={imgProcessing}
+                      className={`w-full flex flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed px-4 py-5 text-sm transition-colors ${
+                        imgProcessing
+                          ? "border-border text-muted-foreground cursor-wait"
+                          : "border-border hover:border-blue-400 hover:bg-blue-50/10 text-muted-foreground cursor-pointer"
+                      }`}
+                    >
+                      {imgProcessing ? (
+                        <>
+                          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                          </svg>
+                          <span>Optimizing image…</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                          </svg>
+                          <span>{form.featuredImageUrl ? "Replace image" : "Click to upload"}</span>
+                          <span className="text-xs">JPEG · PNG · WEBP · max {MAX_FILE_SIZE_MB}MB</span>
+                        </>
+                      )}
+                    </button>
+
+                    {imgInfo && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {imgInfo.name} · optimized to ~{imgInfo.kb}KB
+                      </p>
+                    )}
+                    {imgError && <p className="text-xs text-red-500 mt-1">{imgError}</p>}
                   </Fld>
                 </Card>
 
