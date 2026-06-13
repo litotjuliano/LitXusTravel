@@ -22,7 +22,8 @@ public class GetTenantSettingsQueryHandler(IUnitOfWork uow)
             IsActive: tenant.IsActive,
             ProvisioningStatus: tenant.ProvisioningStatus.ToString(),
             Country: tenant.Country,
-            CreatedAt: tenant.CreatedAt
+            CreatedAt: tenant.CreatedAt,
+            DefaultCurrency: tenant.DefaultCurrency
         );
 
         return Result<TenantSettingsResponse>.Success(response);

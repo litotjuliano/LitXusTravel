@@ -11,12 +11,13 @@ interface PackageEditorModalProps {
   onOpenChange: (open: boolean) => void
   onSuccess?: () => void
   tenantId?: string
+  defaultCurrency?: string
   // Edit mode — when provided, the modal saves changes instead of creating
   editPackageId?: string
   initialData?: {
     title: string; destination: string; basePrice: number; durationDays: number
     category: string; region: string; description: string; shortDescription: string
-    currency: string; featuredImageUrl: string; contactPhone: string; contactWhatsapp: string
+    featuredImageUrl: string; contactPhone: string; contactWhatsapp: string
     isOwnedPackage: boolean
   }
 }
@@ -56,7 +57,8 @@ function Err({ msg }: { msg?: string }) {
   return msg ? <p className="text-xs text-red-500 mt-0.5">{msg}</p> : null
 }
 
-export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, editPackageId, initialData }: PackageEditorModalProps) {
+export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, defaultCurrency, editPackageId, initialData }: PackageEditorModalProps) {
+  const resolvedCurrency = defaultCurrency ?? "MYR"
   const isTenantMode = !!tenantId
   const isEditMode = !!editPackageId
   const [loading, setLoading] = useState(false)
@@ -64,7 +66,7 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, ed
   const [extendToMaster, setExtendToMaster] = useState(false)
   const [form, setForm] = useState({
     title: "", destination: "", basePrice: "", durationDays: "",
-    category: "", description: "", shortDescription: "", currency: "MYR",
+    category: "", description: "", shortDescription: "",
     region: "", featuredImageUrl: "", maxGroupSize: "",
     contactPhone: "", contactWhatsapp: "",
   })
@@ -80,7 +82,6 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, ed
         category: initialData.category,
         description: initialData.description,
         shortDescription: initialData.shortDescription,
-        currency: initialData.currency || "MYR",
         region: initialData.region,
         featuredImageUrl: initialData.featuredImageUrl,
         maxGroupSize: "",
@@ -110,7 +111,7 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, ed
   const reset = () => {
     setForm({
       title: "", destination: "", basePrice: "", durationDays: "",
-      category: "", description: "", shortDescription: "", currency: "MYR",
+      category: "", description: "", shortDescription: "",
       region: "", featuredImageUrl: "", maxGroupSize: "",
       contactPhone: "", contactWhatsapp: "",
     })
@@ -128,7 +129,7 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, ed
         await adminApi.updatePackageOverride(tenantId, editPackageId, {
           title: form.title || undefined,
           price: form.basePrice ? parseFloat(form.basePrice) : undefined,
-          currency: form.currency || undefined,
+          currency: resolvedCurrency,
           description: form.description || undefined,
           shortDescription: form.shortDescription || undefined,
           featuredImageUrl: form.featuredImageUrl || undefined,
@@ -147,7 +148,7 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, ed
           destination: form.destination,
           durationDays: parseInt(form.durationDays),
           price: parseFloat(form.basePrice),
-          currency: form.currency || "MYR",
+          currency: resolvedCurrency,
           category: form.category || undefined,
           region: form.region || undefined,
           description: form.description || undefined,
@@ -167,7 +168,7 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, ed
           category: form.category || undefined,
           description: form.description || undefined,
           shortDescription: form.shortDescription || undefined,
-          currency: form.currency || "MYR",
+          currency: resolvedCurrency,
           region: form.region || undefined,
           featuredImageUrl: form.featuredImageUrl || undefined,
           maxGroupSize: form.maxGroupSize ? parseInt(form.maxGroupSize) : undefined,
@@ -310,25 +311,13 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, ed
               {/* ── Right column ── */}
               <div className="space-y-4">
                 <Card title="Pricing &amp; Duration">
-                  <div className="grid grid-cols-2 gap-3">
-                    <Fld>
-                      <Lbl req>Base Price</Lbl>
-                      <input type="number" name="basePrice" value={form.basePrice} onChange={set}
-                        placeholder="0.00" step="0.01" min="0"
-                        className={inputCls(!!errors.basePrice)} />
-                      <Err msg={errors.basePrice} />
-                    </Fld>
-                    <Fld>
-                      <Lbl>Currency</Lbl>
-                      <select name="currency" value={form.currency} onChange={set} className={selectCls}>
-                        <option>MYR</option>
-                        <option>USD</option>
-                        <option>EUR</option>
-                        <option>GBP</option>
-                        <option>SGD</option>
-                      </select>
-                    </Fld>
-                  </div>
+                  <Fld>
+                    <Lbl req>Base Price ({resolvedCurrency})</Lbl>
+                    <input type="number" name="basePrice" value={form.basePrice} onChange={set}
+                      placeholder="0.00" step="0.01" min="0"
+                      className={inputCls(!!errors.basePrice)} />
+                    <Err msg={errors.basePrice} />
+                  </Fld>
 
                   <Fld>
                     <Lbl req>Duration (Days)</Lbl>

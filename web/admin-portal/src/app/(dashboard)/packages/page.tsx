@@ -12,6 +12,7 @@ import { PackageEditorModal } from "@/components/modals/PackageEditorModal"
 import { PackageViewModal } from "@/components/modals/PackageViewModal"
 import { usePackages, type Package } from "@/lib/hooks/usePackages"
 import { useMarketplace } from "@/lib/hooks/useMarketplace"
+import { useSettings } from "@/lib/hooks/useSettings"
 import { formatCurrency, getTokenClaims } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -39,6 +40,8 @@ export default function PackagesPage() {
 
   const isTenantAdmin = !!tenantId
   const isMarketplaceTab = isTenantAdmin && filter === "Marketplace"
+
+  const { settings: tenantSettings } = useSettings(tenantId)
 
   // Admin: status filter is server-side. Tenant: filtered client-side after fetch.
   const serverStatus = !isTenantAdmin && filter !== "All" ? filter : undefined
@@ -403,6 +406,7 @@ export default function PackagesPage() {
         onOpenChange={(v) => { if (!v) { setEditPackageId(undefined); setEditInitialData(null) }; setEditorOpen(v) }}
         onSuccess={refetch}
         editPackageId={editPackageId}
+        defaultCurrency={tenantSettings?.defaultCurrency}
         initialData={editInitialData ? {
           title: editInitialData.title,
           destination: editInitialData.destination,
@@ -412,7 +416,6 @@ export default function PackagesPage() {
           region: editInitialData.region ?? "",
           description: editInitialData.description ?? "",
           shortDescription: editInitialData.shortDescription ?? "",
-          currency: editInitialData.currency,
           featuredImageUrl: editInitialData.featuredImageUrl ?? "",
           contactPhone: editInitialData.contactPhone ?? "",
           contactWhatsapp: editInitialData.contactWhatsapp ?? "",

@@ -63,6 +63,8 @@ export const adminApi = {
     api.get(`/admin/tenants/${id}`),
   getTenantSettings: (id: string) =>
     api.get(`/admin/tenants/${id}/settings`),
+  updateTenantSettings: (id: string, data: { defaultCurrency: string }) =>
+    api.put(`/admin/tenants/${id}/settings`, data),
   createTenant: (data: object) =>
     api.post("/admin/tenants", data),
 
