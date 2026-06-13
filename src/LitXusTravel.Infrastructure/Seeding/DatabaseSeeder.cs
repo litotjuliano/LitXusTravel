@@ -146,12 +146,16 @@ public class DatabaseSeeder(
     {
         if (await dbContext.Tenants.AnyAsync()) return;
 
-        var tenants = new[]
-        {
-            Tenant.Create("Travel Pro", new Email("contact@travelpro.com")),
-            Tenant.Create("Wanderlust Tours", new Email("info@wanderlust.com")),
-            Tenant.Create("Adventure Seekers", new Email("bookings@adventureseek.com")),
-        };
+        var travelpro = Tenant.Create("Travel Pro", new Email("contact@travelpro.com"));
+        travelpro.AssignSubdomain("travelpro");
+
+        var wanderlust = Tenant.Create("Wanderlust Tours", new Email("info@wanderlust.com"));
+        wanderlust.AssignSubdomain("wanderlust");
+
+        var adventure = Tenant.Create("Adventure Seekers", new Email("bookings@adventureseek.com"));
+        adventure.AssignSubdomain("adventure");
+
+        var tenants = new[] { travelpro, wanderlust, adventure };
 
         foreach (var tenant in tenants)
         {
