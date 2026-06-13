@@ -20,7 +20,9 @@ public class UpdatePackageOverrideCommandHandler(IUnitOfWork uow)
         if (tenantPackage.IsLocked)
             return Result<ResolvedPackageResponse>.Failure("Package is locked and cannot be customized.");
 
-        var @override = tenantPackage.Override;
+        // Navigation property is not loaded by GetByIdAsync — query directly to avoid duplicate insert
+        var @override = await uow.PackageOverrides
+            .FirstOrDefaultAsync(o => o.TenantPackageId == request.TenantPackageId, ct);
         if (@override is null)
         {
             @override = LitXusTravel.Domain.Entities.PackageOverride.CreateEmpty(request.TenantId, request.TenantPackageId);
