@@ -283,39 +283,32 @@ public class DatabaseSeeder(
     private async Task SeedTenantPackagesAsync()
     {
         var tenants = await dbContext.Tenants.ToListAsync();
-        var packages = await dbContext.Packages.ToListAsync();
+        // System packages (no tenant owner) auto-sync to all tenants per platform rules
+        var systemPackages = await dbContext.Packages
+            .Where(p => p.CreatedByTenantId == null)
+            .ToListAsync();
 
-        if (tenants.Count == 0 || packages.Count == 0) return;
+        if (tenants.Count == 0 || systemPackages.Count == 0) return;
 
-        // Realistic subset per tenant — admin would manually sync the rest in real usage.
-        var syncMap = new Dictionary<string, string[]>
-        {
-            ["Travel Pro"]        = ["Japan Sakura", "Europe Grand Tour"],
-            ["Wanderlust Tours"]  = ["Bali Family", "South Korea"],
-            ["Adventure Seekers"] = ["Maldives Luxury", "Japan Sakura"],
-        };
-
+        bool changed = false;
         foreach (var tenant in tenants)
         {
-            var alreadySynced = await dbContext.TenantPackages
-                .AnyAsync(tp => tp.TenantId == tenant.Id);
-
-            if (alreadySynced) continue;
-
-            if (!syncMap.TryGetValue(tenant.Name, out var titles)) continue;
-
-            var toSync = packages.Where(p => titles.Contains(p.Title)).ToList();
-
-            foreach (var package in toSync)
+            foreach (var package in systemPackages)
             {
-                var tp = TenantPackage.Create(tenant.Id, package.Id);
-                await dbContext.TenantPackages.AddAsync(tp);
+                var exists = await dbContext.TenantPackages
+                    .AnyAsync(tp => tp.TenantId == tenant.Id && tp.MasterPackageId == package.Id);
+
+                if (!exists)
+                {
+                    await dbContext.TenantPackages.AddAsync(TenantPackage.Create(tenant.Id, package.Id));
+                    changed = true;
+                }
             }
 
-            logger.LogInformation("✅ Synced {Count} packages → {Tenant}", toSync.Count, tenant.Name);
+            logger.LogInformation("✅ Ensured {Count} system packages → {Tenant}", systemPackages.Count, tenant.Name);
         }
 
-        await dbContext.SaveChangesAsync();
+        if (changed) await dbContext.SaveChangesAsync();
     }
 
     private async Task SeedTenantOwnedPackagesAsync()

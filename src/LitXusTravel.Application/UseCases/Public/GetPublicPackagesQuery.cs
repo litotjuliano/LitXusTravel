@@ -1,15 +1,15 @@
 using MediatR;
 using LitXusTravel.Application.Common.Models;
-using LitXusTravel.Application.DTOs.Response;
 
 namespace LitXusTravel.Application.UseCases.Public;
 
 public record GetPublicPackagesQuery(
+    string Subdomain,
     int Page = 1,
-    int PageSize = 20,
+    int PageSize = 50,
     string? Destination = null,
     string? Category = null,
-    string? SortBy = "title",
+    string? SortBy = null,
     string? SortOrder = "asc"
 ) : IRequest<Result<PagedList<PublicPackageResponse>>>;
 
