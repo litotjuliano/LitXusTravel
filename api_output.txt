@@ -1,0 +1,6 @@
+Using launch settings from src\LitXusTravel.API\Properties\launchSettings.json...
+Building...
+[21:35:23 INF] HTTP GET /api/v1 responded 404 in 16.2964 ms
+[21:35:38 INF] HTTP GET /api/v1 responded 404 in 0.8733 ms
+[21:36:29 INF] HTTP GET / responded 404 in 1.3883 ms
+[21:36:29 INF] HTTP POST /api/v1/auth/login responded 200 in 208.4535 ms

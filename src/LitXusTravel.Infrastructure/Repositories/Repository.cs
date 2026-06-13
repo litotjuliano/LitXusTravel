@@ -8,6 +8,7 @@ namespace LitXusTravel.Infrastructure.Repositories;
 
 public class Repository<T>(LitXusTravelDbContext context) : IRepository<T> where T : BaseEntity
 {
+    protected readonly LitXusTravelDbContext _context = context;
     protected readonly DbSet<T> DbSet = context.Set<T>();
 
     public async Task<T?> GetByIdAsync(Guid id, CancellationToken ct = default)

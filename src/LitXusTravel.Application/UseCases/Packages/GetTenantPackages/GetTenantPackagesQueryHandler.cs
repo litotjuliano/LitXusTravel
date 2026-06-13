@@ -10,11 +10,8 @@ public class GetTenantPackagesQueryHandler(IUnitOfWork uow)
 {
     public async Task<Result<PagedList<ResolvedPackageResponse>>> Handle(GetTenantPackagesQuery request, CancellationToken ct)
     {
-        // Get all tenant packages for this tenant
-        var allTenantPackages = await uow.TenantPackages.GetAllAsync(ct);
-        var tenantPackages = allTenantPackages
-            .Where(tp => tp.TenantId == request.TenantId && tp.IsActive)
-            .ToList();
+        var tenantPackages = (await uow.TenantPackages
+            .GetByTenantWithDetailsAsync(request.TenantId, ct)).ToList();
 
         if (tenantPackages.Count == 0)
             return Result<PagedList<ResolvedPackageResponse>>.Success(
@@ -43,22 +40,63 @@ public class GetTenantPackagesQueryHandler(IUnitOfWork uow)
             .Take(request.PageSize)
             .ToList();
 
+        // Build tenant name lookup for SyncSource resolution
+        var allTenants = (await uow.Tenants.GetAllAsync(ct))
+            .ToDictionary(t => t.Id, t => t.Name);
+
         // Merge master + override using NULL semantics
-        var responses = paginated.Select(tp => MergePackage(tp)).ToList();
+        var responses = paginated.Select(tp => MergePackage(tp, allTenants)).ToList();
 
         var pagedList = PagedList<ResolvedPackageResponse>.Create(responses, request.Page, request.PageSize, totalCount);
         return Result<PagedList<ResolvedPackageResponse>>.Success(pagedList);
     }
 
-    private ResolvedPackageResponse MergePackage(LitXusTravel.Domain.Entities.TenantPackage tenantPackage)
+    private ResolvedPackageResponse MergePackage(
+        LitXusTravel.Domain.Entities.TenantPackage tenantPackage,
+        Dictionary<Guid, string> tenantNames)
     {
-        var master = tenantPackage.MasterPackage;
+        if (tenantPackage.IsOwnedPackage)
+        {
+            var own = tenantPackage.Override!;
+            return new ResolvedPackageResponse(
+                Id: tenantPackage.Id,
+                MasterPackageId: null,
+                IsOwnedPackage: true,
+                Title: own.Title ?? string.Empty,
+                Description: own.Description,
+                ShortDescription: own.ShortDescription,
+                Category: own.Category,
+                Price: own.Price ?? 0,
+                Currency: own.Currency ?? "MYR",
+                DurationDays: own.DurationDays ?? 0,
+                Destination: own.Destination ?? string.Empty,
+                Region: own.Region,
+                FeaturedImageUrl: own.FeaturedImageUrl,
+                ImagesJson: own.ImagesJson,
+                ItineraryJson: null,
+                HighlightsJson: null,
+                InclusionsJson: null,
+                ExclusionsJson: null,
+                ContactPhone: own.ContactPhone,
+                ContactWhatsapp: own.ContactWhatsapp,
+                IsCustomized: true,
+                LastSyncedAt: tenantPackage.LastSyncedAt ?? DateTimeOffset.UtcNow,
+                SyncSource: null
+            );
+        }
+
+        var master = tenantPackage.MasterPackage!;
         var @override = tenantPackage.Override;
 
-        // NULL semantics: override.field IS NULL → use master.field, else use override.field
+        var syncSource = master.CreatedByTenantId.HasValue
+            && tenantNames.TryGetValue(master.CreatedByTenantId.Value, out var creatorName)
+            ? creatorName
+            : "System";
+
         return new ResolvedPackageResponse(
             Id: tenantPackage.Id,
             MasterPackageId: master.Id,
+            IsOwnedPackage: false,
             Title: @override?.Title ?? master.Title,
             Description: @override?.Description ?? master.Description,
             ShortDescription: @override?.ShortDescription ?? master.ShortDescription,
@@ -77,7 +115,8 @@ public class GetTenantPackagesQueryHandler(IUnitOfWork uow)
             ContactPhone: @override?.ContactPhone,
             ContactWhatsapp: @override?.ContactWhatsapp,
             IsCustomized: tenantPackage.IsCustomized,
-            LastSyncedAt: tenantPackage.LastSyncedAt ?? DateTimeOffset.UtcNow
+            LastSyncedAt: tenantPackage.LastSyncedAt ?? DateTimeOffset.UtcNow,
+            SyncSource: syncSource
         );
     }
 }

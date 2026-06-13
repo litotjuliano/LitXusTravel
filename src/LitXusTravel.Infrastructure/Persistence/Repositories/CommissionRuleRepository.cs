@@ -1,6 +1,13 @@
+using LitXusTravel.Application.Interfaces.Persistence;
+using LitXusTravel.Domain.Entities;
+using LitXusTravel.Domain.ValueObjects;
+using LitXusTravel.Infrastructure.Data.Contexts;
+using LitXusTravel.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
+
 namespace LitXusTravel.Infrastructure.Persistence.Repositories;
 
-public class CommissionRuleRepository : RepositoryBase<CommissionRule>, ICommissionRuleRepository
+public class CommissionRuleRepository : Repository<CommissionRule>, ICommissionRuleRepository
 {
     public CommissionRuleRepository(LitXusTravelDbContext context) : base(context)
     {

@@ -1,3 +1,5 @@
+using LitXusTravel.Domain.Entities;
+using LitXusTravel.Domain.ValueObjects;
 namespace LitXusTravel.Application.Interfaces.Persistence;
 
 public interface ICommissionAccrualRepository : IRepository<CommissionAccrual>

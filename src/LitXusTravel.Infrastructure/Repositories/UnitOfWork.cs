@@ -3,6 +3,8 @@ using LitXusTravel.Application.Interfaces.Persistence;
 using LitXusTravel.Domain.Common;
 using LitXusTravel.Domain.Entities;
 using LitXusTravel.Infrastructure.Data.Contexts;
+using LitXusTravel.Infrastructure.Persistence.Repositories;
+using LitXusTravel.Application.Interfaces.Persistence;
 
 namespace LitXusTravel.Infrastructure.Repositories;
 
@@ -11,13 +13,27 @@ public class UnitOfWork(LitXusTravelDbContext context) : IUnitOfWork
     public IRepository<Tenant> Tenants { get; } = new Repository<Tenant>(context);
     public IRepository<TenantSubscription> TenantSubscriptions { get; } = new Repository<TenantSubscription>(context);
     public IRepository<Package> Packages { get; } = new Repository<Package>(context);
-    public IRepository<TenantPackage> TenantPackages { get; } = new Repository<TenantPackage>(context);
+    public ITenantPackageRepository TenantPackages { get; } = new TenantPackageRepository(context);
     public IRepository<PackageOverride> PackageOverrides { get; } = new Repository<PackageOverride>(context);
     public IRepository<Inquiry> Inquiries { get; } = new Repository<Inquiry>(context);
     public IRepository<CrmActivity> CrmActivities { get; } = new Repository<CrmActivity>(context);
     public IRepository<Quotation> Quotations { get; } = new Repository<Quotation>(context);
     public IRepository<Notification> Notifications { get; } = new Repository<Notification>(context);
     public IRepository<AuditLog> AuditLogs { get; } = new Repository<AuditLog>(context);
+
+    // Booking & Tour Repositories
+    public ITourRepository Tours { get; } = new TourRepository(context);
+    public IBookingRepository Bookings { get; } = new BookingRepository(context);
+
+    // Role Hierarchy & Commission System Repositories
+    public IAdminUserRepository AdminUsers { get; } = new AdminUserRepository(context);
+    public IStaffAgentRepository StaffAgents { get; } = new StaffAgentRepository(context);
+    public IIndependentAgentRepository IndependentAgents { get; } = new IndependentAgentRepository(context);
+    public ICommissionRuleRepository CommissionRules { get; } = new CommissionRuleRepository(context);
+    public ICommissionAccrualRepository CommissionAccruals { get; } = new CommissionAccrualRepository(context);
+    public ICommissionPayoutRepository CommissionPayouts { get; } = new CommissionPayoutRepository(context);
+    public ICodeUsageAuditRepository CodeUsageAudits { get; } = new CodeUsageAuditRepository(context);
+    public IDisputeResolutionRepository DisputeResolutionTickets { get; } = new DisputeResolutionRepository(context);
 
     public async Task<int> SaveChangesAsync(CancellationToken ct = default)
     {

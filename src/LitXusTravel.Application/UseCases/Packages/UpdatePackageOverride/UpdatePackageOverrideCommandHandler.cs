@@ -56,6 +56,7 @@ public class UpdatePackageOverrideCommandHandler(IUnitOfWork uow)
         return new ResolvedPackageResponse(
             Id: tp.Id,
             MasterPackageId: master.Id,
+            IsOwnedPackage: tp.IsOwnedPackage,
             Title: @override?.Title ?? master.Title,
             Description: @override?.Description ?? master.Description,
             ShortDescription: @override?.ShortDescription ?? master.ShortDescription,
@@ -74,7 +75,8 @@ public class UpdatePackageOverrideCommandHandler(IUnitOfWork uow)
             ContactPhone: @override?.ContactPhone,
             ContactWhatsapp: @override?.ContactWhatsapp,
             IsCustomized: tp.IsCustomized,
-            LastSyncedAt: tp.LastSyncedAt ?? DateTimeOffset.UtcNow
+            LastSyncedAt: tp.LastSyncedAt ?? DateTimeOffset.UtcNow,
+            SyncSource: null
         );
     }
 }

@@ -1,6 +1,13 @@
+using LitXusTravel.Application.Interfaces.Persistence;
+using LitXusTravel.Domain.Entities;
+using LitXusTravel.Domain.ValueObjects;
+using LitXusTravel.Infrastructure.Data.Contexts;
+using LitXusTravel.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
+
 namespace LitXusTravel.Infrastructure.Persistence.Repositories;
 
-public class DisputeResolutionRepository : RepositoryBase<DisputeResolutionTicket>, IDisputeResolutionRepository
+public class DisputeResolutionRepository : Repository<DisputeResolutionTicket>, IDisputeResolutionRepository
 {
     public DisputeResolutionRepository(LitXusTravelDbContext context) : base(context)
     {

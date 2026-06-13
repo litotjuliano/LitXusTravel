@@ -5,13 +5,14 @@ using LitXusTravel.Application.UseCases.Packages.CreatePackage;
 using LitXusTravel.Application.UseCases.Packages.GetPackages;
 using LitXusTravel.Application.UseCases.Packages.GetPackageById;
 using LitXusTravel.Application.UseCases.Packages.PublishPackage;
+using LitXusTravel.Application.UseCases.Packages.UploadPackageImage;
 
 namespace LitXusTravel.API.Controllers.v1.Admin;
 
 [ApiController]
 [Route("api/v1/admin/packages")]
 [Authorize(Roles = "SuperAdmin,Admin")]
-public class PackagesController(IMediator mediator) : ControllerBase
+public class PackagesController(IMediator mediator, IWebHostEnvironment env) : ControllerBase
 {
     /// <summary>Create a new master package (SPEC-ADMIN-001)</summary>
     [HttpPost]
@@ -61,6 +62,38 @@ public class PackagesController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetPackageByIdQuery(id), ct);
         if (!result.IsSuccess) return NotFound(new { result.Errors });
         return Ok(result.Value);
+    }
+
+    /// <summary>Upload a featured image for a package</summary>
+    [HttpPost("{id:guid}/image")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UploadImage(Guid id, IFormFile file, CancellationToken ct)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(new { message = "No file provided." });
+
+        if (file.Length > 5 * 1024 * 1024)
+            return BadRequest(new { message = "File must be under 5 MB." });
+
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (!new[] { ".jpg", ".jpeg", ".png", ".webp" }.Contains(ext))
+            return BadRequest(new { message = "Only JPG, PNG, or WebP files are allowed." });
+
+        var uploadDir = Path.Combine(env.WebRootPath, "uploads", "packages");
+        Directory.CreateDirectory(uploadDir);
+
+        var fileName = $"{id}{ext}";
+        var filePath = Path.Combine(uploadDir, fileName);
+        await using (var stream = System.IO.File.Create(filePath))
+            await file.CopyToAsync(stream, ct);
+
+        var imageUrl = $"/uploads/packages/{fileName}";
+        var result = await mediator.Send(new UploadPackageImageCommand(id, imageUrl), ct);
+        if (!result.IsSuccess) return NotFound(new { result.Errors });
+
+        return Ok(new { imageUrl });
     }
 
     /// <summary>Publish a master package (SPEC-ADMIN-003)</summary>

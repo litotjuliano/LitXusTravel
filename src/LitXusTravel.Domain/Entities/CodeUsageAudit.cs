@@ -1,12 +1,16 @@
+using LitXusTravel.Domain.Common;
+using LitXusTravel.Domain.Events;
+using LitXusTravel.Domain.Exceptions;
+using LitXusTravel.Domain.ValueObjects;
+
 namespace LitXusTravel.Domain.Entities;
 
 /// <summary>
 /// Code usage audit tracks when and where staff referral codes are used.
 /// Safeguard 3: Code sharing prevention via IP/location anomaly detection.
 /// </summary>
-public class CodeUsageAudit : Entity
+public class CodeUsageAudit : BaseEntity
 {
-    public Guid Id { get; private set; }
     public string Code { get; private set; } = string.Empty;
     public DateTime UsedAt { get; private set; }
     public string? CustomerIp { get; private set; }
@@ -14,7 +18,6 @@ public class CodeUsageAudit : Entity
     public Guid BookingId { get; private set; }
     public Guid? StaffAgentId { get; private set; }
     public Guid TenantId { get; private set; }
-    public DateTime CreatedAt { get; private set; }
 
     private CodeUsageAudit() { }
 
@@ -39,15 +42,13 @@ public class CodeUsageAudit : Entity
 
         return new CodeUsageAudit
         {
-            Id = Guid.NewGuid(),
             Code = code,
             UsedAt = DateTime.UtcNow,
             CustomerIp = customerIp,
             CustomerLocation = customerLocation,
             BookingId = bookingId,
             StaffAgentId = staffAgentId,
-            TenantId = tenantId,
-            CreatedAt = DateTime.UtcNow
+            TenantId = tenantId
         };
     }
 }

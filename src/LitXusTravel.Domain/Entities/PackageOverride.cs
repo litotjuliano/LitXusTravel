@@ -23,16 +23,49 @@ public class PackageOverride : BaseEntity
     public string? ContactPhone { get; private set; }
     public string? ContactWhatsapp { get; private set; }
 
+    // Only populated for tenant-owned packages (no master to inherit from)
+    public string? Destination { get; private set; }
+    public int? DurationDays { get; private set; }
+    public string? Category { get; private set; }
+    public string? Region { get; private set; }
+
     public TenantPackage TenantPackage { get; private set; } = null!;
 
     private PackageOverride() { }
 
     public static PackageOverride CreateEmpty(Guid tenantId, Guid tenantPackageId)
-        => new()
+        => new() { TenantId = tenantId, TenantPackageId = tenantPackageId };
+
+    public static PackageOverride CreateForOwned(
+        Guid tenantId, Guid tenantPackageId,
+        string title, string destination, int durationDays, decimal price,
+        string currency, string? category, string? region,
+        string? description, string? shortDescription,
+        string? featuredImageUrl, string? contactPhone, string? contactWhatsapp)
+    {
+        if (string.IsNullOrWhiteSpace(title)) throw new DomainException("Package title is required.");
+        if (string.IsNullOrWhiteSpace(destination)) throw new DomainException("Destination is required.");
+        if (durationDays <= 0) throw new DomainException("Duration must be at least 1 day.");
+        if (price <= 0) throw new DomainException("Price must be greater than zero.");
+
+        return new()
         {
             TenantId = tenantId,
-            TenantPackageId = tenantPackageId
+            TenantPackageId = tenantPackageId,
+            Title = title,
+            Destination = destination,
+            DurationDays = durationDays,
+            Price = price,
+            Currency = currency,
+            Category = category,
+            Region = region,
+            Description = description,
+            ShortDescription = shortDescription,
+            FeaturedImageUrl = featuredImageUrl,
+            ContactPhone = contactPhone,
+            ContactWhatsapp = contactWhatsapp,
         };
+    }
 
     public void Update(
         string? title = null,

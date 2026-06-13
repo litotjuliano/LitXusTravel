@@ -31,11 +31,11 @@ public class GetWebsiteMetadataQueryHandler(IUnitOfWork uow)
             .Select(p => new FeaturedPackageInfo(
                 Id: p.Id,
                 Title: p.Title,
-                ShortDescription: p.ShortDescription ?? p.Description,
+                ShortDescription: p.ShortDescription ?? p.Description ?? "",
                 Destination: p.Destination,
                 Price: p.BasePrice,
                 Currency: p.Currency,
-                FeaturedImageUrl: p.FeaturedImageUrl
+                FeaturedImageUrl: p.FeaturedImageUrl ?? ""
             ))
             .ToArray();
 

@@ -1,3 +1,8 @@
+using LitXusTravel.Domain.Common;
+using LitXusTravel.Domain.Events;
+using LitXusTravel.Domain.Exceptions;
+using LitXusTravel.Domain.ValueObjects;
+
 namespace LitXusTravel.Domain.Entities;
 
 /// <summary>
@@ -7,16 +12,13 @@ namespace LitXusTravel.Domain.Entities;
 /// </summary>
 public class IndependentAgent : AggregateRoot
 {
-    public Guid Id { get; private set; }
-    public string Name { get; private set; } = string.Empty;
+        public string Name { get; private set; } = string.Empty;
     public Email Email { get; private set; } = null!;
     public string SubscriptionTier { get; private set; } = string.Empty;
     public string WhiteLabelDomain { get; private set; } = string.Empty;
     public List<Guid> AuthorizedTenantIds { get; private set; } = [];
     public bool IsActive { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime? UpdatedAt { get; private set; }
-
+        
     private IndependentAgent() { }
 
     /// <summary>

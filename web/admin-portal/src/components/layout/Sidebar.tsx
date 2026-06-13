@@ -6,13 +6,13 @@ import {
   LayoutDashboard, Package, Users, CreditCard,
   BarChart3, Settings, LogOut, ChevronLeft, ChevronRight, UserCircle,
 } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { useState } from "react"
+import { cn, getTokenClaims } from "@/lib/utils"
+import { useState, useEffect } from "react"
 
 const NAV = [
   { href: "/",             icon: LayoutDashboard, label: "Dashboard" },
   { href: "/packages",     icon: Package,         label: "Packages" },
-  { href: "/tenants",      icon: Users,           label: "Tenants" },
+  { href: "/tenants",      icon: Users,           label: "Tenants",       superOnly: true },
   { href: "/subscriptions",icon: CreditCard,      label: "Subscriptions" },
   { href: "/analytics",    icon: BarChart3,       label: "Analytics" },
   { href: "/profile",      icon: UserCircle,      label: "Profile" },
@@ -22,6 +22,16 @@ const NAV = [
 export default function Sidebar() {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
+  // Initialize to undefined so server and client render the same nav on first paint,
+  // then update after mount to apply role-based filtering (avoids hydration mismatch).
+  const [tenantId, setTenantId] = useState<string | undefined>(undefined)
+
+  useEffect(() => {
+    const { tenantId: tid } = getTokenClaims()
+    setTenantId(tid)
+  }, [])
+
+  const nav = NAV.filter((item) => !item.superOnly || !tenantId)
 
   return (
     <aside
@@ -44,7 +54,7 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
-        {NAV.map(({ href, icon: Icon, label }) => {
+        {nav.map(({ href, icon: Icon, label }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href)
           return (
             <Link

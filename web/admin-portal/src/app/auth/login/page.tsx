@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { Loader2, Lock } from "lucide-react"
+import { Loader2, Lock, WifiOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { adminApi } from "@/lib/api"
 import { toast } from "sonner"
@@ -19,20 +19,26 @@ type FormValues = z.infer<typeof schema>
 export default function LoginPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [serverDown, setServerDown] = useState(false)
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({ resolver: zodResolver(schema) })
 
   const onSubmit = async (data: FormValues) => {
     setLoading(true)
+    setServerDown(false)
     try {
       const res = await adminApi.login(data.email, data.password)
       localStorage.setItem("nexus_token", res.data.accessToken)
-      localStorage.removeItem("user_info")  // Clear old user info from previous session
+      localStorage.removeItem("user_info")
+      setLoading(false)
       router.push("/")
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Login failed")
-    } finally {
       setLoading(false)
+      if (err instanceof Error && err.message === "NETWORK_ERROR") {
+        setServerDown(true)
+        return
+      }
+      toast.error(err instanceof Error ? err.message : "Login failed")
     }
   }
 
@@ -59,6 +65,7 @@ export default function LoginPage() {
                 {...register("email")}
                 type="email"
                 placeholder="superadmin@litxustravel.com"
+                autoComplete="email"
                 className="w-full px-3 py-2.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue]"
               />
               {errors.email && <p className="text-xs text-destructive mt-1">{errors.email.message}</p>}
@@ -70,6 +77,7 @@ export default function LoginPage() {
                 {...register("password")}
                 type="password"
                 placeholder="••••••••"
+                autoComplete="current-password"
                 className="w-full px-3 py-2.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue]"
               />
               {errors.password && <p className="text-xs text-destructive mt-1">{errors.password.message}</p>}
@@ -80,8 +88,19 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full bg-[--color-brand-blue] hover:bg-blue-700 text-white font-semibold py-2.5"
             >
-              {loading ? <><Loader2 size={16} className="animate-spin mr-2" />Signing in...</> : "Sign In"}
+              {loading ? (
+                <><Loader2 size={16} className="animate-spin mr-2" />Signing in...</>
+              ) : (
+                "Sign In"
+              )}
             </Button>
+
+            {serverDown && (
+              <div className="flex items-center gap-2 mt-3 px-3 py-2.5 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm">
+                <WifiOff size={15} className="shrink-0" />
+                <span>Server unavailable. Start the API and try again.</span>
+              </div>
+            )}
           </form>
 
           <div className="text-xs text-muted-foreground text-center mt-6 space-y-1 border-t border-border pt-4">

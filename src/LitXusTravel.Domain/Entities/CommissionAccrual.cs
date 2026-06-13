@@ -1,3 +1,8 @@
+using LitXusTravel.Domain.Common;
+using LitXusTravel.Domain.Events;
+using LitXusTravel.Domain.Exceptions;
+using LitXusTravel.Domain.ValueObjects;
+
 namespace LitXusTravel.Domain.Entities;
 
 /// <summary>
@@ -7,8 +12,7 @@ namespace LitXusTravel.Domain.Entities;
 /// </summary>
 public class CommissionAccrual : AggregateRoot
 {
-    public Guid Id { get; private set; }
-    public Guid AgentId { get; private set; }
+        public Guid AgentId { get; private set; }
     public Guid TenantId { get; private set; }
     public Guid CommissionRuleId { get; private set; }
     public CommissionTriggerType TriggerType { get; private set; }
@@ -21,9 +25,7 @@ public class CommissionAccrual : AggregateRoot
     public DateTime? PaidAt { get; private set; }
     public Guid? PayoutId { get; private set; }
     public Guid? DisputeTicketId { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime? UpdatedAt { get; private set; }
-
+        
     private CommissionAccrual() { }
 
     /// <summary>
@@ -70,10 +72,10 @@ public class CommissionAccrual : AggregateRoot
     }
 
     /// <summary>
-    /// Finalize the commission when tour completes.
+    /// Mark commission as finalized when tour completes.
     /// Safeguard 1: Only finalized commissions are included in payouts.
     /// </summary>
-    public void Finalize()
+    public void MarkAsFinalized()
     {
         if (Status != CommissionStatus.Accrued)
             throw new DomainException("Only accrued commissions can be finalized");

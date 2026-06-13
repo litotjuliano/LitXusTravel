@@ -1,3 +1,5 @@
+using LitXusTravel.Domain.Common;
+using LitXusTravel.Domain.Entities;
 namespace LitXusTravel.Domain.Events;
 
 public record DisputeResolutionTicketCreatedEvent(
@@ -6,8 +8,8 @@ public record DisputeResolutionTicketCreatedEvent(
     Guid CommissionAccrualId,
     decimal OriginalAmount) : IDomainEvent
 {
-    public Guid AggregateId => TicketId;
-    public DateTime OccurredAt => DateTime.UtcNow;
+    public Guid EventId => TicketId;
+    public DateTimeOffset OccurredAt => DateTimeOffset.UtcNow;
 }
 
 public record DisputeResolutionApprovedEvent(
@@ -16,18 +18,18 @@ public record DisputeResolutionApprovedEvent(
     decimal OriginalAmount,
     decimal AdjustedAmount) : IDomainEvent
 {
-    public Guid AggregateId => TicketId;
-    public DateTime OccurredAt => DateTime.UtcNow;
+    public Guid EventId => TicketId;
+    public DateTimeOffset OccurredAt => DateTimeOffset.UtcNow;
 }
 
 public record DisputeResolutionRejectedEvent(Guid TicketId, Guid CommissionAccrualId) : IDomainEvent
 {
-    public Guid AggregateId => TicketId;
-    public DateTime OccurredAt => DateTime.UtcNow;
+    public Guid EventId => TicketId;
+    public DateTimeOffset OccurredAt => DateTimeOffset.UtcNow;
 }
 
 public record DisputeResolutionResolvedEvent(Guid TicketId, Guid CommissionAccrualId) : IDomainEvent
 {
-    public Guid AggregateId => TicketId;
-    public DateTime OccurredAt => DateTime.UtcNow;
+    public Guid EventId => TicketId;
+    public DateTimeOffset OccurredAt => DateTimeOffset.UtcNow;
 }

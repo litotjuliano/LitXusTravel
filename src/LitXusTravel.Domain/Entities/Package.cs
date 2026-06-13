@@ -33,6 +33,8 @@ public class Package : AggregateRoot
     public int? MaxGroupSize { get; private set; }
     public int MinGroupSize { get; private set; } = 2;
     public Guid? CreatedById { get; private set; }
+    // Null = created by platform admin; non-null = tenant extended this package to the master catalog
+    public Guid? CreatedByTenantId { get; private set; }
 
     public ICollection<TenantPackage> TenantPackages { get; private set; } = [];
 
@@ -90,6 +92,12 @@ public class Package : AggregateRoot
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 
+    public void SetFeaturedImage(string? url)
+    {
+        FeaturedImageUrl = url;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
     public void UpdateDetails(string title, string? description, string? shortDescription,
         string? category, decimal basePrice, int durationDays, string destination,
         string? region, string? itineraryJson, string? highlightsJson,
@@ -118,6 +126,11 @@ public class Package : AggregateRoot
         FeaturedImageUrl = featuredImageUrl;
         MaxGroupSize = maxGroupSize;
         UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void MarkCreatedByTenant(Guid tenantId)
+    {
+        CreatedByTenantId = tenantId;
     }
 
     public void SetFeatured(bool isFeatured)
