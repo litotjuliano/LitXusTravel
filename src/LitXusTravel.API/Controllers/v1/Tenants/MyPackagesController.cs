@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using LitXusTravel.Application.UseCases.Packages.CreateTenantPackage;
+using LitXusTravel.Application.UseCases.Packages.GeneratePackagePhoto;
 using LitXusTravel.Application.UseCases.Packages.GetMarketplacePackages;
 using LitXusTravel.Application.UseCases.Packages.GetTenantPackages;
 using LitXusTravel.Application.UseCases.Packages.SyncPackageToTenant;
@@ -134,6 +135,20 @@ public class MyPackagesController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new SyncPackagesCommand(tenantId, [packageId]), ct);
         if (!result.IsSuccess) return BadRequest(new { result.Errors });
         return Ok(new { message = "Package added to your catalog." });
+    }
+
+    /// <summary>Generate a photo for a package from Unsplash (SPEC-TENANT-007)</summary>
+    [HttpPost("{packageId:guid}/generate-photo")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GeneratePhoto(Guid tenantId, Guid packageId, CancellationToken ct)
+    {
+        if (!IsAuthorizedForTenant(tenantId))
+            return Forbid();
+
+        var result = await mediator.Send(new GeneratePackagePhotoCommand(tenantId, packageId), ct);
+        if (!result.IsSuccess) return BadRequest(new { result.Errors });
+        return Ok(new { featuredImageUrl = result.Value });
     }
 
     /// <summary>Unsync a package (SPEC-TENANT-005)</summary>

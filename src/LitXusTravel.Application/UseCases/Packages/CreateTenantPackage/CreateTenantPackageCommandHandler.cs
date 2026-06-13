@@ -1,11 +1,12 @@
 using LitXusTravel.Application.Common.Models;
 using LitXusTravel.Application.Interfaces.Persistence;
+using LitXusTravel.Application.Interfaces.Services;
 using LitXusTravel.Domain.Entities;
 using MediatR;
 
 namespace LitXusTravel.Application.UseCases.Packages.CreateTenantPackage;
 
-public class CreateTenantPackageCommandHandler(IUnitOfWork uow)
+public class CreateTenantPackageCommandHandler(IUnitOfWork uow, IPhotoService photoService)
     : IRequestHandler<CreateTenantPackageCommand, Result<Guid>>
 {
     public async Task<Result<Guid>> Handle(CreateTenantPackageCommand request, CancellationToken ct)
@@ -34,12 +35,16 @@ public class CreateTenantPackageCommandHandler(IUnitOfWork uow)
             await uow.TenantPackages.AddAsync(tenantPackage, ct);
             await uow.SaveChangesAsync(ct);
 
+            var featuredImageUrl = !string.IsNullOrWhiteSpace(request.FeaturedImageUrl)
+                ? request.FeaturedImageUrl
+                : await photoService.GetPhotoUrlAsync(request.Destination, request.Category, ct);
+
             var ownData = PackageOverride.CreateForOwned(
                 request.TenantId, tenantPackage.Id,
                 request.Title, request.Destination, request.DurationDays,
                 request.Price, request.Currency, request.Category, request.Region,
                 request.Description, request.ShortDescription,
-                request.FeaturedImageUrl, request.ContactPhone, request.ContactWhatsapp);
+                featuredImageUrl, request.ContactPhone, request.ContactWhatsapp);
 
             await uow.PackageOverrides.AddAsync(ownData, ct);
             await uow.SaveChangesAsync(ct);

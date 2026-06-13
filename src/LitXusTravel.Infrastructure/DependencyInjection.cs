@@ -44,6 +44,8 @@ public static class DependencyInjection
         services.AddScoped<IWhatsAppService, WhatsAppService>();
         services.AddScoped<IWebsiteProvisioner, WebsiteProvisioner>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddHttpClient("Unsplash");
+        services.AddScoped<IPhotoService, UnsplashPhotoService>();
         services.AddScoped<Seeding.DatabaseSeeder>();
 
         return services;

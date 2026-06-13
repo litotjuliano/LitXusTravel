@@ -97,6 +97,7 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, de
   const [imgProcessing, setImgProcessing] = useState(false)
   const [imgInfo, setImgInfo] = useState<{ name: string; kb: number } | null>(null)
   const [imgError, setImgError] = useState<string | null>(null)
+  const [isGenerating, setIsGenerating] = useState(false)
   const [form, setForm] = useState({
     title: "", destination: "", basePrice: "", durationDays: "",
     category: "", description: "", shortDescription: "",
@@ -179,6 +180,22 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, de
     } finally {
       setImgProcessing(false)
       e.target.value = ""
+    }
+  }
+
+  const handleGeneratePhoto = async () => {
+    if (!tenantId || !editPackageId) return
+    setIsGenerating(true)
+    try {
+      const res = await adminApi.generatePackagePhoto(tenantId, editPackageId)
+      const url = res.data.featuredImageUrl
+      setForm((prev) => ({ ...prev, featuredImageUrl: url }))
+      setImgInfo(null)
+      toast.success("Photo generated from Unsplash")
+    } catch {
+      toast.error("Photo generation failed. Check if Unsplash API key is configured.")
+    } finally {
+      setIsGenerating(false)
     }
   }
 
@@ -464,6 +481,33 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, de
                       </p>
                     )}
                     {imgError && <p className="text-xs text-red-500 mt-1">{imgError}</p>}
+
+                    {/* Generate Photo — edit mode only (needs existing package ID) */}
+                    {isEditMode && tenantId && (
+                      <button
+                        type="button"
+                        onClick={handleGeneratePhoto}
+                        disabled={isGenerating || imgProcessing}
+                        className="mt-2 w-full flex items-center justify-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground hover:border-purple-400 hover:text-purple-600 hover:bg-purple-50/10 transition-colors disabled:opacity-50 disabled:cursor-wait"
+                      >
+                        {isGenerating ? (
+                          <>
+                            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                            </svg>
+                            Searching Unsplash…
+                          </>
+                        ) : (
+                          <>
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3l14 9-14 9V3z"/>
+                            </svg>
+                            Generate Photo
+                          </>
+                        )}
+                      </button>
+                    )}
                   </Fld>
                 </Card>
 
