@@ -14,6 +14,13 @@ public class UpdateTenantSettingsCommandHandler(IUnitOfWork uow)
             return Result.Failure("Tenant not found.");
 
         tenant.UpdateSettings(request.DefaultCurrency);
+
+        // Sync currency on all existing package overrides for this tenant
+        var overrides = await uow.PackageOverrides
+            .FindAsync(o => o.TenantId == request.TenantId, ct);
+        foreach (var o in overrides)
+            o.Update(currency: request.DefaultCurrency.ToUpperInvariant());
+
         await uow.SaveChangesAsync(ct);
         return Result.Success();
     }

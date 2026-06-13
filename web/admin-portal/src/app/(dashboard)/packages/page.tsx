@@ -208,7 +208,7 @@ export default function PackagesPage() {
                       </td>
                       <td className="px-4 py-3 text-foreground">{pkg.destination}</td>
                       <td className="px-4 py-3 font-semibold text-foreground">
-                        {formatCurrency(pkg.basePrice, pkg.currency)}
+                        {formatCurrency(pkg.basePrice, tenantSettings?.defaultCurrency || pkg.currency)}
                       </td>
                       <td className="px-4 py-3 text-foreground">{pkg.durationDays}D</td>
                       <td className="px-4 py-3">
@@ -306,7 +306,7 @@ export default function PackagesPage() {
                         </td>
                         <td className="px-4 py-3 text-foreground">{pkg.destination}</td>
                         <td className="px-4 py-3 font-semibold text-foreground">
-                          {formatCurrency(pkg.basePrice, pkg.currency)}
+                          {formatCurrency(pkg.basePrice, isTenantAdmin ? (tenantSettings?.defaultCurrency || pkg.currency) : pkg.currency)}
                         </td>
                         <td className="px-4 py-3 text-foreground">{pkg.durationDays}D</td>
                         {!isTenantAdmin && (
