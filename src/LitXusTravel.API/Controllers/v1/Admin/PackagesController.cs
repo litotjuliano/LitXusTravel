@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using LitXusTravel.Application.UseCases.Packages.CreatePackage;
+using LitXusTravel.Application.UseCases.Packages.GenerateAdminPackagePhoto;
 using LitXusTravel.Application.UseCases.Packages.GetPackages;
 using LitXusTravel.Application.UseCases.Packages.GetPackageById;
 using LitXusTravel.Application.UseCases.Packages.PublishPackage;
@@ -94,6 +95,18 @@ public class PackagesController(IMediator mediator, IWebHostEnvironment env) : C
         if (!result.IsSuccess) return NotFound(new { result.Errors });
 
         return Ok(new { imageUrl });
+    }
+
+    /// <summary>Generate a photo for a master package from Unsplash</summary>
+    [HttpPost("{id:guid}/generate-photo")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GeneratePhoto(Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GenerateAdminPackagePhotoCommand(id), ct);
+        if (!result.IsSuccess) return BadRequest(new { result.Errors });
+        return Ok(new { featuredImageUrl = result.Value });
     }
 
     /// <summary>Publish a master package (SPEC-ADMIN-003)</summary>

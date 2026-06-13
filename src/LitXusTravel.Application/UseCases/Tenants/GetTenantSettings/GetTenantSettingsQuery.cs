@@ -13,5 +13,6 @@ public record TenantSettingsResponse(
     bool IsActive,
     string ProvisioningStatus,
     string? Country,
-    DateTimeOffset CreatedAt
+    DateTimeOffset CreatedAt,
+    string DefaultCurrency
 );

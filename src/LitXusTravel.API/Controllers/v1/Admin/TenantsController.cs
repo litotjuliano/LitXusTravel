@@ -5,6 +5,7 @@ using LitXusTravel.Application.UseCases.Tenants.CreateTenant;
 using LitXusTravel.Application.UseCases.Tenants.GetTenantById;
 using LitXusTravel.Application.UseCases.Tenants.GetTenants;
 using LitXusTravel.Application.UseCases.Tenants.GetTenantSettings;
+using LitXusTravel.Application.UseCases.Tenants.UpdateTenantSettings;
 using LitXusTravel.Application.UseCases.Packages.SyncPackagesToTenant;
 using LitXusTravel.Application.UseCases.Packages.GetTenantPackages;
 using LitXusTravel.Application.UseCases.Packages.UpdatePackageOverride;
@@ -54,6 +55,20 @@ public class TenantsController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetTenantSettingsQuery(id), ct);
         if (!result.IsSuccess) return NotFound(new { result.Errors });
         return Ok(result.Value);
+    }
+
+    /// <summary>Update tenant settings</summary>
+    [HttpPut("{id:guid}/settings")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateSettings(Guid id,
+        [FromBody] UpdateTenantSettingsRequest request, CancellationToken ct)
+    {
+        var result = await mediator.Send(
+            new UpdateTenantSettingsCommand(id, request.DefaultCurrency), ct);
+        if (!result.IsSuccess) return BadRequest(new { result.Errors });
+        return Ok();
     }
 
     /// <summary>List tenants with pagination (SPEC-ADMIN-005)</summary>
@@ -162,3 +177,5 @@ public class TenantsController(IMediator mediator) : ControllerBase
         return Ok(result.Value);
     }
 }
+
+public record UpdateTenantSettingsRequest(string DefaultCurrency);

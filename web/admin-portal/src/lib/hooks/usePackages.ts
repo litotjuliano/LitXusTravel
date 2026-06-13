@@ -14,7 +14,20 @@ export interface Package {
   syncedTenantsCount: number
   tenants: string[]
   isOwnedPackage?: boolean
+  packageVisibility?: string  // Draft | Published | Archived (from master package)
   syncSource?: string
+  // Detail fields — populated for tenant admin (from ResolvedPackageResponse)
+  description?: string
+  shortDescription?: string
+  region?: string
+  featuredImageUrl?: string
+  imagesJson?: string
+  itineraryJson?: string
+  highlightsJson?: string
+  inclusionsJson?: string
+  exclusionsJson?: string
+  contactPhone?: string
+  contactWhatsapp?: string
 }
 
 export interface UsePackagesResult {
@@ -67,7 +80,11 @@ export const usePackages = (
         const items: Package[] = (result.data || []).map((r: {
           id: string; title: string; category?: string; destination: string
           price: number; currency: string; durationDays: number
-          isCustomized: boolean; isOwnedPackage: boolean
+          isCustomized: boolean; isOwnedPackage: boolean; visibility?: string; syncSource?: string
+          description?: string; shortDescription?: string; region?: string
+          featuredImageUrl?: string; imagesJson?: string; itineraryJson?: string
+          highlightsJson?: string; inclusionsJson?: string; exclusionsJson?: string
+          contactPhone?: string; contactWhatsapp?: string
         }) => ({
           id: r.id,
           title: r.title,
@@ -79,7 +96,19 @@ export const usePackages = (
           visibility: r.isOwnedPackage ? "Owned" : r.isCustomized ? "Customized" : "Synced",
           syncedTenantsCount: 0,
           isOwnedPackage: r.isOwnedPackage,
+          packageVisibility: r.visibility ?? undefined,
           syncSource: r.syncSource ?? undefined,
+          description: r.description ?? undefined,
+          shortDescription: r.shortDescription ?? undefined,
+          region: r.region ?? undefined,
+          featuredImageUrl: r.featuredImageUrl ?? undefined,
+          imagesJson: r.imagesJson ?? undefined,
+          itineraryJson: r.itineraryJson ?? undefined,
+          highlightsJson: r.highlightsJson ?? undefined,
+          inclusionsJson: r.inclusionsJson ?? undefined,
+          exclusionsJson: r.exclusionsJson ?? undefined,
+          contactPhone: r.contactPhone ?? undefined,
+          contactWhatsapp: r.contactWhatsapp ?? undefined,
         }))
         setPackages(items)
         if (result.pagination) setPagination(result.pagination)

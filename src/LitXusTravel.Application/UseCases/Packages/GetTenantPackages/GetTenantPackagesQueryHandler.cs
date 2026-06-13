@@ -13,21 +13,33 @@ public class GetTenantPackagesQueryHandler(IUnitOfWork uow)
         var tenantPackages = (await uow.TenantPackages
             .GetByTenantWithDetailsAsync(request.TenantId, ct)).ToList();
 
+        // Exclude packages from other tenants — only show: portal-only, system, and this tenant's own extended
+        tenantPackages = tenantPackages.Where(tp =>
+            tp.IsOwnedPackage ||
+            tp.MasterPackage?.CreatedByTenantId == null ||
+            tp.MasterPackage?.CreatedByTenantId == request.TenantId
+        ).ToList();
+
         if (tenantPackages.Count == 0)
             return Result<PagedList<ResolvedPackageResponse>>.Success(
                 PagedList<ResolvedPackageResponse>.Create([], request.Page, request.PageSize, 0));
 
         var totalCount = tenantPackages.Count;
 
-        // Apply sorting
+        // Apply sorting (owned packages use Override for title/price; extended/synced use MasterPackage)
+        static string TitleOf(LitXusTravel.Domain.Entities.TenantPackage tp)
+            => tp.IsOwnedPackage ? (tp.Override?.Title ?? "") : (tp.MasterPackage?.Title ?? "");
+        static decimal PriceOf(LitXusTravel.Domain.Entities.TenantPackage tp)
+            => tp.IsOwnedPackage ? (tp.Override?.Price ?? 0) : (tp.MasterPackage?.BasePrice ?? 0);
+
         var sorted = request.SortBy?.ToLower() switch
         {
             "title" => request.SortOrder?.ToLower() == "asc"
-                ? tenantPackages.OrderBy(tp => tp.MasterPackage.Title).ToList()
-                : tenantPackages.OrderByDescending(tp => tp.MasterPackage.Title).ToList(),
+                ? tenantPackages.OrderBy(TitleOf).ToList()
+                : tenantPackages.OrderByDescending(TitleOf).ToList(),
             "price" => request.SortOrder?.ToLower() == "asc"
-                ? tenantPackages.OrderBy(tp => tp.MasterPackage.BasePrice).ToList()
-                : tenantPackages.OrderByDescending(tp => tp.MasterPackage.BasePrice).ToList(),
+                ? tenantPackages.OrderBy(PriceOf).ToList()
+                : tenantPackages.OrderByDescending(PriceOf).ToList(),
             "syncedat" => request.SortOrder?.ToLower() == "asc"
                 ? tenantPackages.OrderBy(tp => tp.LastSyncedAt).ToList()
                 : tenantPackages.OrderByDescending(tp => tp.LastSyncedAt).ToList(),
@@ -62,6 +74,7 @@ public class GetTenantPackagesQueryHandler(IUnitOfWork uow)
                 Id: tenantPackage.Id,
                 MasterPackageId: null,
                 IsOwnedPackage: true,
+                Visibility: "Published",
                 Title: own.Title ?? string.Empty,
                 Description: own.Description,
                 ShortDescription: own.ShortDescription,
@@ -88,15 +101,24 @@ public class GetTenantPackagesQueryHandler(IUnitOfWork uow)
         var master = tenantPackage.MasterPackage!;
         var @override = tenantPackage.Override;
 
-        var syncSource = master.CreatedByTenantId.HasValue
-            && tenantNames.TryGetValue(master.CreatedByTenantId.Value, out var creatorName)
-            ? creatorName
-            : "System";
+        // Packages extended to the catalog BY this tenant should display as "Owned"
+        var createdByCurrentTenant = master.CreatedByTenantId == tenantPackage.TenantId;
+
+        string? syncSource = null;
+        if (!createdByCurrentTenant)
+        {
+            if (master.CreatedByTenantId.HasValue
+                && tenantNames.TryGetValue(master.CreatedByTenantId.Value, out var cn))
+                syncSource = cn;
+            else
+                syncSource = "System";
+        }
 
         return new ResolvedPackageResponse(
             Id: tenantPackage.Id,
             MasterPackageId: master.Id,
-            IsOwnedPackage: false,
+            IsOwnedPackage: createdByCurrentTenant,
+            Visibility: master.Visibility.ToString(),
             Title: @override?.Title ?? master.Title,
             Description: @override?.Description ?? master.Description,
             ShortDescription: @override?.ShortDescription ?? master.ShortDescription,
@@ -116,7 +138,7 @@ public class GetTenantPackagesQueryHandler(IUnitOfWork uow)
             ContactWhatsapp: @override?.ContactWhatsapp,
             IsCustomized: tenantPackage.IsCustomized,
             LastSyncedAt: tenantPackage.LastSyncedAt ?? DateTimeOffset.UtcNow,
-            SyncSource: syncSource
+            SyncSource: createdByCurrentTenant ? null : syncSource
         );
     }
 }

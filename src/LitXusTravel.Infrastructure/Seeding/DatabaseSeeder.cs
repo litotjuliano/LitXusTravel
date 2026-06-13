@@ -22,7 +22,7 @@ public class DatabaseSeeder(
         ["Europe Grand Tour"] = "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=800&q=80",
         ["Maldives Luxury"]   = "https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=800&q=80",
         ["Bali Family"]       = "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&q=80",
-        ["South Korea"]       = "https://images.unsplash.com/photo-1598273490630-5f97ee7a2fa3?w=800&q=80",
+        ["South Korea"]       = "https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?w=800&q=80",
     };
 
     public async Task SeedAsync()
@@ -37,8 +37,9 @@ public class DatabaseSeeder(
         await PatchPackageImagesAsync();
         await SeedTenantPackagesAsync();
         await SeedTenantOwnedPackagesAsync();
-        await SeedCrossTenantExtendedPackagesAsync();
         await BackfillPackageCreatorsAsync();
+        await CleanupCrossTenantSyncAsync();
+        await BackfillTenantDefaultCurrencyAsync();
         await SeedCommissionTestDataAsync();
     }
 
@@ -174,6 +175,21 @@ public class DatabaseSeeder(
         ["Adventure Seekers"] = "adventure",
     };
 
+    private async Task BackfillTenantDefaultCurrencyAsync()
+    {
+        var tenants = await dbContext.Tenants
+            .Where(t => t.DefaultCurrency == "")
+            .ToListAsync();
+
+        if (tenants.Count == 0) return;
+
+        foreach (var tenant in tenants)
+            tenant.UpdateSettings("MYR");
+
+        await dbContext.SaveChangesAsync();
+        logger.LogInformation("✅ Backfilled DefaultCurrency=MYR for {Count} tenants", tenants.Count);
+    }
+
     private async Task PatchTenantSubdomainsAsync()
     {
         var tenants = await dbContext.Tenants
@@ -284,39 +300,32 @@ public class DatabaseSeeder(
     private async Task SeedTenantPackagesAsync()
     {
         var tenants = await dbContext.Tenants.ToListAsync();
-        var packages = await dbContext.Packages.ToListAsync();
+        // System packages (no tenant owner) auto-sync to all tenants per platform rules
+        var systemPackages = await dbContext.Packages
+            .Where(p => p.CreatedByTenantId == null)
+            .ToListAsync();
 
-        if (tenants.Count == 0 || packages.Count == 0) return;
+        if (tenants.Count == 0 || systemPackages.Count == 0) return;
 
-        // Realistic subset per tenant — admin would manually sync the rest in real usage.
-        var syncMap = new Dictionary<string, string[]>
-        {
-            ["Travel Pro"]        = ["Japan Sakura", "Europe Grand Tour"],
-            ["Wanderlust Tours"]  = ["Bali Family", "South Korea"],
-            ["Adventure Seekers"] = ["Maldives Luxury", "Japan Sakura"],
-        };
-
+        bool changed = false;
         foreach (var tenant in tenants)
         {
-            var alreadySynced = await dbContext.TenantPackages
-                .AnyAsync(tp => tp.TenantId == tenant.Id);
-
-            if (alreadySynced) continue;
-
-            if (!syncMap.TryGetValue(tenant.Name, out var titles)) continue;
-
-            var toSync = packages.Where(p => titles.Contains(p.Title)).ToList();
-
-            foreach (var package in toSync)
+            foreach (var package in systemPackages)
             {
-                var tp = TenantPackage.Create(tenant.Id, package.Id);
-                await dbContext.TenantPackages.AddAsync(tp);
+                var exists = await dbContext.TenantPackages
+                    .AnyAsync(tp => tp.TenantId == tenant.Id && tp.MasterPackageId == package.Id);
+
+                if (!exists)
+                {
+                    await dbContext.TenantPackages.AddAsync(TenantPackage.Create(tenant.Id, package.Id));
+                    changed = true;
+                }
             }
 
-            logger.LogInformation("✅ Synced {Count} packages → {Tenant}", toSync.Count, tenant.Name);
+            logger.LogInformation("✅ Ensured {Count} system packages → {Tenant}", systemPackages.Count, tenant.Name);
         }
 
-        await dbContext.SaveChangesAsync();
+        if (changed) await dbContext.SaveChangesAsync();
     }
 
     private async Task SeedTenantOwnedPackagesAsync()
@@ -406,44 +415,6 @@ public class DatabaseSeeder(
         logger.LogInformation("✅ Seeded tenant-owned packages (5 extended to master, 6 portal-only)");
     }
 
-    private async Task SeedCrossTenantExtendedPackagesAsync()
-    {
-        // Extended packages (contributed to the master catalog by a tenant) are visible
-        // in the Admin catalog and should be synced to ALL tenants, not just the creator.
-        var extendedPackages = await dbContext.Packages
-            .Where(p => p.CreatedByTenantId != null)
-            .ToListAsync();
-
-        if (extendedPackages.Count == 0) return;
-
-        var tenants = await dbContext.Tenants.ToListAsync();
-        var existingSyncs = await dbContext.TenantPackages
-            .Select(tp => new { tp.TenantId, tp.MasterPackageId })
-            .ToListAsync();
-
-        int added = 0;
-        foreach (var package in extendedPackages)
-        {
-            foreach (var tenant in tenants)
-            {
-                if (tenant.Id == package.CreatedByTenantId) continue; // creator already has it
-
-                bool alreadyHas = existingSyncs.Any(tp =>
-                    tp.TenantId == tenant.Id && tp.MasterPackageId == package.Id);
-
-                if (alreadyHas) continue;
-
-                await dbContext.TenantPackages.AddAsync(TenantPackage.Create(tenant.Id, package.Id));
-                added++;
-            }
-        }
-
-        if (added > 0)
-        {
-            await dbContext.SaveChangesAsync();
-            logger.LogInformation("✅ Cross-synced {Count} extended package(s) to other tenants", added);
-        }
-    }
 
     private async Task BackfillPackageCreatorsAsync()
     {
@@ -513,6 +484,24 @@ public class DatabaseSeeder(
 
         await dbContext.PackageOverrides.AddAsync(ov);
         await dbContext.SaveChangesAsync();
+    }
+
+    private async Task CleanupCrossTenantSyncAsync()
+    {
+        var stale = await dbContext.TenantPackages
+            .Include(tp => tp.MasterPackage)
+            .Where(tp => !tp.IsOwnedPackage
+                   && tp.MasterPackage != null
+                   && tp.MasterPackage.CreatedByTenantId != null
+                   && tp.MasterPackage.CreatedByTenantId != tp.TenantId)
+            .ToListAsync();
+
+        if (stale.Count > 0)
+        {
+            dbContext.TenantPackages.RemoveRange(stale);
+            await dbContext.SaveChangesAsync();
+            logger.LogInformation("🧹 Removed {Count} stale cross-tenant package link(s)", stale.Count);
+        }
     }
 
     private async Task SeedCommissionTestDataAsync()

@@ -1,10 +1,12 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using LitXusTravel.Application.UseCases.Public;
 
 namespace LitXusTravel.API.Controllers.v1.Public;
 
 [ApiController]
 [Route("api/v1/public/websites/{subdomain}/packages")]
-public class PackagesController() : ControllerBase
+public class PackagesController(ISender mediator) : ControllerBase
 {
     /// <summary>List packages for a public website (SPEC-PUBLIC-002)</summary>
     [HttpGet]
@@ -14,10 +16,16 @@ public class PackagesController() : ControllerBase
         string subdomain,
         [FromQuery] string? category,
         [FromQuery] string? destination,
+        [FromQuery] string? sortBy,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50,
         CancellationToken ct = default)
     {
-        // TODO: Implement GetPublicPackagesQuery (resolve subdomain → tenant, merge overrides)
-        return Ok(new { data = Array.Empty<object>() });
+        var query = new GetPublicPackagesQuery(subdomain, page, pageSize, destination, category, sortBy);
+        var result = await mediator.Send(query, ct);
+
+        if (!result.IsSuccess) return NotFound(new { message = result.Errors.FirstOrDefault() });
+        return Ok(result.Value);
     }
 
     /// <summary>Get resolved package detail for public website (SPEC-PUBLIC-003)</summary>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { adminApi } from "@/lib/api"
@@ -11,6 +11,15 @@ interface PackageEditorModalProps {
   onOpenChange: (open: boolean) => void
   onSuccess?: () => void
   tenantId?: string
+  defaultCurrency?: string
+  // Edit mode — when provided, the modal saves changes instead of creating
+  editPackageId?: string
+  initialData?: {
+    title: string; destination: string; basePrice: number; durationDays: number
+    category: string; region: string; description: string; shortDescription: string
+    featuredImageUrl: string; contactPhone: string; contactWhatsapp: string
+    isOwnedPackage: boolean
+  }
 }
 
 const inputCls = (hasError?: boolean) =>
@@ -48,17 +57,77 @@ function Err({ msg }: { msg?: string }) {
   return msg ? <p className="text-xs text-red-500 mt-0.5">{msg}</p> : null
 }
 
-export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId }: PackageEditorModalProps) {
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"]
+const MAX_FILE_SIZE_MB = 5
+const MAX_DIM = 1200
+
+function optimizeImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new window.Image()
+      img.onload = () => {
+        let { width, height } = img
+        if (width > MAX_DIM || height > MAX_DIM) {
+          if (width >= height) { height = Math.round(height * MAX_DIM / width); width = MAX_DIM }
+          else { width = Math.round(width * MAX_DIM / height); height = MAX_DIM }
+        }
+        const canvas = document.createElement("canvas")
+        canvas.width = width
+        canvas.height = height
+        canvas.getContext("2d")!.drawImage(img, 0, 0, width, height)
+        resolve(canvas.toDataURL("image/jpeg", 0.82))
+      }
+      img.onerror = reject
+      img.src = e.target?.result as string
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
+export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, defaultCurrency, editPackageId, initialData }: PackageEditorModalProps) {
+  const resolvedCurrency = defaultCurrency || "MYR"
   const isTenantMode = !!tenantId
+  const isEditMode = !!editPackageId
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [extendToMaster, setExtendToMaster] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [imgProcessing, setImgProcessing] = useState(false)
+  const [imgInfo, setImgInfo] = useState<{ name: string; kb: number } | null>(null)
+  const [imgError, setImgError] = useState<string | null>(null)
+  const [isGenerating, setIsGenerating] = useState(false)
   const [form, setForm] = useState({
     title: "", destination: "", basePrice: "", durationDays: "",
-    category: "", description: "", shortDescription: "", currency: "MYR",
+    category: "", description: "", shortDescription: "",
     region: "", featuredImageUrl: "", maxGroupSize: "",
     contactPhone: "", contactWhatsapp: "",
   })
+
+  // Pre-populate form when opening in edit mode
+  useEffect(() => {
+    if (open && isEditMode && initialData) {
+      setForm({
+        title: initialData.title,
+        destination: initialData.destination,
+        basePrice: String(initialData.basePrice),
+        durationDays: String(initialData.durationDays),
+        category: initialData.category,
+        description: initialData.description,
+        shortDescription: initialData.shortDescription,
+        region: initialData.region,
+        featuredImageUrl: initialData.featuredImageUrl,
+        maxGroupSize: "",
+        contactPhone: initialData.contactPhone,
+        contactWhatsapp: initialData.contactWhatsapp,
+      })
+      setErrors({})
+      setImgInfo(null)
+      setImgError(null)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, editPackageId])
 
   const set = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -78,12 +147,58 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId }: 
   const reset = () => {
     setForm({
       title: "", destination: "", basePrice: "", durationDays: "",
-      category: "", description: "", shortDescription: "", currency: "MYR",
+      category: "", description: "", shortDescription: "",
       region: "", featuredImageUrl: "", maxGroupSize: "",
       contactPhone: "", contactWhatsapp: "",
     })
     setExtendToMaster(false)
     setErrors({})
+    setImgInfo(null)
+    setImgError(null)
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImgError(null)
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      setImgError("Only JPEG, PNG, or WEBP images are accepted.")
+      return
+    }
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      setImgError(`File exceeds ${MAX_FILE_SIZE_MB}MB limit.`)
+      return
+    }
+    setImgProcessing(true)
+    try {
+      const dataUrl = await optimizeImage(file)
+      const kb = Math.round(dataUrl.length * 0.75 / 1024)
+      setForm((prev) => ({ ...prev, featuredImageUrl: dataUrl }))
+      setImgInfo({ name: file.name, kb })
+    } catch {
+      setImgError("Failed to process image. Try another file.")
+    } finally {
+      setImgProcessing(false)
+      e.target.value = ""
+    }
+  }
+
+  const handleGeneratePhoto = async () => {
+    if (!editPackageId) return
+    setIsGenerating(true)
+    try {
+      const res = tenantId
+        ? await adminApi.generatePackagePhoto(tenantId, editPackageId)
+        : await adminApi.generateAdminPackagePhoto(editPackageId)
+      const url = res.data.featuredImageUrl
+      setForm((prev) => ({ ...prev, featuredImageUrl: url }))
+      setImgInfo(null)
+      toast.success("Photo generated from Unsplash")
+    } catch {
+      toast.error("Photo generation failed. Check if Unsplash API key is configured.")
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -91,13 +206,31 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId }: 
     if (!validate()) { toast.error("Please fix the errors before submitting"); return }
     try {
       setLoading(true)
-      if (isTenantMode) {
+
+      if (isEditMode && tenantId && editPackageId) {
+        await adminApi.updatePackageOverride(tenantId, editPackageId, {
+          title: form.title || undefined,
+          price: form.basePrice ? parseFloat(form.basePrice) : undefined,
+          currency: resolvedCurrency,
+          description: form.description || undefined,
+          shortDescription: form.shortDescription || undefined,
+          featuredImageUrl: form.featuredImageUrl || undefined,
+          contactPhone: form.contactPhone || undefined,
+          contactWhatsapp: form.contactWhatsapp || undefined,
+          // Owned-package fields (only submitted when relevant, ignored by backend for synced)
+          destination: form.destination || undefined,
+          durationDays: form.durationDays ? parseInt(form.durationDays) : undefined,
+          category: form.category || undefined,
+          region: form.region || undefined,
+        })
+        toast.success("Package updated successfully")
+      } else if (isTenantMode) {
         await adminApi.createTenantPackage(tenantId!, {
           title: form.title,
           destination: form.destination,
           durationDays: parseInt(form.durationDays),
           price: parseFloat(form.basePrice),
-          currency: form.currency || "MYR",
+          currency: resolvedCurrency,
           category: form.category || undefined,
           region: form.region || undefined,
           description: form.description || undefined,
@@ -107,6 +240,7 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId }: 
           contactWhatsapp: form.contactWhatsapp || undefined,
           extendToMaster,
         })
+        toast.success("Package created successfully")
       } else {
         await adminApi.createPackage({
           title: form.title,
@@ -116,18 +250,19 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId }: 
           category: form.category || undefined,
           description: form.description || undefined,
           shortDescription: form.shortDescription || undefined,
-          currency: form.currency || "MYR",
+          currency: resolvedCurrency,
           region: form.region || undefined,
           featuredImageUrl: form.featuredImageUrl || undefined,
           maxGroupSize: form.maxGroupSize ? parseInt(form.maxGroupSize) : undefined,
         })
+        toast.success("Package created successfully")
       }
-      toast.success("Package created successfully")
+
       onOpenChange(false)
       reset()
       onSuccess?.()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to create package")
+      toast.error(err instanceof Error ? err.message : isEditMode ? "Failed to update package" : "Failed to create package")
     } finally {
       setLoading(false)
     }
@@ -140,12 +275,14 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId }: 
         {/* Fixed header */}
         <DialogHeader className="px-6 py-5 border-b border-border shrink-0 bg-background">
           <DialogTitle className="text-lg font-semibold">
-            {isTenantMode ? "Create Portal Package" : "Create Master Package"}
+            {isEditMode ? "Edit Package" : isTenantMode ? "Create Portal Package" : "Create Master Package"}
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground mt-0.5">
-            {isTenantMode
-              ? "Create a package exclusive to your portal, or extend it to the master catalog."
-              : "Add a new master package to the shared catalog."}
+            {isEditMode
+              ? "Update the package details. Changes are saved to your portal."
+              : isTenantMode
+                ? "Create a package exclusive to your portal, or extend it to the master catalog."
+                : "Add a new master package to the shared catalog."}
           </DialogDescription>
         </DialogHeader>
 
@@ -217,8 +354,8 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId }: 
                   </Fld>
                 </Card>
 
-                {/* Extend to Master toggle — tenant mode only */}
-                {isTenantMode && (
+                {/* Extend to Master toggle — create mode only */}
+                {isTenantMode && !isEditMode && (
                   <div className={`flex items-start gap-4 rounded-xl border p-4 transition-all ${
                     extendToMaster
                       ? "bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-800"
@@ -256,25 +393,13 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId }: 
               {/* ── Right column ── */}
               <div className="space-y-4">
                 <Card title="Pricing &amp; Duration">
-                  <div className="grid grid-cols-2 gap-3">
-                    <Fld>
-                      <Lbl req>Base Price</Lbl>
-                      <input type="number" name="basePrice" value={form.basePrice} onChange={set}
-                        placeholder="0.00" step="0.01" min="0"
-                        className={inputCls(!!errors.basePrice)} />
-                      <Err msg={errors.basePrice} />
-                    </Fld>
-                    <Fld>
-                      <Lbl>Currency</Lbl>
-                      <select name="currency" value={form.currency} onChange={set} className={selectCls}>
-                        <option>MYR</option>
-                        <option>USD</option>
-                        <option>EUR</option>
-                        <option>GBP</option>
-                        <option>SGD</option>
-                      </select>
-                    </Fld>
-                  </div>
+                  <Fld>
+                    <Lbl req>Base Price ({resolvedCurrency})</Lbl>
+                    <input type="number" name="basePrice" value={form.basePrice} onChange={set}
+                      placeholder="0.00" step="0.01" min="0"
+                      className={inputCls(!!errors.basePrice)} />
+                    <Err msg={errors.basePrice} />
+                  </Fld>
 
                   <Fld>
                     <Lbl req>Duration (Days)</Lbl>
@@ -294,12 +419,18 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId }: 
 
                 <Card title="Media">
                   <Fld>
-                    <Lbl>Featured Image URL</Lbl>
-                    <input type="url" name="featuredImageUrl" value={form.featuredImageUrl} onChange={set}
-                      placeholder="https://example.com/image.jpg"
-                      className={inputCls()} />
+                    <Lbl>Featured Image</Lbl>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+
+                    {/* Preview */}
                     {form.featuredImageUrl && (
-                      <div className="mt-2 rounded-lg overflow-hidden border border-border aspect-video bg-muted">
+                      <div className="relative rounded-lg overflow-hidden border border-border aspect-video bg-muted mb-2">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={form.featuredImageUrl}
@@ -307,12 +438,82 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId }: 
                           className="w-full h-full object-cover"
                           onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }}
                         />
+                        <button
+                          type="button"
+                          onClick={() => { setForm((p) => ({ ...p, featuredImageUrl: "" })); setImgInfo(null) }}
+                          className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center"
+                          title="Remove image"
+                        >✕</button>
                       </div>
+                    )}
+
+                    {/* Upload zone */}
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={imgProcessing}
+                      className={`w-full flex flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed px-4 py-5 text-sm transition-colors ${
+                        imgProcessing
+                          ? "border-border text-muted-foreground cursor-wait"
+                          : "border-border hover:border-blue-400 hover:bg-blue-50/10 text-muted-foreground cursor-pointer"
+                      }`}
+                    >
+                      {imgProcessing ? (
+                        <>
+                          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                          </svg>
+                          <span>Optimizing image…</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                          </svg>
+                          <span>{form.featuredImageUrl ? "Replace image" : "Click to upload"}</span>
+                          <span className="text-xs">JPEG · PNG · WEBP · max {MAX_FILE_SIZE_MB}MB</span>
+                        </>
+                      )}
+                    </button>
+
+                    {imgInfo && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {imgInfo.name} · optimized to ~{imgInfo.kb}KB
+                      </p>
+                    )}
+                    {imgError && <p className="text-xs text-red-500 mt-1">{imgError}</p>}
+
+                    {/* Generate Photo — available in edit mode for both tenant and admin */}
+                    {isEditMode && (
+                      <button
+                        type="button"
+                        onClick={handleGeneratePhoto}
+                        disabled={isGenerating || imgProcessing}
+                        className="mt-2 w-full flex items-center justify-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground hover:border-purple-400 hover:text-purple-600 hover:bg-purple-50/10 transition-colors disabled:opacity-50 disabled:cursor-wait"
+                      >
+                        {isGenerating ? (
+                          <>
+                            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                            </svg>
+                            Searching Unsplash…
+                          </>
+                        ) : (
+                          <>
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3l14 9-14 9V3z"/>
+                            </svg>
+                            Generate Photo
+                          </>
+                        )}
+                      </button>
                     )}
                   </Fld>
                 </Card>
 
-                {isTenantMode && (
+                {(isTenantMode || isEditMode) && (
                   <Card title="Contact Details">
                     <Fld>
                       <Lbl>Phone</Lbl>
@@ -353,9 +554,9 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId }: 
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                     </svg>
-                    Creating…
+                    {isEditMode ? "Saving…" : "Creating…"}
                   </span>
-                ) : "Create Package"}
+                ) : isEditMode ? "Save Changes" : "Create Package"}
               </Button>
             </div>
           </div>

@@ -2,8 +2,11 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using LitXusTravel.Application.UseCases.Packages.CreateTenantPackage;
+using LitXusTravel.Application.UseCases.Packages.GeneratePackagePhoto;
+using LitXusTravel.Application.UseCases.Packages.GetMarketplacePackages;
 using LitXusTravel.Application.UseCases.Packages.GetTenantPackages;
 using LitXusTravel.Application.UseCases.Packages.SyncPackageToTenant;
+using LitXusTravel.Application.UseCases.Packages.PublishTenantPackage;
 using LitXusTravel.Application.UseCases.Packages.UnsyncPackage;
 using LitXusTravel.Application.UseCases.Packages.UpdatePackageOverride;
 
@@ -100,11 +103,68 @@ public class MyPackagesController(IMediator mediator) : ControllerBase
             request.Title, request.Price, request.Currency,
             request.FeaturedImageUrl, request.ImagesJson,
             request.Description, request.ShortDescription,
-            request.ContactPhone, request.ContactWhatsapp);
+            request.ContactPhone, request.ContactWhatsapp,
+            request.Destination, request.DurationDays, request.Category, request.Region);
 
         var result = await mediator.Send(command, ct);
         if (!result.IsSuccess) return BadRequest(new { result.Errors });
         return Ok(result.Value);
+    }
+
+    /// <summary>List marketplace packages available to add (Extended by other tenants, not yet synced)</summary>
+    [HttpGet("/api/v1/tenants/{tenantId:guid}/marketplace")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMarketplace(Guid tenantId, CancellationToken ct)
+    {
+        if (!IsAuthorizedForTenant(tenantId))
+            return Forbid();
+
+        var result = await mediator.Send(new GetMarketplacePackagesQuery(tenantId), ct);
+        if (!result.IsSuccess) return BadRequest(new { result.Errors });
+        return Ok(result.Value);
+    }
+
+    /// <summary>Add a marketplace package to tenant catalog</summary>
+    [HttpPost("/api/v1/tenants/{tenantId:guid}/marketplace/{packageId:guid}/add")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> AddFromMarketplace(Guid tenantId, Guid packageId, CancellationToken ct)
+    {
+        if (!IsAuthorizedForTenant(tenantId))
+            return Forbid();
+
+        var result = await mediator.Send(new SyncPackagesCommand(tenantId, [packageId]), ct);
+        if (!result.IsSuccess) return BadRequest(new { result.Errors });
+        return Ok(new { message = "Package added to your catalog." });
+    }
+
+    /// <summary>Generate a photo for a package from Unsplash (SPEC-TENANT-007)</summary>
+    [HttpPost("{packageId:guid}/generate-photo")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GeneratePhoto(Guid tenantId, Guid packageId, CancellationToken ct)
+    {
+        if (!IsAuthorizedForTenant(tenantId))
+            return Forbid();
+
+        var result = await mediator.Send(new GeneratePackagePhotoCommand(tenantId, packageId), ct);
+        if (!result.IsSuccess) return BadRequest(new { result.Errors });
+        return Ok(new { featuredImageUrl = result.Value });
+    }
+
+    /// <summary>Publish a tenant-extended package (makes it visible on public website)</summary>
+    [HttpPost("{packageId:guid}/publish")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> Publish(Guid tenantId, Guid packageId, CancellationToken ct)
+    {
+        if (!IsAuthorizedForTenant(tenantId))
+            return Forbid();
+
+        var result = await mediator.Send(new PublishTenantPackageCommand(tenantId, packageId), ct);
+        if (!result.IsSuccess) return BadRequest(new { result.Errors });
+        return Ok(new { message = "Package published successfully." });
     }
 
     /// <summary>Unsync a package (SPEC-TENANT-005)</summary>
@@ -150,4 +210,6 @@ public record UpdateOverrideRequest(
     string? Title, decimal? Price, string? Currency,
     string? FeaturedImageUrl, string? ImagesJson,
     string? Description, string? ShortDescription,
-    string? ContactPhone, string? ContactWhatsapp);
+    string? ContactPhone, string? ContactWhatsapp,
+    string? Destination = null, int? DurationDays = null,
+    string? Category = null, string? Region = null);

@@ -15,5 +15,10 @@ public record UpdatePackageOverrideCommand(
     string? Description = null,
     string? ShortDescription = null,
     string? ContactPhone = null,
-    string? ContactWhatsapp = null
+    string? ContactWhatsapp = null,
+    // Owned-package fields (destination/duration/category live in override, not master)
+    string? Destination = null,
+    int? DurationDays = null,
+    string? Category = null,
+    string? Region = null
 ) : IRequest<Result<ResolvedPackageResponse>>;

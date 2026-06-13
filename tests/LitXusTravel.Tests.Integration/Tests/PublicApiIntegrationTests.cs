@@ -67,7 +67,7 @@ public class PublicApiIntegrationTests(DatabaseFixture fixture) : IClassFixture<
             await dbContext.SaveChangesAsync();
 
             var mediator = sp.GetRequiredService<IMediator>();
-            var query = new GetPublicPackagesQuery(1, 20);
+            var query = new GetPublicPackagesQuery("publicpkg");
 
             // Act
             var result = await mediator.Send(query);
@@ -105,7 +105,7 @@ public class PublicApiIntegrationTests(DatabaseFixture fixture) : IClassFixture<
             await dbContext.SaveChangesAsync();
 
             var mediator = sp.GetRequiredService<IMediator>();
-            var query = new GetPublicPackagesQuery(1, 20);
+            var query = new GetPublicPackagesQuery("excludedraft");
 
             // Act
             var result = await mediator.Send(query);

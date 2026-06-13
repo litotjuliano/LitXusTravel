@@ -20,7 +20,9 @@ public class UpdatePackageOverrideCommandHandler(IUnitOfWork uow)
         if (tenantPackage.IsLocked)
             return Result<ResolvedPackageResponse>.Failure("Package is locked and cannot be customized.");
 
-        var @override = tenantPackage.Override;
+        // Navigation property is not loaded by GetByIdAsync — query directly to avoid duplicate insert
+        var @override = await uow.PackageOverrides
+            .FirstOrDefaultAsync(o => o.TenantPackageId == request.TenantPackageId, ct);
         if (@override is null)
         {
             @override = LitXusTravel.Domain.Entities.PackageOverride.CreateEmpty(request.TenantId, request.TenantPackageId);
@@ -36,44 +38,88 @@ public class UpdatePackageOverrideCommandHandler(IUnitOfWork uow)
             description: request.Description,
             shortDescription: request.ShortDescription,
             contactPhone: request.ContactPhone,
-            contactWhatsapp: request.ContactWhatsapp
+            contactWhatsapp: request.ContactWhatsapp,
+            destination: request.Destination,
+            durationDays: request.DurationDays,
+            category: request.Category,
+            region: request.Region
         );
 
         if (@override.HasAnyOverride())
             tenantPackage.MarkCustomized();
 
         await uow.SaveChangesAsync(ct);
-        tenantPackage = await uow.TenantPackages.GetByIdAsync(request.TenantPackageId, ct);
-        
-        return Result<ResolvedPackageResponse>.Success(MergePackage(tenantPackage!));
+
+        // Load master explicitly for synced packages — avoids relying on nav property fixup
+        LitXusTravel.Domain.Entities.Package? master = null;
+        if (!tenantPackage.IsOwnedPackage && tenantPackage.MasterPackageId.HasValue)
+            master = await uow.Packages.GetByIdAsync(tenantPackage.MasterPackageId.Value, ct);
+
+        return Result<ResolvedPackageResponse>.Success(MergePackage(tenantPackage, @override, master));
     }
 
-    private ResolvedPackageResponse MergePackage(LitXusTravel.Domain.Entities.TenantPackage tp)
+    private static ResolvedPackageResponse MergePackage(
+        LitXusTravel.Domain.Entities.TenantPackage tp,
+        LitXusTravel.Domain.Entities.PackageOverride? ov,
+        LitXusTravel.Domain.Entities.Package? master = null)
     {
-        var master = tp.MasterPackage;
-        var @override = tp.Override;
+        if (tp.IsOwnedPackage)
+        {
+            return new ResolvedPackageResponse(
+                Id: tp.Id,
+                MasterPackageId: null,
+                IsOwnedPackage: true,
+                Visibility: "Published",
+                Title: ov?.Title ?? string.Empty,
+                Description: ov?.Description,
+                ShortDescription: ov?.ShortDescription,
+                Category: ov?.Category,
+                Price: ov?.Price ?? 0,
+                Currency: ov?.Currency ?? "MYR",
+                DurationDays: ov?.DurationDays ?? 0,
+                Destination: ov?.Destination ?? string.Empty,
+                Region: ov?.Region,
+                FeaturedImageUrl: ov?.FeaturedImageUrl,
+                ImagesJson: ov?.ImagesJson,
+                ItineraryJson: null,
+                HighlightsJson: null,
+                InclusionsJson: null,
+                ExclusionsJson: null,
+                ContactPhone: ov?.ContactPhone,
+                ContactWhatsapp: ov?.ContactWhatsapp,
+                IsCustomized: true,
+                LastSyncedAt: tp.LastSyncedAt ?? DateTimeOffset.UtcNow,
+                SyncSource: null
+            );
+        }
+
+        if (master is null)
+            throw new InvalidOperationException($"Master package not found for TenantPackage {tp.Id}.");
+
+        var createdByCurrentTenant = master.CreatedByTenantId == tp.TenantId;
 
         return new ResolvedPackageResponse(
             Id: tp.Id,
             MasterPackageId: master.Id,
-            IsOwnedPackage: tp.IsOwnedPackage,
-            Title: @override?.Title ?? master.Title,
-            Description: @override?.Description ?? master.Description,
-            ShortDescription: @override?.ShortDescription ?? master.ShortDescription,
+            IsOwnedPackage: createdByCurrentTenant,
+            Visibility: master.Visibility.ToString(),
+            Title: ov?.Title ?? master.Title,
+            Description: ov?.Description ?? master.Description,
+            ShortDescription: ov?.ShortDescription ?? master.ShortDescription,
             Category: master.Category,
-            Price: @override?.Price ?? master.BasePrice,
-            Currency: @override?.Currency ?? master.Currency,
+            Price: ov?.Price ?? master.BasePrice,
+            Currency: ov?.Currency ?? master.Currency,
             DurationDays: master.DurationDays,
             Destination: master.Destination,
             Region: master.Region,
-            FeaturedImageUrl: @override?.FeaturedImageUrl ?? master.FeaturedImageUrl,
-            ImagesJson: @override?.ImagesJson ?? master.ImagesJson,
+            FeaturedImageUrl: ov?.FeaturedImageUrl ?? master.FeaturedImageUrl,
+            ImagesJson: ov?.ImagesJson ?? master.ImagesJson,
             ItineraryJson: master.ItineraryJson,
             HighlightsJson: master.HighlightsJson,
             InclusionsJson: master.InclusionsJson,
             ExclusionsJson: master.ExclusionsJson,
-            ContactPhone: @override?.ContactPhone,
-            ContactWhatsapp: @override?.ContactWhatsapp,
+            ContactPhone: ov?.ContactPhone,
+            ContactWhatsapp: ov?.ContactWhatsapp,
             IsCustomized: tp.IsCustomized,
             LastSyncedAt: tp.LastSyncedAt ?? DateTimeOffset.UtcNow,
             SyncSource: null

@@ -20,6 +20,7 @@ public class Tenant : AggregateRoot
     public ProvisioningStatus ProvisioningStatus { get; private set; } = ProvisioningStatus.Pending;
     public string? WebsiteUrl { get; private set; }
     public string? Country { get; private set; }
+    public string DefaultCurrency { get; private set; } = "MYR";
 
     public ICollection<TenantSubscription> Subscriptions { get; private set; } = [];
     public ICollection<TenantPackage> TenantPackages { get; private set; } = [];
@@ -65,6 +66,13 @@ public class Tenant : AggregateRoot
     public void MarkProvisioningFailed()
     {
         ProvisioningStatus = ProvisioningStatus.Failed;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void UpdateSettings(string? defaultCurrency)
+    {
+        if (!string.IsNullOrWhiteSpace(defaultCurrency))
+            DefaultCurrency = defaultCurrency.ToUpperInvariant();
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 

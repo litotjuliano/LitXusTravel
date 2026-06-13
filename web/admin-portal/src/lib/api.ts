@@ -63,6 +63,8 @@ export const adminApi = {
     api.get(`/admin/tenants/${id}`),
   getTenantSettings: (id: string) =>
     api.get(`/admin/tenants/${id}/settings`),
+  updateTenantSettings: (id: string, data: { defaultCurrency: string }) =>
+    api.put(`/admin/tenants/${id}/settings`, data),
   createTenant: (data: object) =>
     api.post("/admin/tenants", data),
 
@@ -86,7 +88,17 @@ export const adminApi = {
   getTenantPackages: (tenantId: string, params?: object) =>
     api.get(`/tenants/${tenantId}/packages`, { params }),
   updatePackageOverride: (tenantId: string, tenantPackageId: string, data: object) =>
-    api.put(`/admin/tenants/${tenantId}/packages/${tenantPackageId}`, data),
+    api.put(`/tenants/${tenantId}/packages/${tenantPackageId}/override`, data),
   unsyncPackage: (tenantId: string, tenantPackageId: string) =>
     api.delete(`/admin/tenants/${tenantId}/packages/${tenantPackageId}`),
+  getMarketplacePackages: (tenantId: string) =>
+    api.get(`/tenants/${tenantId}/marketplace`),
+  addFromMarketplace: (tenantId: string, packageId: string) =>
+    api.post(`/tenants/${tenantId}/marketplace/${packageId}/add`),
+  generatePackagePhoto: (tenantId: string, pkgId: string) =>
+    api.post<{ featuredImageUrl: string }>(`/tenants/${tenantId}/packages/${pkgId}/generate-photo`),
+  generateAdminPackagePhoto: (pkgId: string) =>
+    api.post<{ featuredImageUrl: string }>(`/admin/packages/${pkgId}/generate-photo`),
+  publishTenantPackage: (tenantId: string, packageId: string) =>
+    api.post(`/tenants/${tenantId}/packages/${packageId}/publish`),
 }

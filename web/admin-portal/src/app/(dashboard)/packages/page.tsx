@@ -10,7 +10,10 @@ import { Pagination } from "@/components/common/Pagination"
 import { SortableHeader } from "@/components/common/SortableHeader"
 import { PackageEditorModal } from "@/components/modals/PackageEditorModal"
 import { PackageViewModal } from "@/components/modals/PackageViewModal"
-import { usePackages } from "@/lib/hooks/usePackages"
+import { usePackages, type Package } from "@/lib/hooks/usePackages"
+import { adminApi } from "@/lib/api"
+import { useMarketplace } from "@/lib/hooks/useMarketplace"
+import { useSettings } from "@/lib/hooks/useSettings"
 import { formatCurrency, getTokenClaims } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -18,8 +21,11 @@ export default function PackagesPage() {
   const [search, setSearch] = useState("")
   const [filter, setFilter] = useState("All")
   const [editorOpen, setEditorOpen] = useState(false)
+  const [editPackageId, setEditPackageId] = useState<string | undefined>(undefined)
+  const [editInitialData, setEditInitialData] = useState<Package | null>(null)
   const [viewOpen, setViewOpen] = useState(false)
   const [viewPackageId, setViewPackageId] = useState<string | null>(null)
+  const [viewPackageData, setViewPackageData] = useState<Package | null>(null)
   const [tenantId, setTenantId] = useState<string | undefined>(undefined)
 
   const [tenantFilter, setTenantFilter] = useState("All")
@@ -34,6 +40,9 @@ export default function PackagesPage() {
   }, [])
 
   const isTenantAdmin = !!tenantId
+  const isMarketplaceTab = isTenantAdmin && filter === "Marketplace"
+
+  const { settings: tenantSettings } = useSettings(tenantId)
 
   // Admin: status filter is server-side. Tenant: filtered client-side after fetch.
   const serverStatus = !isTenantAdmin && filter !== "All" ? filter : undefined
@@ -44,12 +53,16 @@ export default function PackagesPage() {
     { sortBy, sortOrder, status: serverStatus }
   )
 
+  const { packages: marketplacePackages, loading: marketplaceLoading, addToCatalog } = useMarketplace(
+    isMarketplaceTab ? tenantId : undefined
+  )
+
   const tenantOptions = !isTenantAdmin
     ? ["All", ...Array.from(new Set(packages.flatMap((p) => p.tenants))).sort()]
     : []
 
   const filterTabs = isTenantAdmin
-    ? ["All", "Owned", "Customized", "Synced"]
+    ? ["All", "Owned", "Customized", "Synced", "Marketplace"]
     : ["All", "Published", "Draft", "Archived"]
 
   // For tenant: apply tab filter client-side (Owned/Customized/Synced are computed).
@@ -156,8 +169,77 @@ export default function PackagesPage() {
         )}
       </div>
 
-      {/* Table */}
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
+      {/* Marketplace Table */}
+      {isMarketplaceTab && (
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+          {marketplaceLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader className="animate-spin text-muted-foreground mr-2" size={20} />
+              <p className="text-muted-foreground">Loading marketplace...</p>
+            </div>
+          ) : marketplacePackages.length === 0 ? (
+            <div className="px-4 py-12 text-center text-muted-foreground text-sm">
+              No packages available in the marketplace yet.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50 border-b border-border">
+                  <tr>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Package</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Destination</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Price</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Duration</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Source</th>
+                    <th className="px-4 py-3" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {marketplacePackages.map((pkg, i) => (
+                    <motion.tr
+                      key={pkg.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: i * 0.04 }}
+                      className="hover:bg-muted/30 transition-colors"
+                    >
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-foreground">{pkg.title}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{pkg.category}</p>
+                      </td>
+                      <td className="px-4 py-3 text-foreground">{pkg.destination}</td>
+                      <td className="px-4 py-3 font-semibold text-foreground">
+                        {formatCurrency(pkg.basePrice, tenantSettings?.defaultCurrency || pkg.currency)}
+                      </td>
+                      <td className="px-4 py-3 text-foreground">{pkg.durationDays}D</td>
+                      <td className="px-4 py-3">
+                        <span className="inline-block px-2 py-0.5 text-[11px] font-medium rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 whitespace-nowrap">
+                          {pkg.sourceTenantName}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={async () => {
+                            const ok = await addToCatalog(pkg.id)
+                            if (ok) toast.success(`"${pkg.title}" added to your catalog`)
+                            else toast.error("Failed to add package")
+                          }}
+                          className="px-3 py-1.5 text-xs font-medium rounded-lg bg-[--color-brand-blue] text-white hover:bg-blue-700 transition-colors"
+                        >
+                          Add to My Catalog
+                        </button>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* My Packages Table */}
+      {!isMarketplaceTab && <div className="bg-card border border-border rounded-xl overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader className="animate-spin text-muted-foreground mr-2" size={20} />
@@ -225,7 +307,7 @@ export default function PackagesPage() {
                         </td>
                         <td className="px-4 py-3 text-foreground">{pkg.destination}</td>
                         <td className="px-4 py-3 font-semibold text-foreground">
-                          {formatCurrency(pkg.basePrice, pkg.currency)}
+                          {formatCurrency(pkg.basePrice, isTenantAdmin ? (tenantSettings?.defaultCurrency || pkg.currency) : pkg.currency)}
                         </td>
                         <td className="px-4 py-3 text-foreground">{pkg.durationDays}D</td>
                         {!isTenantAdmin && (
@@ -252,28 +334,50 @@ export default function PackagesPage() {
                           </td>
                         )}
                         <td className="px-4 py-3">
-                          <StatusBadge
-                            status={pkg.visibility}
-                            label={pkg.visibility === "Synced" && pkg.syncSource
-                              ? `Synced (${pkg.syncSource})`
-                              : pkg.visibility}
-                          />
+                          <div className="flex flex-wrap gap-1 items-center">
+                            <StatusBadge
+                              status={pkg.visibility}
+                              label={pkg.visibility === "Synced" && pkg.syncSource
+                                ? `Synced (${pkg.syncSource})`
+                                : pkg.visibility}
+                            />
+                            {isTenantAdmin && pkg.packageVisibility === "Draft" && (
+                              <StatusBadge status="Draft" label="Draft" />
+                            )}
+                          </div>
                         </td>
                         <td className="px-4 py-3">
                           <ActionMenu
                             items={[
                               {
                                 label: "View",
-                                action: () => { setViewPackageId(pkg.id); setViewOpen(true) },
+                                action: () => {
+                                  setViewPackageId(pkg.id)
+                                  setViewPackageData(isTenantAdmin ? pkg : null)
+                                  setViewOpen(true)
+                                },
                               },
                               ...(pkg.visibility !== "Synced" ? [{
                                 label: "Edit",
-                                action: () => toast.info("Edit coming soon"),
+                                action: () => {
+                                  setEditPackageId(pkg.id)
+                                  setEditInitialData(pkg)
+                                  setEditorOpen(true)
+                                },
                               }] : []),
-                              {
+                              ...(isTenantAdmin && pkg.packageVisibility === "Draft" ? [{
                                 label: "Publish",
-                                action: () => toast.success(`${pkg.title} published`),
-                              },
+                                action: async () => {
+                                  if (!tenantId) return
+                                  try {
+                                    await adminApi.publishTenantPackage(tenantId, pkg.id)
+                                    toast.success(`"${pkg.title}" published — now visible on your website`)
+                                    refetch()
+                                  } catch (e) {
+                                    toast.error(e instanceof Error ? e.message : "Publish failed")
+                                  }
+                                },
+                              }] : []),
                               {
                                 label: "Duplicate",
                                 action: () => toast.info("Duplicate coming soon"),
@@ -303,18 +407,35 @@ export default function PackagesPage() {
             />
           </>
         )}
-      </div>
+      </div>}
 
       <PackageViewModal
         packageId={viewPackageId}
+        packageData={viewPackageData ?? undefined}
         open={viewOpen}
         onOpenChange={setViewOpen}
       />
 
       <PackageEditorModal
         open={editorOpen}
-        onOpenChange={setEditorOpen}
+        onOpenChange={(v) => { if (!v) { setEditPackageId(undefined); setEditInitialData(null) }; setEditorOpen(v) }}
         onSuccess={refetch}
+        editPackageId={editPackageId}
+        defaultCurrency={tenantSettings?.defaultCurrency}
+        initialData={editInitialData ? {
+          title: editInitialData.title,
+          destination: editInitialData.destination,
+          basePrice: editInitialData.basePrice,
+          durationDays: editInitialData.durationDays,
+          category: editInitialData.category,
+          region: editInitialData.region ?? "",
+          description: editInitialData.description ?? "",
+          shortDescription: editInitialData.shortDescription ?? "",
+          featuredImageUrl: editInitialData.featuredImageUrl ?? "",
+          contactPhone: editInitialData.contactPhone ?? "",
+          contactWhatsapp: editInitialData.contactWhatsapp ?? "",
+          isOwnedPackage: editInitialData.isOwnedPackage ?? false,
+        } : undefined}
         tenantId={isTenantAdmin ? tenantId : undefined}
       />
     </div>
