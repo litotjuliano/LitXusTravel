@@ -15,6 +15,16 @@ export interface Package {
   tenants: string[]
   isOwnedPackage?: boolean
   syncSource?: string
+  // Detail fields — populated for tenant admin (from ResolvedPackageResponse)
+  description?: string
+  shortDescription?: string
+  region?: string
+  featuredImageUrl?: string
+  imagesJson?: string
+  itineraryJson?: string
+  highlightsJson?: string
+  inclusionsJson?: string
+  exclusionsJson?: string
 }
 
 export interface UsePackagesResult {
@@ -67,7 +77,10 @@ export const usePackages = (
         const items: Package[] = (result.data || []).map((r: {
           id: string; title: string; category?: string; destination: string
           price: number; currency: string; durationDays: number
-          isCustomized: boolean; isOwnedPackage: boolean
+          isCustomized: boolean; isOwnedPackage: boolean; syncSource?: string
+          description?: string; shortDescription?: string; region?: string
+          featuredImageUrl?: string; imagesJson?: string; itineraryJson?: string
+          highlightsJson?: string; inclusionsJson?: string; exclusionsJson?: string
         }) => ({
           id: r.id,
           title: r.title,
@@ -80,6 +93,15 @@ export const usePackages = (
           syncedTenantsCount: 0,
           isOwnedPackage: r.isOwnedPackage,
           syncSource: r.syncSource ?? undefined,
+          description: r.description ?? undefined,
+          shortDescription: r.shortDescription ?? undefined,
+          region: r.region ?? undefined,
+          featuredImageUrl: r.featuredImageUrl ?? undefined,
+          imagesJson: r.imagesJson ?? undefined,
+          itineraryJson: r.itineraryJson ?? undefined,
+          highlightsJson: r.highlightsJson ?? undefined,
+          inclusionsJson: r.inclusionsJson ?? undefined,
+          exclusionsJson: r.exclusionsJson ?? undefined,
         }))
         setPackages(items)
         if (result.pagination) setPagination(result.pagination)

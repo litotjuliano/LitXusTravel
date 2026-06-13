@@ -10,7 +10,7 @@ import { Pagination } from "@/components/common/Pagination"
 import { SortableHeader } from "@/components/common/SortableHeader"
 import { PackageEditorModal } from "@/components/modals/PackageEditorModal"
 import { PackageViewModal } from "@/components/modals/PackageViewModal"
-import { usePackages } from "@/lib/hooks/usePackages"
+import { usePackages, type Package } from "@/lib/hooks/usePackages"
 import { useMarketplace } from "@/lib/hooks/useMarketplace"
 import { formatCurrency, getTokenClaims } from "@/lib/utils"
 import { toast } from "sonner"
@@ -21,6 +21,7 @@ export default function PackagesPage() {
   const [editorOpen, setEditorOpen] = useState(false)
   const [viewOpen, setViewOpen] = useState(false)
   const [viewPackageId, setViewPackageId] = useState<string | null>(null)
+  const [viewPackageData, setViewPackageData] = useState<Package | null>(null)
   const [tenantId, setTenantId] = useState<string | undefined>(undefined)
 
   const [tenantFilter, setTenantFilter] = useState("All")
@@ -339,7 +340,11 @@ export default function PackagesPage() {
                             items={[
                               {
                                 label: "View",
-                                action: () => { setViewPackageId(pkg.id); setViewOpen(true) },
+                                action: () => {
+                                  setViewPackageId(pkg.id)
+                                  setViewPackageData(isTenantAdmin ? pkg : null)
+                                  setViewOpen(true)
+                                },
                               },
                               ...(pkg.visibility !== "Synced" ? [{
                                 label: "Edit",
@@ -382,6 +387,7 @@ export default function PackagesPage() {
 
       <PackageViewModal
         packageId={viewPackageId}
+        packageData={viewPackageData ?? undefined}
         open={viewOpen}
         onOpenChange={setViewOpen}
       />

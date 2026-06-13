@@ -22,7 +22,7 @@ public class DatabaseSeeder(
         ["Europe Grand Tour"] = "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=800&q=80",
         ["Maldives Luxury"]   = "https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=800&q=80",
         ["Bali Family"]       = "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&q=80",
-        ["South Korea"]       = "https://images.unsplash.com/photo-1598273490630-5f97ee7a2fa3?w=800&q=80",
+        ["South Korea"]       = "https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?w=800&q=80",
     };
 
     public async Task SeedAsync()
@@ -38,6 +38,7 @@ public class DatabaseSeeder(
         await SeedTenantPackagesAsync();
         await SeedTenantOwnedPackagesAsync();
         await BackfillPackageCreatorsAsync();
+        await CleanupCrossTenantSyncAsync();
         await SeedCommissionTestDataAsync();
     }
 
@@ -467,6 +468,24 @@ public class DatabaseSeeder(
 
         await dbContext.PackageOverrides.AddAsync(ov);
         await dbContext.SaveChangesAsync();
+    }
+
+    private async Task CleanupCrossTenantSyncAsync()
+    {
+        var stale = await dbContext.TenantPackages
+            .Include(tp => tp.MasterPackage)
+            .Where(tp => !tp.IsOwnedPackage
+                   && tp.MasterPackage != null
+                   && tp.MasterPackage.CreatedByTenantId != null
+                   && tp.MasterPackage.CreatedByTenantId != tp.TenantId)
+            .ToListAsync();
+
+        if (stale.Count > 0)
+        {
+            dbContext.TenantPackages.RemoveRange(stale);
+            await dbContext.SaveChangesAsync();
+            logger.LogInformation("🧹 Removed {Count} stale cross-tenant package link(s)", stale.Count);
+        }
     }
 
     private async Task SeedCommissionTestDataAsync()

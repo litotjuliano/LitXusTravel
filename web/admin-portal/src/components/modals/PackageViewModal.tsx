@@ -36,8 +36,30 @@ interface PackageDetail {
   updatedAt?: string
 }
 
+interface PreloadedPackage {
+  id: string
+  title: string
+  description?: string
+  shortDescription?: string
+  category?: string
+  basePrice: number
+  currency: string
+  durationDays: number
+  destination: string
+  region?: string
+  featuredImageUrl?: string
+  imagesJson?: string
+  itineraryJson?: string
+  highlightsJson?: string
+  inclusionsJson?: string
+  exclusionsJson?: string
+  visibility?: string
+}
+
 interface Props {
   packageId: string | null
+  /** When provided (tenant admin), use this data directly — no API fetch needed */
+  packageData?: PreloadedPackage
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -49,21 +71,46 @@ function parseJson<T>(json: string | null | undefined, fallback: T): T {
 
 interface ItineraryDay { day: number; title?: string; description?: string }
 
-export function PackageViewModal({ packageId, open, onOpenChange }: Props) {
+export function PackageViewModal({ packageId, packageData, open, onOpenChange }: Props) {
   const [pkg, setPkg] = useState<PackageDetail | null>(null)
   const [loading, setLoading] = useState(false)
   const [showMore, setShowMore] = useState(false)
 
   useEffect(() => {
-    if (!open || !packageId) return
+    if (!open) return
+    setShowMore(false)
+
+    if (packageData) {
+      setPkg({
+        id: packageData.id,
+        title: packageData.title,
+        description: packageData.description,
+        shortDescription: packageData.shortDescription,
+        category: packageData.category,
+        basePrice: packageData.basePrice,
+        currency: packageData.currency,
+        durationDays: packageData.durationDays,
+        destination: packageData.destination,
+        region: packageData.region,
+        featuredImageUrl: packageData.featuredImageUrl,
+        imagesJson: packageData.imagesJson,
+        itineraryJson: packageData.itineraryJson,
+        highlightsJson: packageData.highlightsJson,
+        inclusionsJson: packageData.inclusionsJson,
+        exclusionsJson: packageData.exclusionsJson,
+        visibility: packageData.visibility ?? "",
+      })
+      return
+    }
+
+    if (!packageId) return
     setLoading(true)
     setPkg(null)
-    setShowMore(false)
     adminApi.getPackageById(packageId)
       .then((res) => setPkg(res.data))
       .catch(() => setPkg(null))
       .finally(() => setLoading(false))
-  }, [open, packageId])
+  }, [open, packageId, packageData])
 
   const highlights = parseJson<string[]>(pkg?.highlightsJson, [])
   const inclusions = parseJson<string[]>(pkg?.inclusionsJson, [])

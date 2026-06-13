@@ -13,7 +13,7 @@ interface Props {
 }
 
 export default function PackageCard({ pkg }: Props) {
-  const image = pkg.featuredImageUrl ?? "https://images.unsplash.com/photo-1500835556837-99ac94a94552?w=600&q=75"
+  const image = pkg.featuredImageUrl || "https://images.unsplash.com/photo-1500835556837-99ac94a94552?w=600&q=75"
 
   return (
     <motion.div variants={staggerItem} {...hoverLift}>

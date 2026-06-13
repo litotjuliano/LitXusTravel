@@ -36,6 +36,10 @@ public class GetPublicPackagesQueryHandler(IUnitOfWork uow, ITenantResolver tena
                 // Synced from master catalog
                 if (tp.MasterPackage is null) continue;
                 if (tp.MasterPackage.Visibility != PackageVisibility.Published) continue;
+                // Don't show other tenants' packages on this tenant's public website
+                if (tp.MasterPackage.CreatedByTenantId != null
+                    && tp.MasterPackage.CreatedByTenantId != tenantInfo.Value.Id)
+                    continue;
                 response = MapSynced(tp);
             }
 

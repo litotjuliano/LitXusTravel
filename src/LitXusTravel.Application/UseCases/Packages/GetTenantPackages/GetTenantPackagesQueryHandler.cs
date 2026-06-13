@@ -13,6 +13,13 @@ public class GetTenantPackagesQueryHandler(IUnitOfWork uow)
         var tenantPackages = (await uow.TenantPackages
             .GetByTenantWithDetailsAsync(request.TenantId, ct)).ToList();
 
+        // Exclude packages from other tenants — only show: portal-only, system, and this tenant's own extended
+        tenantPackages = tenantPackages.Where(tp =>
+            tp.IsOwnedPackage ||
+            tp.MasterPackage?.CreatedByTenantId == null ||
+            tp.MasterPackage?.CreatedByTenantId == request.TenantId
+        ).ToList();
+
         if (tenantPackages.Count == 0)
             return Result<PagedList<ResolvedPackageResponse>>.Success(
                 PagedList<ResolvedPackageResponse>.Create([], request.Page, request.PageSize, 0));
@@ -88,15 +95,23 @@ public class GetTenantPackagesQueryHandler(IUnitOfWork uow)
         var master = tenantPackage.MasterPackage!;
         var @override = tenantPackage.Override;
 
-        var syncSource = master.CreatedByTenantId.HasValue
-            && tenantNames.TryGetValue(master.CreatedByTenantId.Value, out var creatorName)
-            ? creatorName
-            : "System";
+        // Packages extended to the catalog BY this tenant should display as "Owned"
+        var createdByCurrentTenant = master.CreatedByTenantId == tenantPackage.TenantId;
+
+        string? syncSource = null;
+        if (!createdByCurrentTenant)
+        {
+            if (master.CreatedByTenantId.HasValue
+                && tenantNames.TryGetValue(master.CreatedByTenantId.Value, out var cn))
+                syncSource = cn;
+            else
+                syncSource = "System";
+        }
 
         return new ResolvedPackageResponse(
             Id: tenantPackage.Id,
             MasterPackageId: master.Id,
-            IsOwnedPackage: false,
+            IsOwnedPackage: createdByCurrentTenant,
             Title: @override?.Title ?? master.Title,
             Description: @override?.Description ?? master.Description,
             ShortDescription: @override?.ShortDescription ?? master.ShortDescription,
@@ -116,7 +131,7 @@ public class GetTenantPackagesQueryHandler(IUnitOfWork uow)
             ContactWhatsapp: @override?.ContactWhatsapp,
             IsCustomized: tenantPackage.IsCustomized,
             LastSyncedAt: tenantPackage.LastSyncedAt ?? DateTimeOffset.UtcNow,
-            SyncSource: syncSource
+            SyncSource: createdByCurrentTenant ? null : syncSource
         );
     }
 }
