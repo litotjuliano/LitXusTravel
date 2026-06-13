@@ -49,68 +49,75 @@ public class UpdatePackageOverrideCommandHandler(IUnitOfWork uow)
             tenantPackage.MarkCustomized();
 
         await uow.SaveChangesAsync(ct);
-        tenantPackage = await uow.TenantPackages.GetByIdAsync(request.TenantPackageId, ct);
-        
-        return Result<ResolvedPackageResponse>.Success(MergePackage(tenantPackage!));
+
+        // Load master explicitly for synced packages — avoids relying on nav property fixup
+        LitXusTravel.Domain.Entities.Package? master = null;
+        if (!tenantPackage.IsOwnedPackage && tenantPackage.MasterPackageId.HasValue)
+            master = await uow.Packages.GetByIdAsync(tenantPackage.MasterPackageId.Value, ct);
+
+        return Result<ResolvedPackageResponse>.Success(MergePackage(tenantPackage, @override, master));
     }
 
-    private ResolvedPackageResponse MergePackage(LitXusTravel.Domain.Entities.TenantPackage tp)
+    private static ResolvedPackageResponse MergePackage(
+        LitXusTravel.Domain.Entities.TenantPackage tp,
+        LitXusTravel.Domain.Entities.PackageOverride? ov,
+        LitXusTravel.Domain.Entities.Package? master = null)
     {
-        var @override = tp.Override!;
-
         if (tp.IsOwnedPackage)
         {
             return new ResolvedPackageResponse(
                 Id: tp.Id,
                 MasterPackageId: null,
                 IsOwnedPackage: true,
-                Title: @override.Title ?? string.Empty,
-                Description: @override.Description,
-                ShortDescription: @override.ShortDescription,
-                Category: @override.Category,
-                Price: @override.Price ?? 0,
-                Currency: @override.Currency ?? "MYR",
-                DurationDays: @override.DurationDays ?? 0,
-                Destination: @override.Destination ?? string.Empty,
-                Region: @override.Region,
-                FeaturedImageUrl: @override.FeaturedImageUrl,
-                ImagesJson: @override.ImagesJson,
+                Title: ov?.Title ?? string.Empty,
+                Description: ov?.Description,
+                ShortDescription: ov?.ShortDescription,
+                Category: ov?.Category,
+                Price: ov?.Price ?? 0,
+                Currency: ov?.Currency ?? "MYR",
+                DurationDays: ov?.DurationDays ?? 0,
+                Destination: ov?.Destination ?? string.Empty,
+                Region: ov?.Region,
+                FeaturedImageUrl: ov?.FeaturedImageUrl,
+                ImagesJson: ov?.ImagesJson,
                 ItineraryJson: null,
                 HighlightsJson: null,
                 InclusionsJson: null,
                 ExclusionsJson: null,
-                ContactPhone: @override.ContactPhone,
-                ContactWhatsapp: @override.ContactWhatsapp,
+                ContactPhone: ov?.ContactPhone,
+                ContactWhatsapp: ov?.ContactWhatsapp,
                 IsCustomized: true,
                 LastSyncedAt: tp.LastSyncedAt ?? DateTimeOffset.UtcNow,
                 SyncSource: null
             );
         }
 
-        var master = tp.MasterPackage!;
+        if (master is null)
+            throw new InvalidOperationException($"Master package not found for TenantPackage {tp.Id}.");
+
         var createdByCurrentTenant = master.CreatedByTenantId == tp.TenantId;
 
         return new ResolvedPackageResponse(
             Id: tp.Id,
             MasterPackageId: master.Id,
             IsOwnedPackage: createdByCurrentTenant,
-            Title: @override?.Title ?? master.Title,
-            Description: @override?.Description ?? master.Description,
-            ShortDescription: @override?.ShortDescription ?? master.ShortDescription,
+            Title: ov?.Title ?? master.Title,
+            Description: ov?.Description ?? master.Description,
+            ShortDescription: ov?.ShortDescription ?? master.ShortDescription,
             Category: master.Category,
-            Price: @override?.Price ?? master.BasePrice,
-            Currency: @override?.Currency ?? master.Currency,
+            Price: ov?.Price ?? master.BasePrice,
+            Currency: ov?.Currency ?? master.Currency,
             DurationDays: master.DurationDays,
             Destination: master.Destination,
             Region: master.Region,
-            FeaturedImageUrl: @override?.FeaturedImageUrl ?? master.FeaturedImageUrl,
-            ImagesJson: @override?.ImagesJson ?? master.ImagesJson,
+            FeaturedImageUrl: ov?.FeaturedImageUrl ?? master.FeaturedImageUrl,
+            ImagesJson: ov?.ImagesJson ?? master.ImagesJson,
             ItineraryJson: master.ItineraryJson,
             HighlightsJson: master.HighlightsJson,
             InclusionsJson: master.InclusionsJson,
             ExclusionsJson: master.ExclusionsJson,
-            ContactPhone: @override?.ContactPhone,
-            ContactWhatsapp: @override?.ContactWhatsapp,
+            ContactPhone: ov?.ContactPhone,
+            ContactWhatsapp: ov?.ContactWhatsapp,
             IsCustomized: tp.IsCustomized,
             LastSyncedAt: tp.LastSyncedAt ?? DateTimeOffset.UtcNow,
             SyncSource: null
