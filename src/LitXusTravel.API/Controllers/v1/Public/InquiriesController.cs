@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using LitXusTravel.Application.Interfaces.Services;
 using LitXusTravel.Application.UseCases.Inquiries.CreateInquiry;
 
 namespace LitXusTravel.API.Controllers.v1.Public;
@@ -12,10 +13,16 @@ public class InquiriesController(IMediator mediator) : ControllerBase
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetWebsiteMetadata(string subdomain, CancellationToken ct)
+    public async Task<IActionResult> GetWebsiteMetadata(
+        string subdomain,
+        [FromServices] ITenantResolver resolver,
+        CancellationToken ct)
     {
-        // TODO: Implement GetWebsiteMetadataQuery
-        return Ok(new { subdomain, companyName = "LitXusTravel", syncedPackagesCount = 0 });
+        var info = await resolver.ResolveTenantInfoAsync(subdomain, ct);
+        if (info is null)
+            return NotFound(new { message = "Website not found." });
+
+        return Ok(new { subdomain, tenantName = info.Value.Name, syncedPackagesCount = 0 });
     }
 
     /// <summary>Submit customer inquiry (SPEC-PUBLIC-004)</summary>

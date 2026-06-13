@@ -31,6 +31,7 @@ public class DatabaseSeeder(
         await SeedSuperAdminUserAsync();
         await SeedAdminUserAsync();
         await SeedTenantsAsync();
+        await PatchTenantSubdomainsAsync();
         await SeedTenantAdminUsersAsync();
         await SeedPackagesAsync();
         await PatchPackageImagesAsync();
@@ -146,12 +147,16 @@ public class DatabaseSeeder(
     {
         if (await dbContext.Tenants.AnyAsync()) return;
 
-        var tenants = new[]
-        {
-            Tenant.Create("Travel Pro", new Email("contact@travelpro.com")),
-            Tenant.Create("Wanderlust Tours", new Email("info@wanderlust.com")),
-            Tenant.Create("Adventure Seekers", new Email("bookings@adventureseek.com")),
-        };
+        var travelpro = Tenant.Create("Travel Pro", new Email("contact@travelpro.com"));
+        travelpro.AssignSubdomain("travelpro");
+
+        var wanderlust = Tenant.Create("Wanderlust Tours", new Email("info@wanderlust.com"));
+        wanderlust.AssignSubdomain("wanderlust");
+
+        var adventure = Tenant.Create("Adventure Seekers", new Email("bookings@adventureseek.com"));
+        adventure.AssignSubdomain("adventure");
+
+        var tenants = new[] { travelpro, wanderlust, adventure };
 
         foreach (var tenant in tenants)
         {
@@ -160,6 +165,36 @@ public class DatabaseSeeder(
 
         await dbContext.SaveChangesAsync();
         logger.LogInformation("✅ Seeded 3 sample tenants");
+    }
+
+    private static readonly Dictionary<string, string> _tenantSubdomains = new()
+    {
+        ["Travel Pro"]        = "travelpro",
+        ["Wanderlust Tours"]  = "wanderlust",
+        ["Adventure Seekers"] = "adventure",
+    };
+
+    private async Task PatchTenantSubdomainsAsync()
+    {
+        var tenants = await dbContext.Tenants
+            .Where(t => t.Subdomain == null)
+            .ToListAsync();
+
+        bool changed = false;
+        foreach (var tenant in tenants)
+        {
+            if (_tenantSubdomains.TryGetValue(tenant.Name, out var subdomain))
+            {
+                tenant.AssignSubdomain(subdomain);
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            await dbContext.SaveChangesAsync();
+            logger.LogInformation("✅ Patched subdomains for {Count} tenants", tenants.Count);
+        }
     }
 
     private async Task SeedTenantAdminUsersAsync()
