@@ -113,12 +113,6 @@ export default function LoginPage() {
               <span className="block">admin@wanderlust.com / Wanderlust@123</span>
               <span className="block">admin@adventureseek.com / Adventure@123</span>
             </p>
-            <p className="text-muted-foreground text-[10px] mt-3 space-y-1">
-              <span className="block"><span className="text-[--color-brand-blue]">Tenant URLs (lvh.me):</span></span>
-              <span className="block"><a href="http://travelpro.lvh.me:3001" target="_blank" rel="noreferrer" className="underline hover:text-[--color-brand-blue]">travelpro.lvh.me:3001</a> — Travel Pro</span>
-              <span className="block"><a href="http://wanderlust.lvh.me:3001" target="_blank" rel="noreferrer" className="underline hover:text-[--color-brand-blue]">wanderlust.lvh.me:3001</a> — Wanderlust Tours</span>
-              <span className="block"><a href="http://adventure.lvh.me:3002" target="_blank" rel="noreferrer" className="underline hover:text-[--color-brand-blue]">adventure.lvh.me:3002</a> — Adventure Seekers</span>
-            </p>
           </div>
         </div>
       </div>
