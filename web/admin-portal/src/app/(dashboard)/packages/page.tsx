@@ -19,6 +19,8 @@ export default function PackagesPage() {
   const [search, setSearch] = useState("")
   const [filter, setFilter] = useState("All")
   const [editorOpen, setEditorOpen] = useState(false)
+  const [editPackageId, setEditPackageId] = useState<string | undefined>(undefined)
+  const [editInitialData, setEditInitialData] = useState<Package | null>(null)
   const [viewOpen, setViewOpen] = useState(false)
   const [viewPackageId, setViewPackageId] = useState<string | null>(null)
   const [viewPackageData, setViewPackageData] = useState<Package | null>(null)
@@ -348,7 +350,11 @@ export default function PackagesPage() {
                               },
                               ...(pkg.visibility !== "Synced" ? [{
                                 label: "Edit",
-                                action: () => toast.info("Edit coming soon"),
+                                action: () => {
+                                  setEditPackageId(pkg.id)
+                                  setEditInitialData(pkg)
+                                  setEditorOpen(true)
+                                },
                               }] : []),
                               {
                                 label: "Publish",
@@ -394,8 +400,24 @@ export default function PackagesPage() {
 
       <PackageEditorModal
         open={editorOpen}
-        onOpenChange={setEditorOpen}
+        onOpenChange={(v) => { if (!v) { setEditPackageId(undefined); setEditInitialData(null) }; setEditorOpen(v) }}
         onSuccess={refetch}
+        editPackageId={editPackageId}
+        initialData={editInitialData ? {
+          title: editInitialData.title,
+          destination: editInitialData.destination,
+          basePrice: editInitialData.basePrice,
+          durationDays: editInitialData.durationDays,
+          category: editInitialData.category,
+          region: editInitialData.region ?? "",
+          description: editInitialData.description ?? "",
+          shortDescription: editInitialData.shortDescription ?? "",
+          currency: editInitialData.currency,
+          featuredImageUrl: editInitialData.featuredImageUrl ?? "",
+          contactPhone: editInitialData.contactPhone ?? "",
+          contactWhatsapp: editInitialData.contactWhatsapp ?? "",
+          isOwnedPackage: editInitialData.isOwnedPackage ?? false,
+        } : undefined}
         tenantId={isTenantAdmin ? tenantId : undefined}
       />
     </div>

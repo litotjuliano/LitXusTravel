@@ -101,7 +101,8 @@ public class MyPackagesController(IMediator mediator) : ControllerBase
             request.Title, request.Price, request.Currency,
             request.FeaturedImageUrl, request.ImagesJson,
             request.Description, request.ShortDescription,
-            request.ContactPhone, request.ContactWhatsapp);
+            request.ContactPhone, request.ContactWhatsapp,
+            request.Destination, request.DurationDays, request.Category, request.Region);
 
         var result = await mediator.Send(command, ct);
         if (!result.IsSuccess) return BadRequest(new { result.Errors });
@@ -178,4 +179,6 @@ public record UpdateOverrideRequest(
     string? Title, decimal? Price, string? Currency,
     string? FeaturedImageUrl, string? ImagesJson,
     string? Description, string? ShortDescription,
-    string? ContactPhone, string? ContactWhatsapp);
+    string? ContactPhone, string? ContactWhatsapp,
+    string? Destination = null, int? DurationDays = null,
+    string? Category = null, string? Region = null);

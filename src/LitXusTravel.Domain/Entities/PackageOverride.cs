@@ -76,10 +76,16 @@ public class PackageOverride : BaseEntity
         string? description = null,
         string? shortDescription = null,
         string? contactPhone = null,
-        string? contactWhatsapp = null)
+        string? contactWhatsapp = null,
+        string? destination = null,
+        int? durationDays = null,
+        string? category = null,
+        string? region = null)
     {
         if (price.HasValue && price.Value <= 0)
             throw new DomainException("Override price must be greater than zero.");
+        if (durationDays.HasValue && durationDays.Value <= 0)
+            throw new DomainException("Duration must be at least 1 day.");
 
         if (title is not null) Title = title;
         if (price is not null) Price = price;
@@ -90,6 +96,10 @@ public class PackageOverride : BaseEntity
         if (shortDescription is not null) ShortDescription = shortDescription;
         if (contactPhone is not null) ContactPhone = contactPhone;
         if (contactWhatsapp is not null) ContactWhatsapp = contactWhatsapp;
+        if (destination is not null) Destination = destination;
+        if (durationDays is not null) DurationDays = durationDays;
+        if (category is not null) Category = category;
+        if (region is not null) Region = region;
 
         UpdatedAt = DateTimeOffset.UtcNow;
     }

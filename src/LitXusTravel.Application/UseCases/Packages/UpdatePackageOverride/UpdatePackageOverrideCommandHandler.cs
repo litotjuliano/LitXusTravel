@@ -36,7 +36,11 @@ public class UpdatePackageOverrideCommandHandler(IUnitOfWork uow)
             description: request.Description,
             shortDescription: request.ShortDescription,
             contactPhone: request.ContactPhone,
-            contactWhatsapp: request.ContactWhatsapp
+            contactWhatsapp: request.ContactWhatsapp,
+            destination: request.Destination,
+            durationDays: request.DurationDays,
+            category: request.Category,
+            region: request.Region
         );
 
         if (@override.HasAnyOverride())
@@ -50,13 +54,44 @@ public class UpdatePackageOverrideCommandHandler(IUnitOfWork uow)
 
     private ResolvedPackageResponse MergePackage(LitXusTravel.Domain.Entities.TenantPackage tp)
     {
-        var master = tp.MasterPackage;
-        var @override = tp.Override;
+        var @override = tp.Override!;
+
+        if (tp.IsOwnedPackage)
+        {
+            return new ResolvedPackageResponse(
+                Id: tp.Id,
+                MasterPackageId: null,
+                IsOwnedPackage: true,
+                Title: @override.Title ?? string.Empty,
+                Description: @override.Description,
+                ShortDescription: @override.ShortDescription,
+                Category: @override.Category,
+                Price: @override.Price ?? 0,
+                Currency: @override.Currency ?? "MYR",
+                DurationDays: @override.DurationDays ?? 0,
+                Destination: @override.Destination ?? string.Empty,
+                Region: @override.Region,
+                FeaturedImageUrl: @override.FeaturedImageUrl,
+                ImagesJson: @override.ImagesJson,
+                ItineraryJson: null,
+                HighlightsJson: null,
+                InclusionsJson: null,
+                ExclusionsJson: null,
+                ContactPhone: @override.ContactPhone,
+                ContactWhatsapp: @override.ContactWhatsapp,
+                IsCustomized: true,
+                LastSyncedAt: tp.LastSyncedAt ?? DateTimeOffset.UtcNow,
+                SyncSource: null
+            );
+        }
+
+        var master = tp.MasterPackage!;
+        var createdByCurrentTenant = master.CreatedByTenantId == tp.TenantId;
 
         return new ResolvedPackageResponse(
             Id: tp.Id,
             MasterPackageId: master.Id,
-            IsOwnedPackage: tp.IsOwnedPackage,
+            IsOwnedPackage: createdByCurrentTenant,
             Title: @override?.Title ?? master.Title,
             Description: @override?.Description ?? master.Description,
             ShortDescription: @override?.ShortDescription ?? master.ShortDescription,

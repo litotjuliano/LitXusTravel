@@ -86,7 +86,7 @@ export const adminApi = {
   getTenantPackages: (tenantId: string, params?: object) =>
     api.get(`/tenants/${tenantId}/packages`, { params }),
   updatePackageOverride: (tenantId: string, tenantPackageId: string, data: object) =>
-    api.put(`/admin/tenants/${tenantId}/packages/${tenantPackageId}`, data),
+    api.put(`/tenants/${tenantId}/packages/${tenantPackageId}/override`, data),
   unsyncPackage: (tenantId: string, tenantPackageId: string) =>
     api.delete(`/admin/tenants/${tenantId}/packages/${tenantPackageId}`),
   getMarketplacePackages: (tenantId: string) =>

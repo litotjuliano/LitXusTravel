@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { adminApi } from "@/lib/api"
@@ -11,6 +11,14 @@ interface PackageEditorModalProps {
   onOpenChange: (open: boolean) => void
   onSuccess?: () => void
   tenantId?: string
+  // Edit mode — when provided, the modal saves changes instead of creating
+  editPackageId?: string
+  initialData?: {
+    title: string; destination: string; basePrice: number; durationDays: number
+    category: string; region: string; description: string; shortDescription: string
+    currency: string; featuredImageUrl: string; contactPhone: string; contactWhatsapp: string
+    isOwnedPackage: boolean
+  }
 }
 
 const inputCls = (hasError?: boolean) =>
@@ -48,8 +56,9 @@ function Err({ msg }: { msg?: string }) {
   return msg ? <p className="text-xs text-red-500 mt-0.5">{msg}</p> : null
 }
 
-export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId }: PackageEditorModalProps) {
+export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, editPackageId, initialData }: PackageEditorModalProps) {
   const isTenantMode = !!tenantId
+  const isEditMode = !!editPackageId
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [extendToMaster, setExtendToMaster] = useState(false)
@@ -59,6 +68,29 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId }: 
     region: "", featuredImageUrl: "", maxGroupSize: "",
     contactPhone: "", contactWhatsapp: "",
   })
+
+  // Pre-populate form when opening in edit mode
+  useEffect(() => {
+    if (open && isEditMode && initialData) {
+      setForm({
+        title: initialData.title,
+        destination: initialData.destination,
+        basePrice: String(initialData.basePrice),
+        durationDays: String(initialData.durationDays),
+        category: initialData.category,
+        description: initialData.description,
+        shortDescription: initialData.shortDescription,
+        currency: initialData.currency || "MYR",
+        region: initialData.region,
+        featuredImageUrl: initialData.featuredImageUrl,
+        maxGroupSize: "",
+        contactPhone: initialData.contactPhone,
+        contactWhatsapp: initialData.contactWhatsapp,
+      })
+      setErrors({})
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, editPackageId])
 
   const set = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -91,7 +123,25 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId }: 
     if (!validate()) { toast.error("Please fix the errors before submitting"); return }
     try {
       setLoading(true)
-      if (isTenantMode) {
+
+      if (isEditMode && tenantId && editPackageId) {
+        await adminApi.updatePackageOverride(tenantId, editPackageId, {
+          title: form.title || undefined,
+          price: form.basePrice ? parseFloat(form.basePrice) : undefined,
+          currency: form.currency || undefined,
+          description: form.description || undefined,
+          shortDescription: form.shortDescription || undefined,
+          featuredImageUrl: form.featuredImageUrl || undefined,
+          contactPhone: form.contactPhone || undefined,
+          contactWhatsapp: form.contactWhatsapp || undefined,
+          // Owned-package fields (only submitted when relevant, ignored by backend for synced)
+          destination: form.destination || undefined,
+          durationDays: form.durationDays ? parseInt(form.durationDays) : undefined,
+          category: form.category || undefined,
+          region: form.region || undefined,
+        })
+        toast.success("Package updated successfully")
+      } else if (isTenantMode) {
         await adminApi.createTenantPackage(tenantId!, {
           title: form.title,
           destination: form.destination,
@@ -107,6 +157,7 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId }: 
           contactWhatsapp: form.contactWhatsapp || undefined,
           extendToMaster,
         })
+        toast.success("Package created successfully")
       } else {
         await adminApi.createPackage({
           title: form.title,
@@ -121,13 +172,14 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId }: 
           featuredImageUrl: form.featuredImageUrl || undefined,
           maxGroupSize: form.maxGroupSize ? parseInt(form.maxGroupSize) : undefined,
         })
+        toast.success("Package created successfully")
       }
-      toast.success("Package created successfully")
+
       onOpenChange(false)
       reset()
       onSuccess?.()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to create package")
+      toast.error(err instanceof Error ? err.message : isEditMode ? "Failed to update package" : "Failed to create package")
     } finally {
       setLoading(false)
     }
@@ -140,12 +192,14 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId }: 
         {/* Fixed header */}
         <DialogHeader className="px-6 py-5 border-b border-border shrink-0 bg-background">
           <DialogTitle className="text-lg font-semibold">
-            {isTenantMode ? "Create Portal Package" : "Create Master Package"}
+            {isEditMode ? "Edit Package" : isTenantMode ? "Create Portal Package" : "Create Master Package"}
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground mt-0.5">
-            {isTenantMode
-              ? "Create a package exclusive to your portal, or extend it to the master catalog."
-              : "Add a new master package to the shared catalog."}
+            {isEditMode
+              ? "Update the package details. Changes are saved to your portal."
+              : isTenantMode
+                ? "Create a package exclusive to your portal, or extend it to the master catalog."
+                : "Add a new master package to the shared catalog."}
           </DialogDescription>
         </DialogHeader>
 
@@ -217,8 +271,8 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId }: 
                   </Fld>
                 </Card>
 
-                {/* Extend to Master toggle — tenant mode only */}
-                {isTenantMode && (
+                {/* Extend to Master toggle — create mode only */}
+                {isTenantMode && !isEditMode && (
                   <div className={`flex items-start gap-4 rounded-xl border p-4 transition-all ${
                     extendToMaster
                       ? "bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-800"
@@ -312,7 +366,7 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId }: 
                   </Fld>
                 </Card>
 
-                {isTenantMode && (
+                {(isTenantMode || isEditMode) && (
                   <Card title="Contact Details">
                     <Fld>
                       <Lbl>Phone</Lbl>
@@ -353,9 +407,9 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId }: 
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                     </svg>
-                    Creating…
+                    {isEditMode ? "Saving…" : "Creating…"}
                   </span>
-                ) : "Create Package"}
+                ) : isEditMode ? "Save Changes" : "Create Package"}
               </Button>
             </div>
           </div>

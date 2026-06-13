@@ -25,6 +25,8 @@ export interface Package {
   highlightsJson?: string
   inclusionsJson?: string
   exclusionsJson?: string
+  contactPhone?: string
+  contactWhatsapp?: string
 }
 
 export interface UsePackagesResult {
@@ -81,6 +83,7 @@ export const usePackages = (
           description?: string; shortDescription?: string; region?: string
           featuredImageUrl?: string; imagesJson?: string; itineraryJson?: string
           highlightsJson?: string; inclusionsJson?: string; exclusionsJson?: string
+          contactPhone?: string; contactWhatsapp?: string
         }) => ({
           id: r.id,
           title: r.title,
@@ -102,6 +105,8 @@ export const usePackages = (
           highlightsJson: r.highlightsJson ?? undefined,
           inclusionsJson: r.inclusionsJson ?? undefined,
           exclusionsJson: r.exclusionsJson ?? undefined,
+          contactPhone: r.contactPhone ?? undefined,
+          contactWhatsapp: r.contactWhatsapp ?? undefined,
         }))
         setPackages(items)
         if (result.pagination) setPagination(result.pagination)
