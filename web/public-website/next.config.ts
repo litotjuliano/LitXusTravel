@@ -1,6 +1,7 @@
 import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ["travelpro.lvh.me", "wanderlust.lvh.me", "adventure.lvh.me"],
   turbopack: {
     root: __dirname,
   },

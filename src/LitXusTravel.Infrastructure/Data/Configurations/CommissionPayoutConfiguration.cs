@@ -26,7 +26,7 @@ public class CommissionPayoutConfiguration : IEntityTypeConfiguration<Commission
                     .Select(Guid.Parse)
                     .ToList(),
                 new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<List<Guid>>(
-                    (c1, c2) => c1.SequenceEqual(c2),
+                    (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
                     c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode()))))
             .HasMaxLength(5000);
 
