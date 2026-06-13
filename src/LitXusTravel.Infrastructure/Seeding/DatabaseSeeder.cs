@@ -31,6 +31,7 @@ public class DatabaseSeeder(
         await SeedSuperAdminUserAsync();
         await SeedAdminUserAsync();
         await SeedTenantsAsync();
+        await PatchTenantSubdomainsAsync();
         await SeedTenantAdminUsersAsync();
         await SeedPackagesAsync();
         await PatchPackageImagesAsync();
@@ -164,6 +165,36 @@ public class DatabaseSeeder(
 
         await dbContext.SaveChangesAsync();
         logger.LogInformation("✅ Seeded 3 sample tenants");
+    }
+
+    private static readonly Dictionary<string, string> _tenantSubdomains = new()
+    {
+        ["Travel Pro"]        = "travelpro",
+        ["Wanderlust Tours"]  = "wanderlust",
+        ["Adventure Seekers"] = "adventure",
+    };
+
+    private async Task PatchTenantSubdomainsAsync()
+    {
+        var tenants = await dbContext.Tenants
+            .Where(t => t.Subdomain == null)
+            .ToListAsync();
+
+        bool changed = false;
+        foreach (var tenant in tenants)
+        {
+            if (_tenantSubdomains.TryGetValue(tenant.Name, out var subdomain))
+            {
+                tenant.AssignSubdomain(subdomain);
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            await dbContext.SaveChangesAsync();
+            logger.LogInformation("✅ Patched subdomains for {Count} tenants", tenants.Count);
+        }
     }
 
     private async Task SeedTenantAdminUsersAsync()
