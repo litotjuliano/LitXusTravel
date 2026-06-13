@@ -18,8 +18,10 @@ builder.Host.UseSerilog((ctx, cfg) =>
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// Controllers
+// Controllers — increase JSON body limit to 50MB for base64 image uploads
 builder.Services.AddControllers();
+builder.WebHost.ConfigureKestrel(k =>
+    k.Limits.MaxRequestBodySize = 50 * 1024 * 1024);
 builder.Services.AddEndpointsApiExplorer();
 
 // JWT Authentication
