@@ -27,4 +27,16 @@ public class TenantResolver(LitXusTravelDbContext context) : ITenantResolver
 
         return null;
     }
+
+    public async Task<(Guid Id, string Name)?> ResolveTenantInfoAsync(string subdomain, CancellationToken ct = default)
+    {
+        var tenant = await context.Tenants
+            .AsNoTracking()
+            .IgnoreQueryFilters()
+            .Where(t => t.Subdomain == subdomain.ToLowerInvariant() && t.IsActive)
+            .Select(t => new { t.Id, t.Name })
+            .FirstOrDefaultAsync(ct);
+
+        return tenant is null ? null : (tenant.Id, tenant.Name);
+    }
 }

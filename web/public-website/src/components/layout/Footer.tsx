@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { Globe, Share2, MessageCircle, Phone, Mail, MapPin } from "lucide-react"
+import { useTenantName } from "@/lib/hooks/useTenantName"
 
 const QUICK_LINKS = [
   { href: "/packages", label: "Packages" },
@@ -17,13 +18,15 @@ const SUPPORT_LINKS = [
 ]
 
 export default function Footer() {
+  const tenantName = useTenantName()
+
   return (
     <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
           {/* Brand */}
           <div>
-            <h3 className="text-xl font-bold mb-4">✈ LitXusTravel</h3>
+            <h3 className="text-xl font-bold mb-4">✈ {tenantName}</h3>
             <p className="text-gray-400 text-sm leading-relaxed mb-5">
               Discover extraordinary travel experiences curated just for you.
             </p>
@@ -89,7 +92,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-gray-800 pt-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500">
-          <p>© {new Date().getFullYear()} LitXusTravel. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} {tenantName}. All rights reserved.</p>
           <p>
             Powered by{" "}
             <span className="text-[--color-brand-blue] font-semibold">LitXusTravel Platform</span>
