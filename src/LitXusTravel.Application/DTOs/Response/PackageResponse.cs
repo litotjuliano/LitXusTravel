@@ -30,6 +30,7 @@ public record ResolvedPackageResponse(
     Guid Id,
     Guid? MasterPackageId,
     bool IsOwnedPackage,
+    string? Visibility,
     string Title,
     string? Description,
     string? ShortDescription,

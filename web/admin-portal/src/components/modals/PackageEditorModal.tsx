@@ -184,10 +184,12 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, de
   }
 
   const handleGeneratePhoto = async () => {
-    if (!tenantId || !editPackageId) return
+    if (!editPackageId) return
     setIsGenerating(true)
     try {
-      const res = await adminApi.generatePackagePhoto(tenantId, editPackageId)
+      const res = tenantId
+        ? await adminApi.generatePackagePhoto(tenantId, editPackageId)
+        : await adminApi.generateAdminPackagePhoto(editPackageId)
       const url = res.data.featuredImageUrl
       setForm((prev) => ({ ...prev, featuredImageUrl: url }))
       setImgInfo(null)
@@ -482,8 +484,8 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, de
                     )}
                     {imgError && <p className="text-xs text-red-500 mt-1">{imgError}</p>}
 
-                    {/* Generate Photo — edit mode only (needs existing package ID) */}
-                    {isEditMode && tenantId && (
+                    {/* Generate Photo — available in edit mode for both tenant and admin */}
+                    {isEditMode && (
                       <button
                         type="button"
                         onClick={handleGeneratePhoto}

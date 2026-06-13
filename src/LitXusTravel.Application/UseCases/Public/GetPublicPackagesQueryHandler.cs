@@ -20,6 +20,7 @@ public class GetPublicPackagesQueryHandler(IUnitOfWork uow, ITenantResolver tena
             .GetByTenantWithDetailsAsync(tenantInfo.Value.Id, ct);
 
         var responses = new List<PublicPackageResponse>();
+        var syncedMasterIds = new HashSet<Guid>();
 
         foreach (var tp in tenantPackages)
         {
@@ -40,17 +41,25 @@ public class GetPublicPackagesQueryHandler(IUnitOfWork uow, ITenantResolver tena
                 if (tp.MasterPackage.CreatedByTenantId != null
                     && tp.MasterPackage.CreatedByTenantId != tenantInfo.Value.Id)
                     continue;
+
+                syncedMasterIds.Add(tp.MasterPackage.Id);
                 response = MapSynced(tp);
             }
 
-            if (!string.IsNullOrEmpty(request.Category) &&
-                !string.Equals(response.Category, request.Category, StringComparison.OrdinalIgnoreCase))
-                continue;
+            if (!PassesFilters(response, request)) continue;
+            responses.Add(response);
+        }
 
-            if (!string.IsNullOrEmpty(request.Destination) &&
-                !response.Destination.Contains(request.Destination, StringComparison.OrdinalIgnoreCase))
-                continue;
+        // Include published admin packages not yet synced to this tenant
+        var adminPackages = await uow.Packages.FindAsync(
+            p => p.CreatedByTenantId == null && p.Visibility == PackageVisibility.Published, ct);
 
+        foreach (var pkg in adminPackages)
+        {
+            if (syncedMasterIds.Contains(pkg.Id)) continue; // already shown via TenantPackage
+
+            var response = MapAdminPackage(pkg);
+            if (!PassesFilters(response, request)) continue;
             responses.Add(response);
         }
 
@@ -68,6 +77,19 @@ public class GetPublicPackagesQueryHandler(IUnitOfWork uow, ITenantResolver tena
 
         return Result<PagedList<PublicPackageResponse>>.Success(
             PagedList<PublicPackageResponse>.Create(paged, request.Page, request.PageSize, total));
+    }
+
+    private static bool PassesFilters(PublicPackageResponse r, GetPublicPackagesQuery req)
+    {
+        if (!string.IsNullOrEmpty(req.Category) &&
+            !string.Equals(r.Category, req.Category, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        if (!string.IsNullOrEmpty(req.Destination) &&
+            !r.Destination.Contains(req.Destination, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        return true;
     }
 
     private static PublicPackageResponse MapSynced(TenantPackage tp)
@@ -106,6 +128,24 @@ public class GetPublicPackagesQueryHandler(IUnitOfWork uow, ITenantResolver tena
             FeaturedImageUrl: o.FeaturedImageUrl ?? "",
             IsFeatured:       false,
             IsPopular:        false
+        );
+    }
+
+    private static PublicPackageResponse MapAdminPackage(Package p)
+    {
+        return new PublicPackageResponse(
+            Id:               p.Id,
+            Title:            p.Title,
+            ShortDescription: p.ShortDescription ?? p.Description ?? "",
+            Category:         p.Category ?? "",
+            Price:            p.BasePrice,
+            Currency:         p.Currency,
+            DurationDays:     p.DurationDays,
+            Destination:      p.Destination,
+            Region:           p.Region ?? "",
+            FeaturedImageUrl: p.FeaturedImageUrl ?? "",
+            IsFeatured:       p.IsFeatured,
+            IsPopular:        p.IsPopular
         );
     }
 }

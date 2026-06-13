@@ -6,6 +6,7 @@ using LitXusTravel.Application.UseCases.Packages.GeneratePackagePhoto;
 using LitXusTravel.Application.UseCases.Packages.GetMarketplacePackages;
 using LitXusTravel.Application.UseCases.Packages.GetTenantPackages;
 using LitXusTravel.Application.UseCases.Packages.SyncPackageToTenant;
+using LitXusTravel.Application.UseCases.Packages.PublishTenantPackage;
 using LitXusTravel.Application.UseCases.Packages.UnsyncPackage;
 using LitXusTravel.Application.UseCases.Packages.UpdatePackageOverride;
 
@@ -149,6 +150,21 @@ public class MyPackagesController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GeneratePackagePhotoCommand(tenantId, packageId), ct);
         if (!result.IsSuccess) return BadRequest(new { result.Errors });
         return Ok(new { featuredImageUrl = result.Value });
+    }
+
+    /// <summary>Publish a tenant-extended package (makes it visible on public website)</summary>
+    [HttpPost("{packageId:guid}/publish")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> Publish(Guid tenantId, Guid packageId, CancellationToken ct)
+    {
+        if (!IsAuthorizedForTenant(tenantId))
+            return Forbid();
+
+        var result = await mediator.Send(new PublishTenantPackageCommand(tenantId, packageId), ct);
+        if (!result.IsSuccess) return BadRequest(new { result.Errors });
+        return Ok(new { message = "Package published successfully." });
     }
 
     /// <summary>Unsync a package (SPEC-TENANT-005)</summary>

@@ -26,15 +26,20 @@ public class GetTenantPackagesQueryHandler(IUnitOfWork uow)
 
         var totalCount = tenantPackages.Count;
 
-        // Apply sorting
+        // Apply sorting (owned packages use Override for title/price; extended/synced use MasterPackage)
+        static string TitleOf(LitXusTravel.Domain.Entities.TenantPackage tp)
+            => tp.IsOwnedPackage ? (tp.Override?.Title ?? "") : (tp.MasterPackage?.Title ?? "");
+        static decimal PriceOf(LitXusTravel.Domain.Entities.TenantPackage tp)
+            => tp.IsOwnedPackage ? (tp.Override?.Price ?? 0) : (tp.MasterPackage?.BasePrice ?? 0);
+
         var sorted = request.SortBy?.ToLower() switch
         {
             "title" => request.SortOrder?.ToLower() == "asc"
-                ? tenantPackages.OrderBy(tp => tp.MasterPackage.Title).ToList()
-                : tenantPackages.OrderByDescending(tp => tp.MasterPackage.Title).ToList(),
+                ? tenantPackages.OrderBy(TitleOf).ToList()
+                : tenantPackages.OrderByDescending(TitleOf).ToList(),
             "price" => request.SortOrder?.ToLower() == "asc"
-                ? tenantPackages.OrderBy(tp => tp.MasterPackage.BasePrice).ToList()
-                : tenantPackages.OrderByDescending(tp => tp.MasterPackage.BasePrice).ToList(),
+                ? tenantPackages.OrderBy(PriceOf).ToList()
+                : tenantPackages.OrderByDescending(PriceOf).ToList(),
             "syncedat" => request.SortOrder?.ToLower() == "asc"
                 ? tenantPackages.OrderBy(tp => tp.LastSyncedAt).ToList()
                 : tenantPackages.OrderByDescending(tp => tp.LastSyncedAt).ToList(),
@@ -69,6 +74,7 @@ public class GetTenantPackagesQueryHandler(IUnitOfWork uow)
                 Id: tenantPackage.Id,
                 MasterPackageId: null,
                 IsOwnedPackage: true,
+                Visibility: "Published",
                 Title: own.Title ?? string.Empty,
                 Description: own.Description,
                 ShortDescription: own.ShortDescription,
@@ -112,6 +118,7 @@ public class GetTenantPackagesQueryHandler(IUnitOfWork uow)
             Id: tenantPackage.Id,
             MasterPackageId: master.Id,
             IsOwnedPackage: createdByCurrentTenant,
+            Visibility: master.Visibility.ToString(),
             Title: @override?.Title ?? master.Title,
             Description: @override?.Description ?? master.Description,
             ShortDescription: @override?.ShortDescription ?? master.ShortDescription,

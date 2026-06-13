@@ -97,4 +97,8 @@ export const adminApi = {
     api.post(`/tenants/${tenantId}/marketplace/${packageId}/add`),
   generatePackagePhoto: (tenantId: string, pkgId: string) =>
     api.post<{ featuredImageUrl: string }>(`/tenants/${tenantId}/packages/${pkgId}/generate-photo`),
+  generateAdminPackagePhoto: (pkgId: string) =>
+    api.post<{ featuredImageUrl: string }>(`/admin/packages/${pkgId}/generate-photo`),
+  publishTenantPackage: (tenantId: string, packageId: string) =>
+    api.post(`/tenants/${tenantId}/packages/${packageId}/publish`),
 }

@@ -14,6 +14,7 @@ export interface Package {
   syncedTenantsCount: number
   tenants: string[]
   isOwnedPackage?: boolean
+  packageVisibility?: string  // Draft | Published | Archived (from master package)
   syncSource?: string
   // Detail fields — populated for tenant admin (from ResolvedPackageResponse)
   description?: string
@@ -79,7 +80,7 @@ export const usePackages = (
         const items: Package[] = (result.data || []).map((r: {
           id: string; title: string; category?: string; destination: string
           price: number; currency: string; durationDays: number
-          isCustomized: boolean; isOwnedPackage: boolean; syncSource?: string
+          isCustomized: boolean; isOwnedPackage: boolean; visibility?: string; syncSource?: string
           description?: string; shortDescription?: string; region?: string
           featuredImageUrl?: string; imagesJson?: string; itineraryJson?: string
           highlightsJson?: string; inclusionsJson?: string; exclusionsJson?: string
@@ -95,6 +96,7 @@ export const usePackages = (
           visibility: r.isOwnedPackage ? "Owned" : r.isCustomized ? "Customized" : "Synced",
           syncedTenantsCount: 0,
           isOwnedPackage: r.isOwnedPackage,
+          packageVisibility: r.visibility ?? undefined,
           syncSource: r.syncSource ?? undefined,
           description: r.description ?? undefined,
           shortDescription: r.shortDescription ?? undefined,

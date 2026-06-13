@@ -11,6 +11,7 @@ import { SortableHeader } from "@/components/common/SortableHeader"
 import { PackageEditorModal } from "@/components/modals/PackageEditorModal"
 import { PackageViewModal } from "@/components/modals/PackageViewModal"
 import { usePackages, type Package } from "@/lib/hooks/usePackages"
+import { adminApi } from "@/lib/api"
 import { useMarketplace } from "@/lib/hooks/useMarketplace"
 import { useSettings } from "@/lib/hooks/useSettings"
 import { formatCurrency, getTokenClaims } from "@/lib/utils"
@@ -333,12 +334,17 @@ export default function PackagesPage() {
                           </td>
                         )}
                         <td className="px-4 py-3">
-                          <StatusBadge
-                            status={pkg.visibility}
-                            label={pkg.visibility === "Synced" && pkg.syncSource
-                              ? `Synced (${pkg.syncSource})`
-                              : pkg.visibility}
-                          />
+                          <div className="flex flex-wrap gap-1 items-center">
+                            <StatusBadge
+                              status={pkg.visibility}
+                              label={pkg.visibility === "Synced" && pkg.syncSource
+                                ? `Synced (${pkg.syncSource})`
+                                : pkg.visibility}
+                            />
+                            {isTenantAdmin && pkg.packageVisibility === "Draft" && (
+                              <StatusBadge status="Draft" label="Draft" />
+                            )}
+                          </div>
                         </td>
                         <td className="px-4 py-3">
                           <ActionMenu
@@ -359,10 +365,19 @@ export default function PackagesPage() {
                                   setEditorOpen(true)
                                 },
                               }] : []),
-                              {
+                              ...(isTenantAdmin && pkg.packageVisibility === "Draft" ? [{
                                 label: "Publish",
-                                action: () => toast.success(`${pkg.title} published`),
-                              },
+                                action: async () => {
+                                  if (!tenantId) return
+                                  try {
+                                    await adminApi.publishTenantPackage(tenantId, pkg.id)
+                                    toast.success(`"${pkg.title}" published — now visible on your website`)
+                                    refetch()
+                                  } catch (e) {
+                                    toast.error(e instanceof Error ? e.message : "Publish failed")
+                                  }
+                                },
+                              }] : []),
                               {
                                 label: "Duplicate",
                                 action: () => toast.info("Duplicate coming soon"),
