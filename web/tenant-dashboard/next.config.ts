@@ -1,7 +1,7 @@
 import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["*.lvh.me"],
+  allowedDevOrigins: ["travelpro.lvh.me", "wanderlust.lvh.me", "adventure.lvh.me"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
