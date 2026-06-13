@@ -36,7 +36,6 @@ public class DatabaseSeeder(
         await PatchPackageImagesAsync();
         await SeedTenantPackagesAsync();
         await SeedTenantOwnedPackagesAsync();
-        await SeedCrossTenantExtendedPackagesAsync();
         await BackfillPackageCreatorsAsync();
         await SeedCommissionTestDataAsync();
     }
@@ -371,44 +370,6 @@ public class DatabaseSeeder(
         logger.LogInformation("✅ Seeded tenant-owned packages (5 extended to master, 6 portal-only)");
     }
 
-    private async Task SeedCrossTenantExtendedPackagesAsync()
-    {
-        // Extended packages (contributed to the master catalog by a tenant) are visible
-        // in the Admin catalog and should be synced to ALL tenants, not just the creator.
-        var extendedPackages = await dbContext.Packages
-            .Where(p => p.CreatedByTenantId != null)
-            .ToListAsync();
-
-        if (extendedPackages.Count == 0) return;
-
-        var tenants = await dbContext.Tenants.ToListAsync();
-        var existingSyncs = await dbContext.TenantPackages
-            .Select(tp => new { tp.TenantId, tp.MasterPackageId })
-            .ToListAsync();
-
-        int added = 0;
-        foreach (var package in extendedPackages)
-        {
-            foreach (var tenant in tenants)
-            {
-                if (tenant.Id == package.CreatedByTenantId) continue; // creator already has it
-
-                bool alreadyHas = existingSyncs.Any(tp =>
-                    tp.TenantId == tenant.Id && tp.MasterPackageId == package.Id);
-
-                if (alreadyHas) continue;
-
-                await dbContext.TenantPackages.AddAsync(TenantPackage.Create(tenant.Id, package.Id));
-                added++;
-            }
-        }
-
-        if (added > 0)
-        {
-            await dbContext.SaveChangesAsync();
-            logger.LogInformation("✅ Cross-synced {Count} extended package(s) to other tenants", added);
-        }
-    }
 
     private async Task BackfillPackageCreatorsAsync()
     {

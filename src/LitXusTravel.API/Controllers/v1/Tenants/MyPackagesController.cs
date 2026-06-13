@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using LitXusTravel.Application.UseCases.Packages.CreateTenantPackage;
+using LitXusTravel.Application.UseCases.Packages.GetMarketplacePackages;
 using LitXusTravel.Application.UseCases.Packages.GetTenantPackages;
 using LitXusTravel.Application.UseCases.Packages.SyncPackageToTenant;
 using LitXusTravel.Application.UseCases.Packages.UnsyncPackage;
@@ -105,6 +106,33 @@ public class MyPackagesController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(command, ct);
         if (!result.IsSuccess) return BadRequest(new { result.Errors });
         return Ok(result.Value);
+    }
+
+    /// <summary>List marketplace packages available to add (Extended by other tenants, not yet synced)</summary>
+    [HttpGet("/api/v1/tenants/{tenantId:guid}/marketplace")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMarketplace(Guid tenantId, CancellationToken ct)
+    {
+        if (!IsAuthorizedForTenant(tenantId))
+            return Forbid();
+
+        var result = await mediator.Send(new GetMarketplacePackagesQuery(tenantId), ct);
+        if (!result.IsSuccess) return BadRequest(new { result.Errors });
+        return Ok(result.Value);
+    }
+
+    /// <summary>Add a marketplace package to tenant catalog</summary>
+    [HttpPost("/api/v1/tenants/{tenantId:guid}/marketplace/{packageId:guid}/add")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> AddFromMarketplace(Guid tenantId, Guid packageId, CancellationToken ct)
+    {
+        if (!IsAuthorizedForTenant(tenantId))
+            return Forbid();
+
+        var result = await mediator.Send(new SyncPackagesCommand(tenantId, [packageId]), ct);
+        if (!result.IsSuccess) return BadRequest(new { result.Errors });
+        return Ok(new { message = "Package added to your catalog." });
     }
 
     /// <summary>Unsync a package (SPEC-TENANT-005)</summary>

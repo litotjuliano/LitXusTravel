@@ -89,4 +89,8 @@ export const adminApi = {
     api.put(`/admin/tenants/${tenantId}/packages/${tenantPackageId}`, data),
   unsyncPackage: (tenantId: string, tenantPackageId: string) =>
     api.delete(`/admin/tenants/${tenantId}/packages/${tenantPackageId}`),
+  getMarketplacePackages: (tenantId: string) =>
+    api.get(`/tenants/${tenantId}/marketplace`),
+  addFromMarketplace: (tenantId: string, packageId: string) =>
+    api.post(`/tenants/${tenantId}/marketplace/${packageId}/add`),
 }

@@ -11,6 +11,7 @@ import { SortableHeader } from "@/components/common/SortableHeader"
 import { PackageEditorModal } from "@/components/modals/PackageEditorModal"
 import { PackageViewModal } from "@/components/modals/PackageViewModal"
 import { usePackages } from "@/lib/hooks/usePackages"
+import { useMarketplace } from "@/lib/hooks/useMarketplace"
 import { formatCurrency, getTokenClaims } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -34,6 +35,7 @@ export default function PackagesPage() {
   }, [])
 
   const isTenantAdmin = !!tenantId
+  const isMarketplaceTab = isTenantAdmin && filter === "Marketplace"
 
   // Admin: status filter is server-side. Tenant: filtered client-side after fetch.
   const serverStatus = !isTenantAdmin && filter !== "All" ? filter : undefined
@@ -44,12 +46,16 @@ export default function PackagesPage() {
     { sortBy, sortOrder, status: serverStatus }
   )
 
+  const { packages: marketplacePackages, loading: marketplaceLoading, addToCatalog } = useMarketplace(
+    isMarketplaceTab ? tenantId : undefined
+  )
+
   const tenantOptions = !isTenantAdmin
     ? ["All", ...Array.from(new Set(packages.flatMap((p) => p.tenants))).sort()]
     : []
 
   const filterTabs = isTenantAdmin
-    ? ["All", "Owned", "Customized", "Synced"]
+    ? ["All", "Owned", "Customized", "Synced", "Marketplace"]
     : ["All", "Published", "Draft", "Archived"]
 
   // For tenant: apply tab filter client-side (Owned/Customized/Synced are computed).
@@ -156,8 +162,77 @@ export default function PackagesPage() {
         )}
       </div>
 
-      {/* Table */}
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
+      {/* Marketplace Table */}
+      {isMarketplaceTab && (
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+          {marketplaceLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader className="animate-spin text-muted-foreground mr-2" size={20} />
+              <p className="text-muted-foreground">Loading marketplace...</p>
+            </div>
+          ) : marketplacePackages.length === 0 ? (
+            <div className="px-4 py-12 text-center text-muted-foreground text-sm">
+              No packages available in the marketplace yet.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50 border-b border-border">
+                  <tr>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Package</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Destination</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Price</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Duration</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Source</th>
+                    <th className="px-4 py-3" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {marketplacePackages.map((pkg, i) => (
+                    <motion.tr
+                      key={pkg.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: i * 0.04 }}
+                      className="hover:bg-muted/30 transition-colors"
+                    >
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-foreground">{pkg.title}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{pkg.category}</p>
+                      </td>
+                      <td className="px-4 py-3 text-foreground">{pkg.destination}</td>
+                      <td className="px-4 py-3 font-semibold text-foreground">
+                        {formatCurrency(pkg.basePrice, pkg.currency)}
+                      </td>
+                      <td className="px-4 py-3 text-foreground">{pkg.durationDays}D</td>
+                      <td className="px-4 py-3">
+                        <span className="inline-block px-2 py-0.5 text-[11px] font-medium rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 whitespace-nowrap">
+                          {pkg.sourceTenantName}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={async () => {
+                            const ok = await addToCatalog(pkg.id)
+                            if (ok) toast.success(`"${pkg.title}" added to your catalog`)
+                            else toast.error("Failed to add package")
+                          }}
+                          className="px-3 py-1.5 text-xs font-medium rounded-lg bg-[--color-brand-blue] text-white hover:bg-blue-700 transition-colors"
+                        >
+                          Add to My Catalog
+                        </button>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* My Packages Table */}
+      {!isMarketplaceTab && <div className="bg-card border border-border rounded-xl overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader className="animate-spin text-muted-foreground mr-2" size={20} />
@@ -303,7 +378,7 @@ export default function PackagesPage() {
             />
           </>
         )}
-      </div>
+      </div>}
 
       <PackageViewModal
         packageId={viewPackageId}
