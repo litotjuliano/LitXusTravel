@@ -14,10 +14,13 @@ This project uses the **OpenSpec framework** for spec-driven development.
 
 **Spec domains:**
 - `openspec/specs/packages/` — Package management (SPEC-ADMIN-001/002/003, SPEC-TENANT-001/002/004-007)
-- `openspec/specs/tenants/` — Tenant management (SPEC-ADMIN-004/005/006-009)
+- `openspec/specs/tenants/` — Tenant management (SPEC-ADMIN-004/005, settings, multi-tenancy)
 - `openspec/specs/inquiries/` — Inquiries & CRM (SPEC-ADMIN-010, SPEC-TENANT-008/010, SPEC-PUBLIC-004)
 - `openspec/specs/public-website/` — Public website (SPEC-PUBLIC-001/002/003)
 - `openspec/specs/auth/` — Authentication & role hierarchy
+- `openspec/specs/commission/` — Commission rules, 10 safeguards, payout flow, dispute resolution
+- `openspec/specs/admin-portal/` — Admin dashboard UI/UX (pages, layout, components)
+- `openspec/specs/design-system/` — Brand colors, typography, spacing, animation presets
 
 **Project context for AI:** `openspec/project.md`
 **AI agent instructions:** `openspec/AGENTS.md`
@@ -1019,8 +1022,10 @@ When implementing commission features:
 
 ## 📚 Supporting Documents
 
-- **ROLE_HIERARCHY_AND_COMMISSION_SYSTEM.md** — Complete role definitions, agent models, commission rules, and safeguards
+- **openspec/specs/commission/spec.md** — Complete role definitions, agent models, commission rules, and 10 safeguards (migrated from ROLE_HIERARCHY_AND_COMMISSION_SYSTEM.md)
 - **UAT-WORKFLOW.md** — Testing protocol between LitXusTravel and LitXusDevHub
+- **SEED-USERS.md** — Development seed user credentials
+- **DEPLOYMENT.md** — Local, staging, and production deployment guide
 
 ---
 

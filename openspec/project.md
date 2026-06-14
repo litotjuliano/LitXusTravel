@@ -107,5 +107,15 @@ All implemented endpoints carry a SPEC code in their XML summary comment:
 - `SPEC-TENANT-*` — Tenant agent operations
 - `SPEC-PUBLIC-*` — Public website (unauthenticated)
 
-Full behavioral specs live in `openspec/specs/` organized by domain.
-Design/architecture docs live in `OpenSpecs/` (capital O — legacy reference docs).
+Full behavioral specs live in `openspec/specs/` organized by domain:
+
+| Domain | File | Coverage |
+|--------|------|----------|
+| Packages | `openspec/specs/packages/spec.md` | SPEC-ADMIN-001/002/003/006/007/008/009, SPEC-TENANT-001/002/004/005/006/007 |
+| Tenants | `openspec/specs/tenants/spec.md` | SPEC-ADMIN-004/005, tenant settings, multi-tenancy, subdomain resolution |
+| Inquiries | `openspec/specs/inquiries/spec.md` | SPEC-PUBLIC-004, SPEC-TENANT-008/010, SPEC-ADMIN-010, CRM isolation |
+| Public Website | `openspec/specs/public-website/spec.md` | SPEC-PUBLIC-001/002/003, server-side rendering |
+| Auth | `openspec/specs/auth/spec.md` | Login, JWT claims, RBAC, role hierarchy |
+| Commission | `openspec/specs/commission/spec.md` | Role hierarchy, commission rules, 10 safeguards, payout flow |
+| Admin Portal | `openspec/specs/admin-portal/spec.md` | UI layout, pages, components (Next.js dashboard) |
+| Design System | `openspec/specs/design-system/spec.md` | Brand colors, typography, spacing, animation presets |

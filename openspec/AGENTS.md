@@ -11,13 +11,16 @@
 
 ## Spec Location Map
 
-| Domain | Spec File | SPEC Codes |
+| Domain | Spec File | SPEC Codes / Coverage |
 |--------|-----------|------------|
 | Package management | `openspec/specs/packages/spec.md` | SPEC-ADMIN-001/002/003, SPEC-TENANT-001/002/004/005/006/007 |
-| Tenant management | `openspec/specs/tenants/spec.md` | SPEC-ADMIN-004/005/006/007/008/009 |
+| Tenant management | `openspec/specs/tenants/spec.md` | SPEC-ADMIN-004/005, settings, multi-tenancy, subdomain |
 | Inquiries & CRM | `openspec/specs/inquiries/spec.md` | SPEC-ADMIN-010, SPEC-TENANT-008/010, SPEC-PUBLIC-004 |
-| Public website | `openspec/specs/public-website/spec.md` | SPEC-PUBLIC-001/002/003 |
-| Authentication | `openspec/specs/auth/spec.md` | Login, JWT, role claims |
+| Public website | `openspec/specs/public-website/spec.md` | SPEC-PUBLIC-001/002/003, server-side data fetching |
+| Authentication | `openspec/specs/auth/spec.md` | Login, JWT, RBAC, role hierarchy |
+| Commission system | `openspec/specs/commission/spec.md` | Role hierarchy, commission rules, 10 safeguards, dispute resolution |
+| Admin portal UI | `openspec/specs/admin-portal/spec.md` | Dashboard, packages, tenants pages; sidebar layout; components |
+| Design system | `openspec/specs/design-system/spec.md` | Brand colors (#0066CC/#00A89A/#FF6B35), typography, spacing, Framer Motion |
 
 ---
 
