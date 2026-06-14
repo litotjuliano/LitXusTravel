@@ -1,5 +1,10 @@
 # LitXusTravel - Specification for Claude Code
 
+> **Note:** This file is the legacy spec reference. The authoritative behavioral specifications
+> have been migrated to the **OpenSpec framework** at `openspec/specs/`. Use those files for
+> requirement lookup and new feature planning. This document is retained as a historical reference
+> and for design context (see also `DATABASE_SCHEMA.md`, `SOLUTION_STRUCTURE.md`).
+
 ## Executive Summary
 
 **LitXusTravel** is a multi-tenant SaaS platform for travel package distribution.

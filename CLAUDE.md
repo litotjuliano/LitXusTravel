@@ -2,6 +2,28 @@
 
 ---
 
+## 📐 OpenSpec — Spec-Driven Development
+
+This project uses the **OpenSpec framework** for spec-driven development.
+
+**Before implementing any feature:**
+1. Check `openspec/specs/<domain>/spec.md` for the behavioral requirement
+2. Use `/opsx:propose "<feature>"` to plan new work
+3. Use `/opsx:apply` to implement from the tasks checklist
+4. Use `/opsx:archive` to finalize and sync specs
+
+**Spec domains:**
+- `openspec/specs/packages/` — Package management (SPEC-ADMIN-001/002/003, SPEC-TENANT-001/002/004-007)
+- `openspec/specs/tenants/` — Tenant management (SPEC-ADMIN-004/005/006-009)
+- `openspec/specs/inquiries/` — Inquiries & CRM (SPEC-ADMIN-010, SPEC-TENANT-008/010, SPEC-PUBLIC-004)
+- `openspec/specs/public-website/` — Public website (SPEC-PUBLIC-001/002/003)
+- `openspec/specs/auth/` — Authentication & role hierarchy
+
+**Project context for AI:** `openspec/project.md`
+**AI agent instructions:** `openspec/AGENTS.md`
+
+---
+
 ## 🔄 UAT Workflow (LitXusTravel ↔ LitXusDevHub)
 
 **Our role:** SENDER — we write UAT lists and receive feedback from DevHub.
