@@ -23,21 +23,6 @@ jobs:
     name: Test Backend
     runs-on: ubuntu-latest
 
-    services:
-      mssql:
-        image: mcr.microsoft.com/mssql/server:2022-latest
-        env:
-          ACCEPT_EULA: Y
-          SA_PASSWORD: TestPassword123!
-          MSSQL_PID: Express
-        options: >-
-          --health-cmd "sqlcmd -S localhost -U sa -P TestPassword123! -Q 'SELECT 1'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 1433:1433
-
     steps:
       - uses: actions/checkout@v4
         with:

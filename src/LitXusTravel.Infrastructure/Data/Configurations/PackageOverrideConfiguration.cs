@@ -12,7 +12,6 @@ public class PackageOverrideConfiguration : IEntityTypeConfiguration<PackageOver
 
         builder.Property(o => o.Title).HasMaxLength(255);
         builder.Property(o => o.Currency).HasMaxLength(10);
-        builder.Property(o => o.FeaturedImageUrl).HasColumnType("nvarchar(max)");
         builder.Property(o => o.ContactPhone).HasMaxLength(20);
         builder.Property(o => o.ContactWhatsapp).HasMaxLength(20);
         builder.Property(o => o.Price).HasColumnType("decimal(10,2)");

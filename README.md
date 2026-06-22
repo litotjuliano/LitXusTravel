@@ -14,9 +14,6 @@ c:\LitXus Systems\LitXusTravel\
 ├── DELIVERABLES.md
 │   └─ Complete index of all materials
 │
-├── Seed-Data.sql
-│   └─ Test data (50+ records ready to load)
-│
 ├── Documentation/ (8 Word documents with diagrams)
 │   ├── 1-Role-Hierarchy.docx (14KB)
 │   ├── 2-Agent-Models.docx (15KB)
@@ -45,7 +42,7 @@ c:\LitXus Systems\LitXusTravel\
 
 ## For Developers
 
-1. Load **Seed-Data.sql** into test database
+1. Start the API (`dotnet run`) — seed data loads automatically via `DatabaseSeeder.cs`
 2. Follow **IMPLEMENTATION-CHECKLIST.md** phases
 3. Execute UAT cases as you implement
 4. Reference Word documents for visual guidance
@@ -53,7 +50,7 @@ c:\LitXus Systems\LitXusTravel\
 ## For QA/Testers
 
 1. Read **UAT-README.md** first
-2. Load **Seed-Data.sql**
+2. Start the API — seed data loads automatically via `DatabaseSeeder.cs`
 3. Execute 58 test cases (UAT-1 through UAT-4)
 4. Document findings
 5. Get sign-offs
@@ -77,17 +74,17 @@ c:\LitXus Systems\LitXusTravel\
 | Visual diagrams | Documentation/ (8 Word docs) | 1-2 hours |
 | Test guide | uat/UAT-README.md | 10 min |
 | Test cases | uat/UAT-*.md (4 files) | 10-15 hours |
-| Test data | Seed-Data.sql | 5 min to load |
+| Test data | Automatic (`DatabaseSeeder.cs`, runs on API startup) | 0 min — no manual step |
 
 ---
 
 # ✅ Deliverables at a Glance
 
-**Documentation:** 5 markdown files + 1 SQL file  
+**Documentation:** 5 markdown files  
 **Diagrams:** 8 Word documents (134KB)  
 **Test Cases:** 58 across 4 UAT documents  
 **Safeguards:** 10 critical fraud prevention measures  
-**Test Data:** 50+ seed records  
+**Test Data:** Seeded automatically via `DatabaseSeeder.cs`  
 **Implementation:** 6 phases, 4-5 weeks  
 
 ---
@@ -101,7 +98,7 @@ c:\LitXus Systems\LitXusTravel\
 → Read `IMPLEMENTATION-CHECKLIST.md` (30 minutes) then start Phase 1
 
 ### Option 3: Need to Test It?
-→ Read `uat/UAT-README.md` (10 minutes) then load `Seed-Data.sql` and start testing
+→ Read `uat/UAT-README.md` (10 minutes), start the API, and start testing (seed data loads automatically)
 
 ### Option 4: Want Visual Overview?
 → Open Word documents in `Documentation/` folder (start with 1, 2, 3)
@@ -147,22 +144,22 @@ c:\LitXus Systems\LitXusTravel\
 # 🔧 Setup & Testing
 
 ```bash
-# 1. Load seed data
-sqlcmd -S localhost -d LitXusTravel_Dev -i Seed-Data.sql
+# 1. Start the API — seed data loads automatically via DatabaseSeeder.cs
+dotnet run --project src/LitXusTravel.API
 
-# 2. Verify load
-SELECT COUNT(*) FROM AdminUsers         -- Expected: 4
-SELECT COUNT(*) FROM Tenants            -- Expected: 2
-SELECT COUNT(*) FROM StaffAgents        -- Expected: 4
-SELECT COUNT(*) FROM Bookings           -- Expected: 10
-SELECT COUNT(*) FROM CommissionAccruals -- Expected: 10
+# 2. Verify (via psql)
+SELECT COUNT(*) FROM "AdminUsers";
+SELECT COUNT(*) FROM "Tenants";
+SELECT COUNT(*) FROM "StaffAgents";
+SELECT COUNT(*) FROM "Bookings";
+SELECT COUNT(*) FROM "CommissionAccruals";
 ```
 
 ---
 
 # 📈 Expected Test Results
 
-**June Commission Scenario (from Seed-Data.sql):**
+**June Commission Scenario (from `DatabaseSeeder.cs`'s `SeedCommissionTestDataAsync`):**
 
 ```
 John Smith:        $195 finalized, $45 pending, $75 reversed

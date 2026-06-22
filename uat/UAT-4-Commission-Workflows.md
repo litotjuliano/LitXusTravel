@@ -18,7 +18,7 @@ This document covers UAT for complete commission workflows:
 
 ## Test Data Reference
 
-**Seed data from `Seed-Data.sql`:**
+**Seed data from `DatabaseSeeder.cs`:**
 
 **Tenants:**
 - Tenant A: Travel Pro Inc

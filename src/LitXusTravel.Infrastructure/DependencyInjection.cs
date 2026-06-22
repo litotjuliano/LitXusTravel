@@ -16,10 +16,17 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        // Domain entities use DateTime (Kind=Unspecified) for several timestamp fields, which
+        // SQL Server accepted but Npgsql rejects by default ("Cannot write DateTime with
+        // Kind=Unspecified to PostgreSQL type 'timestamp with time zone', only UTC is
+        // supported"). Restore Npgsql's pre-6.0 behavior, which treats Unspecified-kind
+        // DateTimes as UTC, rather than auditing every DateTime construction in the domain.
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
         services.AddDbContext<LitXusTravelDbContext>(options =>
-            options.UseSqlServer(
+            options.UseNpgsql(
                 configuration.GetConnectionString("DefaultConnection"),
-                sql => sql.MigrationsAssembly(typeof(LitXusTravelDbContext).Assembly.FullName)));
+                npgsql => npgsql.MigrationsAssembly(typeof(LitXusTravelDbContext).Assembly.FullName)));
 
         services.AddIdentityCore<ApplicationUser>(options =>
         {

@@ -12,10 +12,15 @@ public class LitXusTravelDbContextFactory : IDesignTimeDbContextFactory<LitXusTr
 {
     public LitXusTravelDbContext CreateDbContext(string[] args)
     {
+        // Override via `ConnectionStrings__DefaultConnection` env var so real credentials
+        // never need to live in this tracked file. Falls back to a generic local placeholder.
+        var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
+            ?? "Host=localhost;Port=5432;Database=litxustravel_dev;Username=postgres;Password=postgres";
+
         var options = new DbContextOptionsBuilder<LitXusTravelDbContext>()
-            .UseSqlServer(
-                "Server=.;Database=LitXusTravel_Dev;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True",
-                sql => sql.MigrationsAssembly(typeof(LitXusTravelDbContext).Assembly.FullName))
+            .UseNpgsql(
+                connectionString,
+                npgsql => npgsql.MigrationsAssembly(typeof(LitXusTravelDbContext).Assembly.FullName))
             .Options;
 
         return new LitXusTravelDbContext(options, new NullCurrentTenant());

@@ -15,7 +15,7 @@ white-label websites, without affecting the master or other tenants.
 | Layer | Technology |
 |-------|-----------|
 | Backend API | .NET 8, ASP.NET Core, C# |
-| Database | SQL Server, EF Core (Code First) |
+| Database | PostgreSQL, EF Core (Code First) |
 | Architecture | Clean Architecture + CQRS (MediatR) |
 | Validation | FluentValidation |
 | Mapping | AutoMapper |

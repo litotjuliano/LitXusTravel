@@ -18,7 +18,6 @@ This folder contains comprehensive UAT (User Acceptance Testing) documentation f
 | **UAT-2-Agent-Models.md** | Test staff & independent agent setup | QA, Product | 3-4 hours |
 | **UAT-3-Commission-Safeguards.md** | **CRITICAL** - Test all 10 fraud prevention measures | QA, Security | 4-5 hours |
 | **UAT-4-Commission-Workflows.md** | Test booking → commission → payout flows | QA, Accounting | 2-3 hours |
-| **Seed-Data.sql** | Test data - load before starting UAT | Database Admin | 5-10 min |
 
 ---
 
@@ -27,16 +26,16 @@ This folder contains comprehensive UAT (User Acceptance Testing) documentation f
 ### Step 1: Database Setup (5 minutes)
 
 ```bash
-# Load seed data
-sqlcmd -S localhost -d LitXusTravel_Dev -i Seed-Data.sql
+# Start the API — seed data loads automatically via DatabaseSeeder.cs
+dotnet run --project src/LitXusTravel.API
 
-# Verify load
-SELECT COUNT(*) FROM AdminUsers      -- Expected: 4
-SELECT COUNT(*) FROM Tenants         -- Expected: 2
-SELECT COUNT(*) FROM StaffAgents     -- Expected: 4
-SELECT COUNT(*) FROM IndependentAgents -- Expected: 2
-SELECT COUNT(*) FROM Bookings        -- Expected: 10
-SELECT COUNT(*) FROM CommissionAccruals -- Expected: 10
+# Verify (via psql)
+SELECT COUNT(*) FROM "AdminUsers";      -- Expected: 4
+SELECT COUNT(*) FROM "Tenants";         -- Expected: 2
+SELECT COUNT(*) FROM "StaffAgents";     -- Expected: 4
+SELECT COUNT(*) FROM "IndependentAgents"; -- Expected: 2
+SELECT COUNT(*) FROM "Bookings";        -- Expected: 10
+SELECT COUNT(*) FROM "CommissionAccruals"; -- Expected: 10
 ```
 
 ### Step 2: Review Architecture (15 minutes)
@@ -298,7 +297,7 @@ Signature: _________________ Date: _______
 
 If you encounter issues:
 
-1. **Check the seed data** - is it correct? (`Seed-Data.sql`)
+1. **Check the seed data** - is it correct? (`DatabaseSeeder.cs`)
 2. **Review the architecture** - misunderstandings? (CLAUDE.md)
 3. **Re-read the test case** - did you miss a step?
 4. **Check database state** - are values as expected?

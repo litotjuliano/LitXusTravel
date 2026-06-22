@@ -49,7 +49,7 @@ This project uses the **OpenSpec framework** for spec-driven development.
 **Project:** LitXusTravel - Travel Package Distribution Platform  
 **Start Date:** May 28, 2026  
 **Architecture:** Clean Architecture + Multi-Tenant SaaS  
-**Tech Stack:** .NET 8, SQL Server, Next.js, shadcn/ui, Framer Motion
+**Tech Stack:** .NET 8, PostgreSQL, Next.js, shadcn/ui, Framer Motion
 
 ---
 
@@ -873,7 +873,7 @@ public class CreateTenantIntegrationTests : IClassFixture<WebApplicationFactory<
 
 ### Local Development
 ```
-1. Create LitXusTravel_Dev SQL Server database
+1. Install PostgreSQL locally and ensure litxustravel_dev database exists (or let EF create it via migrations)
 2. Run: dotnet ef database update
 3. Run: dotnet run (API on http://localhost:5000)
 4. Next.js: npm run dev (http://localhost:3000)
@@ -882,7 +882,7 @@ public class CreateTenantIntegrationTests : IClassFixture<WebApplicationFactory<
 ### Staging/Production
 ```
 1. Docker containers for .NET API
-2. Azure SQL Database for SQL Server
+2. PostgreSQL (production hosting TODO — not yet decided)
 3. Next.js on Vercel or Azure Static Web Apps
 4. GitHub Actions CI/CD pipeline
 5. Environment variables via Azure Key Vault
@@ -903,7 +903,7 @@ public class CreateTenantIntegrationTests : IClassFixture<WebApplicationFactory<
 - Admin-only endpoints require special claims
 
 ### Data Protection
-- All sensitive data encrypted at rest (SQL Server TDE)
+- All sensitive data encrypted at rest (TODO: select Postgres-equivalent encryption-at-rest mechanism once production host is decided)
 - HTTPS everywhere
 - CORS configured per tenant subdomain
 

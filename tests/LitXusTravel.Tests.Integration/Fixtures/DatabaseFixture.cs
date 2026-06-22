@@ -36,14 +36,14 @@ public class DatabaseFixture : IAsyncLifetime
         Client = _factory.CreateClient();
         ServiceProvider = _factory.Services;
 
-        using var scope = ServiceProvider.CreateScope();
+        await using var scope = ServiceProvider.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<LitXusTravelDbContext>();
         await dbContext.Database.EnsureCreatedAsync();
     }
 
     public async Task DisposeAsync()
     {
-        using var scope = ServiceProvider.CreateScope();
+        await using var scope = ServiceProvider.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<LitXusTravelDbContext>();
         await dbContext.Database.EnsureDeletedAsync();
 
@@ -53,7 +53,7 @@ public class DatabaseFixture : IAsyncLifetime
     public async Task<T> ExecuteInScopeAsync<T>(
         Func<LitXusTravelDbContext, IServiceProvider, Task<T>> action)
     {
-        using var scope = ServiceProvider.CreateScope();
+        await using var scope = ServiceProvider.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<LitXusTravelDbContext>();
         return await action(dbContext, scope.ServiceProvider);
     }
@@ -61,7 +61,7 @@ public class DatabaseFixture : IAsyncLifetime
     public async Task ExecuteInScopeAsync(
         Func<LitXusTravelDbContext, IServiceProvider, Task> action)
     {
-        using var scope = ServiceProvider.CreateScope();
+        await using var scope = ServiceProvider.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<LitXusTravelDbContext>();
         await action(dbContext, scope.ServiceProvider);
     }

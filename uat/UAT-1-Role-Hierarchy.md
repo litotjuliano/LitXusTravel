@@ -18,7 +18,7 @@ This document covers UAT test cases for the Role Hierarchy system:
 
 ## Prerequisite Data
 
-**Seed Data Required:** Load `Seed-Data.sql` before starting UAT
+**Seed Data Required:** Start the API (`dotnet run`) — seed data loads automatically via `DatabaseSeeder.cs`
 
 **Test Users:**
 - SuperAdmin: `litotjuliano@gmail.com`

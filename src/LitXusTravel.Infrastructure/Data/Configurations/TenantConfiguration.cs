@@ -29,7 +29,7 @@ public class TenantConfiguration : IEntityTypeConfiguration<Tenant>
         });
 
         builder.HasIndex(t => t.Slug).IsUnique();
-        builder.HasIndex(t => t.Subdomain).IsUnique().HasFilter("[Subdomain] IS NOT NULL");
+        builder.HasIndex(t => t.Subdomain).IsUnique().HasFilter("\"Subdomain\" IS NOT NULL");
         builder.HasIndex(t => t.IsActive);
 
         builder.HasMany(t => t.Subscriptions)

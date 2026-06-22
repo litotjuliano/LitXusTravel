@@ -49,7 +49,7 @@ Core Documentation:
   • CLAUDE.md (Sections 10-11) - Architecture decisions
   • ROLE_HIERARCHY_AND_COMMISSION_SYSTEM.md - Complete design
   • IMPLEMENTATION-CHECKLIST.md - 6-phase implementation plan
-  • Seed-Data.sql - Test data (50+ records)
+  • DatabaseSeeder.cs - Test data (loads automatically on API startup)
 
 This Folder (Documentation/):
   • 1-Role-Hierarchy.docx - Role definitions & permissions
@@ -72,14 +72,14 @@ Testing (uat/ folder):
 HOW TO USE
 
 For Developers:
-  1. Load Seed-Data.sql into test database
+  1. Start the API (dotnet run) - seed data loads automatically via DatabaseSeeder.cs
   2. Follow IMPLEMENTATION-CHECKLIST.md phases
   3. Execute UAT cases as you implement
   4. Reference these Word documents for visual guidance
 
 For QA/Testers:
   1. Read uat/UAT-README.md first
-  2. Load Seed-Data.sql
+  2. Start the API - seed data loads automatically via DatabaseSeeder.cs
   3. Execute 58 test cases (UAT-1 through UAT-4)
   4. Document findings
   5. Get sign-offs
@@ -100,8 +100,9 @@ Step 1: Understand the System (1-2 hours)
     3. 2-Agent-Models.docx (15 min)
     4. 3-Safeguards.docx (20 min)
 
-Step 2: Load Test Data (5 minutes)
-  sqlcmd -S localhost -d LitXusTravel_Dev -i Seed-Data.sql
+Step 2: Load Test Data (automatic)
+  dotnet run --project src/LitXusTravel.API
+  (DatabaseSeeder.cs seeds test data on every startup)
 
 Step 3: Execute UAT (2-3 days)
   Day 1:
@@ -202,7 +203,7 @@ NEXT STEPS
 1. Read this document completely (10 minutes)
 2. Review 1-Role-Hierarchy.docx (15 minutes)
 3. Share with your team
-4. Load Seed-Data.sql in test environment
+4. Start the API in test environment (seed data loads automatically via DatabaseSeeder.cs)
 5. Begin implementation following IMPLEMENTATION-CHECKLIST.md
 
 For questions about architecture:

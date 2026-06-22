@@ -17,7 +17,7 @@ public class TenantPackageConfiguration : IEntityTypeConfiguration<TenantPackage
         // Unique only when MasterPackageId is set (owned packages have no master)
         builder.HasIndex(tp => new { tp.TenantId, tp.MasterPackageId })
             .IsUnique()
-            .HasFilter("[MasterPackageId] IS NOT NULL");
+            .HasFilter("\"MasterPackageId\" IS NOT NULL");
 
         builder.HasOne(tp => tp.MasterPackage)
             .WithMany(p => p.TenantPackages)

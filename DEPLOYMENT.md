@@ -5,7 +5,7 @@
 LitXusTravel is a multi-tenant travel package distribution SaaS platform built with:
 - **Backend**: .NET 8 API (Clean Architecture)
 - **Frontend**: Next.js with TypeScript and shadcn/ui
-- **Database**: SQL Server (LocalDB for development, Azure SQL for production)
+- **Database**: PostgreSQL (native local install for development, production host TODO)
 - **Deployment**: Docker + Kubernetes / Azure App Service
 
 ---
@@ -31,7 +31,7 @@ LitXusTravel is a multi-tenant travel package distribution SaaS platform built w
 
 - **.NET 8 SDK** (https://dotnet.microsoft.com/download)
 - **Node.js 18+** with npm (https://nodejs.org/)
-- **SQL Server Express or LocalDB** (included with Visual Studio)
+- **PostgreSQL** (native Windows install, https://www.postgresql.org/download/windows/ — default port 5432)
 - **Git** and GitHub CLI (gh)
 - **Docker** (optional, for container testing)
 
@@ -52,7 +52,7 @@ cd ../../web/public-website
 npm install
 cd ../..
 
-# Initialize database (LocalDB)
+# Initialize database (PostgreSQL)
 dotnet ef database update --project src/LitXusTravel.Infrastructure
 ```
 
@@ -127,7 +127,7 @@ npm run dev
                      │
 ┌────────────────────▼────────────────────────────────────┐
 │                    Data Layer                           │
-│  SQL Server (LocalDB/Azure SQL)                         │
+│  PostgreSQL (native local / production host TODO)       │
 │  ├─ Tenants                                             │
 │  ├─ Packages (Master)                                   │
 │  ├─ TenantPackages (Synced copies)                      │
@@ -144,7 +144,7 @@ npm run dev
 
 ```env
 # Database
-ConnectionStrings__LitXusTravel=Server=(localdb)\mssqllocaldb;Database=LitXusTravel_Dev;Integrated Security=true;
+ConnectionStrings__LitXusTravel=Host=localhost;Port=5432;Database=litxustravel_dev;Username=postgres;Password=postgres
 
 # JWT
 Jwt__Key=your-256-bit-secret-key-here
@@ -165,7 +165,8 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 ```env
 # Database
-ConnectionStrings__LitXusTravel=Server=nexustravel-staging.database.windows.net;Database=LitXusTravel_Staging;User Id=adminuser;Password=StrongP@ssw0rd;
+# TODO: staging Postgres host undecided.
+ConnectionStrings__LitXusTravel=Host=<TODO>;Port=5432;Database=litxustravel_staging;Username=<TODO>;Password=<TODO>
 
 # JWT
 Jwt__Key=staging-secret-key-min-256-characters-required
@@ -185,8 +186,9 @@ NEXT_PUBLIC_APP_URL=https://staging.nexustravel.com
 ### Production (.env.production)
 
 ```env
-# Database (Azure SQL with SSL)
-ConnectionStrings__LitXusTravel=Server=nexustravel-prod.database.windows.net;Database=LitXusTravel_Prod;User Id=adminuser;Password=VeryStrongP@ssw0rd123!;Encrypt=true;
+# Database (PostgreSQL — production host TODO)
+# TODO: production Postgres host undecided.
+ConnectionStrings__LitXusTravel=Host=<TODO>;Port=5432;Database=litxustravel_prod;Username=<TODO>;Password=<TODO>;SSL Mode=Require
 
 # JWT
 Jwt__Key=production-secret-key-min-256-characters-required
@@ -253,15 +255,9 @@ public class DatabaseSeeder
 - Weekly full backups (90-day retention)
 - Point-in-time recovery enabled
 
-Configure via Azure SQL -> Backup & Restore:
-```powershell
-Set-AzSqlDatabaseBackupLongTermRetentionPolicy `
-  -ResourceGroupName "nexustravel-prod" `
-  -ServerName "nexustravel-prod" `
-  -DatabaseName "LitXusTravel_Prod" `
-  -WeeklyRetention P13W `
-  -MonthlyRetention P12M
-```
+# TODO: production PostgreSQL host is undecided — backup strategy depends on the chosen
+# provider (e.g. pg_dump + cron, or the managed backup tooling of whichever hosted
+# Postgres service is selected). Document the concrete commands once the host is picked.
 
 ---
 
@@ -319,7 +315,7 @@ docker run -p 3000:3000 nexustravel-admin:latest
 ### Prerequisites
 
 - Azure subscription with App Service plan
-- Azure SQL Database
+- PostgreSQL database (hosting provider TODO)
 - Azure Container Registry
 - GitHub Actions secrets configured
 
@@ -347,7 +343,7 @@ curl https://api-staging.nexustravel.com/health
 https://staging.nexustravel.com/admin
 
 # Verify database migrations
-# Connect to Azure SQL and run: SELECT * FROM __EFMigrationsHistory
+# Connect via psql and run: SELECT * FROM "__EFMigrationsHistory";
 ```
 
 **4. Smoke Tests:**
@@ -588,11 +584,9 @@ az webapp deployment slot swap \
 
 ```sql
 -- Last resort - restore from backup (with data loss)
--- From Azure Portal:
--- 1. SQL Server → Backups → Point-in-time restore
--- 2. Select time before problematic migration
--- 3. Restore to new database
--- 4. Swap databases (requires downtime)
+-- TODO: production PostgreSQL host undecided — restore steps depend on the chosen
+-- provider's backup tooling (e.g. pg_restore from a pg_dump snapshot, or the managed
+-- point-in-time-restore feature of whichever hosted Postgres service is selected).
 ```
 
 **Safer: Keep old schema version available**
