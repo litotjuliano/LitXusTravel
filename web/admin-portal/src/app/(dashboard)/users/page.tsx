@@ -62,7 +62,7 @@ export default function UsersPage() {
         {isSuperAdmin && (
           <button
             onClick={() => toast.info("Invite admin — coming soon")}
-            className="flex items-center gap-2 px-4 py-2.5 bg-[--color-brand-blue] hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 bg-(--color-brand-blue) hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors"
           >
             <Plus size={16} />
             Invite Admin
@@ -76,7 +76,7 @@ export default function UsersPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search users..."
-          className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue]"
+          className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-(--color-brand-blue)"
         />
       </div>
 

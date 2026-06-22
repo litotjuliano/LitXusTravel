@@ -58,7 +58,7 @@ export default function CommissionPage() {
     finally { setSubmitting(false) }
   }
 
-  const inputCls = "w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue]"
+  const inputCls = "w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-(--color-brand-blue)"
 
   return (
     <div className="space-y-6">
@@ -68,7 +68,7 @@ export default function CommissionPage() {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Commission Rules</p>
-          <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2 px-3 py-1.5 bg-[--color-brand-blue] hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors">
+          <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2 px-3 py-1.5 bg-(--color-brand-blue) hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors">
             <Plus size={13} /> Add Rule
           </button>
         </div>
@@ -100,7 +100,7 @@ export default function CommissionPage() {
             </div>
             <div className="flex gap-2 justify-end">
               <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">Cancel</button>
-              <button type="submit" disabled={submitting} className="px-4 py-2 text-sm font-semibold bg-[--color-brand-blue] text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">{submitting ? "Creating..." : "Create"}</button>
+              <button type="submit" disabled={submitting} className="px-4 py-2 text-sm font-semibold bg-(--color-brand-blue) text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">{submitting ? "Creating..." : "Create"}</button>
             </div>
           </form>
         )}
@@ -140,7 +140,7 @@ export default function CommissionPage() {
         <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Agent Commission Statement</p>
         <div className="flex gap-3">
           <input className={`flex-1 ${inputCls}`} placeholder="Agent ID (UUID)" value={agentId} onChange={e => setAgentId(e.target.value)} />
-          <button onClick={loadStatement} disabled={!agentId} className="px-4 py-2 text-sm font-semibold bg-[--color-brand-blue] text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">Load</button>
+          <button onClick={loadStatement} disabled={!agentId} className="px-4 py-2 text-sm font-semibold bg-(--color-brand-blue) text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">Load</button>
         </div>
         {statement && (
           <div className="space-y-4">

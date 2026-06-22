@@ -63,7 +63,7 @@ export function Pagination({
               onClick={() => onPageChange(p as number)}
               className={`min-w-[32px] h-8 rounded-md text-xs font-medium transition-colors px-1 ${
                 p === page
-                  ? "bg-[--color-brand-blue] text-white"
+                  ? "bg-(--color-brand-blue) text-white"
                   : "hover:bg-muted text-foreground"
               }`}
             >
@@ -90,7 +90,7 @@ export function Pagination({
             onChange={(e) => {
               onPageSizeChange(Number(e.target.value))
             }}
-            className="border border-border rounded-md px-2 py-1 bg-card text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-[--color-brand-blue]"
+            className="border border-border rounded-md px-2 py-1 bg-card text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-(--color-brand-blue)"
           >
             {[10, 20, 50].map((s) => (
               <option key={s} value={s}>

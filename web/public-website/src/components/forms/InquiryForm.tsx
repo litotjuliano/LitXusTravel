@@ -62,7 +62,7 @@ export default function InquiryForm({ packageId, packageTitle, onSuccess }: Prop
         className="flex flex-col items-center gap-4 py-8 text-center"
       >
         <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-          <CheckCircle size={32} className="text-[--color-brand-success]" />
+          <CheckCircle size={32} className="text-(--color-brand-success)" />
         </div>
         <h3 className="text-xl font-bold">Inquiry Sent!</h3>
         <p className="text-muted-foreground text-sm">
@@ -78,7 +78,7 @@ export default function InquiryForm({ packageId, packageTitle, onSuccess }: Prop
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {packageTitle && (
-        <div className="bg-blue-50 text-[--color-brand-blue] text-sm px-4 py-3 rounded-lg font-medium">
+        <div className="bg-blue-50 text-(--color-brand-blue) text-sm px-4 py-3 rounded-lg font-medium">
           ✈ Enquiring about: {packageTitle}
         </div>
       )}
@@ -91,7 +91,7 @@ export default function InquiryForm({ packageId, packageTitle, onSuccess }: Prop
         <input
           {...register("customerName")}
           placeholder="Your full name"
-          className="w-full px-4 py-2.5 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue] text-sm bg-background"
+          className="w-full px-4 py-2.5 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-(--color-brand-blue) text-sm bg-background"
         />
         {errors.customerName && <p className="text-xs text-red-500 mt-1">{errors.customerName.message}</p>}
       </div>
@@ -105,7 +105,7 @@ export default function InquiryForm({ packageId, packageTitle, onSuccess }: Prop
           {...register("customerEmail")}
           type="email"
           placeholder="your@email.com"
-          className="w-full px-4 py-2.5 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue] text-sm bg-background"
+          className="w-full px-4 py-2.5 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-(--color-brand-blue) text-sm bg-background"
         />
         {errors.customerEmail && <p className="text-xs text-red-500 mt-1">{errors.customerEmail.message}</p>}
       </div>
@@ -119,7 +119,7 @@ export default function InquiryForm({ packageId, packageTitle, onSuccess }: Prop
           {...register("customerPhone")}
           type="tel"
           placeholder="+60 12-345 6789"
-          className="w-full px-4 py-2.5 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue] text-sm bg-background"
+          className="w-full px-4 py-2.5 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-(--color-brand-blue) text-sm bg-background"
         />
         {errors.customerPhone && <p className="text-xs text-red-500 mt-1">{errors.customerPhone.message}</p>}
       </div>
@@ -133,7 +133,7 @@ export default function InquiryForm({ packageId, packageTitle, onSuccess }: Prop
             type="number"
             min={1}
             placeholder="2"
-            className="w-full px-4 py-2.5 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue] text-sm bg-background"
+            className="w-full px-4 py-2.5 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-(--color-brand-blue) text-sm bg-background"
           />
         </div>
         <div>
@@ -141,7 +141,7 @@ export default function InquiryForm({ packageId, packageTitle, onSuccess }: Prop
           <input
             {...register("preferredTravelDates")}
             placeholder="e.g. March 2026"
-            className="w-full px-4 py-2.5 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue] text-sm bg-background"
+            className="w-full px-4 py-2.5 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-(--color-brand-blue) text-sm bg-background"
           />
         </div>
       </div>
@@ -155,7 +155,7 @@ export default function InquiryForm({ packageId, packageTitle, onSuccess }: Prop
           {...register("message")}
           rows={4}
           placeholder="Tell us what you're looking for..."
-          className="w-full px-4 py-2.5 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue] text-sm bg-background resize-none"
+          className="w-full px-4 py-2.5 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-(--color-brand-blue) text-sm bg-background resize-none"
         />
         {errors.message && <p className="text-xs text-red-500 mt-1">{errors.message.message}</p>}
       </div>
@@ -163,7 +163,7 @@ export default function InquiryForm({ packageId, packageTitle, onSuccess }: Prop
       <Button
         type="submit"
         disabled={isSubmitting}
-        className="w-full bg-[--color-brand-blue] hover:bg-blue-700 text-white font-bold py-3 rounded-xl gap-2"
+        className="w-full bg-(--color-brand-blue) hover:bg-blue-700 text-white font-bold py-3 rounded-xl gap-2"
         size="lg"
       >
         {isSubmitting ? (
@@ -177,7 +177,7 @@ export default function InquiryForm({ packageId, packageTitle, onSuccess }: Prop
         Or reach us directly on{" "}
         <a
           href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "601234567890"}`}
-          className="text-[--color-brand-blue] font-semibold hover:underline"
+          className="text-(--color-brand-blue) font-semibold hover:underline"
           target="_blank"
           rel="noopener noreferrer"
         >

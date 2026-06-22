@@ -49,7 +49,7 @@ export default function InquiriesPage() {
             }}
             className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
               activeFilter === status
-                ? "bg-[--color-brand-blue] text-white"
+                ? "bg-(--color-brand-blue) text-white"
                 : "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white hover:bg-gray-100 dark:bg-gray-800"
             }`}
           >
@@ -87,7 +87,7 @@ export default function InquiriesPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleStatusChange(inq)}
-                      className="text-[--color-brand-blue] hover:bg-gray-100 dark:bg-gray-800"
+                      className="text-(--color-brand-blue) hover:bg-gray-100 dark:bg-gray-800"
                     >
                       Change Status
                     </Button>

@@ -21,7 +21,7 @@ export default function PopularDestinations() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-12"
         >
-          <p className="text-sm font-semibold text-[--color-brand-teal] uppercase tracking-widest mb-2">
+          <p className="text-sm font-semibold text-(--color-brand-teal) uppercase tracking-widest mb-2">
             Explore the World
           </p>
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground">

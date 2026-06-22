@@ -41,7 +41,7 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 font-bold text-xl text-[--color-brand-blue]">
+        <Link href="/" className="flex items-center gap-2 font-bold text-xl text-(--color-brand-blue)">
           ✈ {tenantName}
         </Link>
 
@@ -52,8 +52,8 @@ export default function Navbar() {
               key={href}
               href={href}
               className={cn(
-                "text-sm font-medium transition-colors hover:text-[--color-brand-blue]",
-                pathname === href ? "text-[--color-brand-blue]" : "text-muted-foreground"
+                "text-sm font-medium transition-colors hover:text-(--color-brand-blue)",
+                pathname === href ? "text-(--color-brand-blue)" : "text-muted-foreground"
               )}
             >
               {label}
@@ -67,7 +67,7 @@ export default function Navbar() {
             href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className={cn(buttonVariants({ size: "sm" }), "bg-[--color-brand-blue] hover:bg-blue-700 text-white gap-2")}
+            className={cn(buttonVariants({ size: "sm" }), "bg-(--color-brand-blue) hover:bg-blue-700 text-white gap-2")}
           >
             <MessageCircle size={16} />
             WhatsApp Us
@@ -89,7 +89,7 @@ export default function Navbar() {
                   className={cn(
                     "px-4 py-3 rounded-lg text-sm font-medium transition-colors",
                     pathname === href
-                      ? "bg-blue-50 text-[--color-brand-blue]"
+                      ? "bg-blue-50 text-(--color-brand-blue)"
                       : "hover:bg-muted text-foreground"
                   )}
                 >
@@ -101,7 +101,7 @@ export default function Navbar() {
                   href={WHATSAPP_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={cn(buttonVariants(), "w-full justify-center bg-[--color-brand-blue] hover:bg-blue-700 text-white gap-2")}
+                  className={cn(buttonVariants(), "w-full justify-center bg-(--color-brand-blue) hover:bg-blue-700 text-white gap-2")}
                 >
                   <MessageCircle size={16} />
                   WhatsApp Us

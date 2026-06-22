@@ -72,7 +72,7 @@ function PlatformView() {
         {PLANS.map((plan) => (
           <div key={plan.name} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5">
             <h3 className="font-bold text-gray-900 dark:text-white mb-1">{plan.name}</h3>
-            <p className="text-2xl font-bold text-[--color-brand-blue] mb-4">
+            <p className="text-2xl font-bold text-(--color-brand-blue) mb-4">
               RM {plan.price}
               <span className="text-sm font-normal text-gray-500 dark:text-gray-400">/mo</span>
             </p>
@@ -82,7 +82,7 @@ function PlatformView() {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-500 dark:text-gray-400">{plan.tenants} active tenants</span>
-              <span className="text-xs font-semibold text-[--color-brand-blue]">
+              <span className="text-xs font-semibold text-(--color-brand-blue)">
                 RM {(plan.price * plan.tenants).toLocaleString()}/mo
               </span>
             </div>
@@ -159,7 +159,7 @@ function PlatformView() {
                               if (!plan) return
                               setPendingPlan({ tenantId: t.id, tenantName: t.name, planName: plan })
                             }}
-                            className="text-sm border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue] disabled:opacity-50"
+                            className="text-sm border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-(--color-brand-blue) disabled:opacity-50"
                           >
                             <option value="">— Assign plan —</option>
                             {PLANS.map(p => (
@@ -225,7 +225,7 @@ function PlatformView() {
               <button
                 onClick={confirmAssignPlan}
                 disabled={assigning === pendingPlan.tenantId}
-                className="px-4 py-2 text-sm font-semibold bg-[--color-brand-blue] hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                className="px-4 py-2 text-sm font-semibold bg-(--color-brand-blue) hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
               >
                 {assigning === pendingPlan.tenantId && <Loader size={14} className="animate-spin" />}
                 Confirm
@@ -262,14 +262,14 @@ function TenantView() {
       </div>
 
       {/* Current plan card */}
-      <div className="bg-white dark:bg-gray-900 border border-[--color-brand-blue]/40 rounded-xl p-6 space-y-5">
+      <div className="bg-white dark:bg-gray-900 border border-(--color-brand-blue)/40 rounded-xl p-6 space-y-5">
         <div className="flex items-start justify-between">
           <div>
             <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
               Current Plan
             </p>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">{plan}</p>
-            <p className="text-xl font-semibold text-[--color-brand-blue] mt-0.5">
+            <p className="text-xl font-semibold text-(--color-brand-blue) mt-0.5">
               RM {planDetails.price}
               <span className="text-sm font-normal text-gray-500 dark:text-gray-400">/month</span>
             </p>
@@ -316,12 +316,12 @@ function TenantView() {
               key={p.name}
               className={`rounded-xl border p-4 ${
                 p.name === plan
-                  ? "border-[--color-brand-blue] bg-[--color-brand-blue]/5"
+                  ? "border-(--color-brand-blue) bg-(--color-brand-blue)/5"
                   : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
               }`}
             >
               <p className="font-semibold text-gray-900 dark:text-white text-sm">{p.name}</p>
-              <p className="text-[--color-brand-blue] font-bold mt-0.5">
+              <p className="text-(--color-brand-blue) font-bold mt-0.5">
                 RM {p.price}
                 <span className="text-xs font-normal text-gray-500 dark:text-gray-400">/mo</span>
               </p>
@@ -330,7 +330,7 @@ function TenantView() {
                 <p>{p.members} members</p>
               </div>
               {p.name === plan ? (
-                <p className="mt-3 text-xs font-semibold text-[--color-brand-blue]">
+                <p className="mt-3 text-xs font-semibold text-(--color-brand-blue)">
                   Current plan
                 </p>
               ) : (

@@ -29,12 +29,12 @@ export default function PackageCard({ pkg }: Props) {
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
             {pkg.isFeatured && (
-              <Badge className="absolute top-3 right-3 bg-[--color-brand-orange] hover:bg-orange-600 text-white text-xs font-semibold">
+              <Badge className="absolute top-3 right-3 bg-(--color-brand-orange) hover:bg-orange-600 text-white text-xs font-semibold">
                 Featured
               </Badge>
             )}
             {pkg.isPopular && !pkg.isFeatured && (
-              <Badge className="absolute top-3 right-3 bg-[--color-brand-teal] hover:bg-teal-700 text-white text-xs font-semibold">
+              <Badge className="absolute top-3 right-3 bg-(--color-brand-teal) hover:bg-teal-700 text-white text-xs font-semibold">
                 Popular
               </Badge>
             )}
@@ -58,7 +58,7 @@ export default function PackageCard({ pkg }: Props) {
             </div>
 
             {/* Title */}
-            <h3 className="font-bold text-foreground text-base leading-snug mb-2 line-clamp-2 group-hover:text-[--color-brand-blue] transition-colors">
+            <h3 className="font-bold text-foreground text-base leading-snug mb-2 line-clamp-2 group-hover:text-(--color-brand-blue) transition-colors">
               {pkg.title}
             </h3>
 
@@ -77,7 +77,7 @@ export default function PackageCard({ pkg }: Props) {
               </span>
               <div className="text-right">
                 <p className="text-xs text-muted-foreground">From</p>
-                <p className="text-xl font-bold text-[--color-brand-blue]">
+                <p className="text-xl font-bold text-(--color-brand-blue)">
                   {pkg.currency} {pkg.price.toLocaleString()}
                 </p>
               </div>

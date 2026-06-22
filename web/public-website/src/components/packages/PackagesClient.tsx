@@ -59,7 +59,7 @@ export default function PackagesClient({ packages }: Props) {
               placeholder="Search packages, destinations..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-lg border border-border text-sm focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue] bg-background"
+              className="w-full pl-9 pr-4 py-2 rounded-lg border border-border text-sm focus:outline-none focus:ring-2 focus:ring-(--color-brand-blue) bg-background"
             />
             {search && (
               <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
@@ -71,7 +71,7 @@ export default function PackagesClient({ packages }: Props) {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="hidden sm:block px-3 py-2 rounded-lg border border-border text-sm focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue] bg-background"
+            className="hidden sm:block px-3 py-2 rounded-lg border border-border text-sm focus:outline-none focus:ring-2 focus:ring-(--color-brand-blue) bg-background"
           >
             <option value="popular">Most Popular</option>
             <option value="price_asc">Price: Low to High</option>
@@ -102,7 +102,7 @@ export default function PackagesClient({ packages }: Props) {
                       onClick={() => setCategory(cat)}
                       className={`cursor-pointer transition-colors ${
                         category === cat
-                          ? "bg-[--color-brand-blue] hover:bg-blue-700 text-white"
+                          ? "bg-(--color-brand-blue) hover:bg-blue-700 text-white"
                           : "bg-white text-foreground border border-border hover:bg-gray-100"
                       }`}
                     >
@@ -119,7 +119,7 @@ export default function PackagesClient({ packages }: Props) {
                 <input
                   type="range" min={500} max={15000} step={500} value={priceMax}
                   onChange={(e) => setPriceMax(Number(e.target.value))}
-                  className="w-full accent-[--color-brand-blue]"
+                  className="w-full accent-(--color-brand-blue)"
                 />
               </div>
             </div>

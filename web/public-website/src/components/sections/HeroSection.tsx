@@ -55,7 +55,7 @@ export default function HeroSection({
                 href="/packages"
                 className={cn(
                   buttonVariants({ size: "lg" }),
-                  "bg-[--color-brand-blue] hover:bg-blue-700 text-white px-8 rounded-xl font-semibold gap-2 shadow-lg"
+                  "bg-(--color-brand-blue) hover:bg-blue-700 text-white px-8 rounded-xl font-semibold gap-2 shadow-lg"
                 )}
               >
                 <Search size={18} />

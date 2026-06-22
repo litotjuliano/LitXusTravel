@@ -35,7 +35,7 @@ export default function Footer() {
                 <a
                   key={i}
                   href="#"
-                  className="w-9 h-9 rounded-lg bg-gray-800 flex items-center justify-center hover:bg-[--color-brand-blue] transition-colors"
+                  className="w-9 h-9 rounded-lg bg-gray-800 flex items-center justify-center hover:bg-(--color-brand-blue) transition-colors"
                 >
                   <Icon size={16} />
                 </a>
@@ -95,7 +95,7 @@ export default function Footer() {
           <p>© {new Date().getFullYear()} {tenantName}. All rights reserved.</p>
           <p>
             Powered by{" "}
-            <span className="text-[--color-brand-blue] font-semibold">LitXusTravel Platform</span>
+            <span className="text-(--color-brand-blue) font-semibold">LitXusTravel Platform</span>
           </p>
         </div>
       </div>

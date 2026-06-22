@@ -37,7 +37,7 @@ export default function TestimonialsSection() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <p className="text-sm font-semibold text-[--color-brand-teal] uppercase tracking-widest mb-2">
+          <p className="text-sm font-semibold text-(--color-brand-teal) uppercase tracking-widest mb-2">
             Happy Travellers
           </p>
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
@@ -71,7 +71,7 @@ export default function TestimonialsSection() {
 
               {/* Author */}
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[--color-brand-blue] flex items-center justify-center text-white font-bold text-sm">
+                <div className="w-10 h-10 rounded-full bg-(--color-brand-blue) flex items-center justify-center text-white font-bold text-sm">
                   {t.author[0]}
                 </div>
                 <div>

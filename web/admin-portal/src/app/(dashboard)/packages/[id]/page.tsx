@@ -44,7 +44,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   )
 }
 
-const inputCls = "w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue] transition-colors"
+const inputCls = "w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-(--color-brand-blue) transition-colors"
 
 export default function PackageEditorPage() {
   const { id } = useParams<{ id: string }>()
@@ -197,7 +197,7 @@ export default function PackageEditorPage() {
             <Button
               onClick={handleSave}
               disabled={saving}
-              className="w-full bg-[--color-brand-blue] hover:bg-blue-700 text-white font-semibold"
+              className="w-full bg-(--color-brand-blue) hover:bg-blue-700 text-white font-semibold"
             >
               {saving ? <><Loader size={14} className="animate-spin mr-2" />Saving...</> : "Save Changes"}
             </Button>

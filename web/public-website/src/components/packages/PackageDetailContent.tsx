@@ -55,13 +55,13 @@ export default function PackageDetailContent({ pkg }: Props) {
           <div className="lg:col-span-2 space-y-10">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
               <div className="flex flex-wrap gap-2 mb-3">
-                {pkg.category && <Badge className="bg-blue-100 text-[--color-brand-blue]">{pkg.category}</Badge>}
-                {pkg.isFeatured && <Badge className="bg-orange-100 text-[--color-brand-orange]">Featured</Badge>}
+                {pkg.category && <Badge className="bg-blue-100 text-(--color-brand-blue)">{pkg.category}</Badge>}
+                {pkg.isFeatured && <Badge className="bg-orange-100 text-(--color-brand-orange)">Featured</Badge>}
               </div>
               <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">{pkg.title}</h1>
               <div className="flex flex-wrap items-center gap-5 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1.5"><MapPin size={15} className="text-[--color-brand-blue]" />{pkg.destination}</span>
-                <span className="flex items-center gap-1.5"><Calendar size={15} className="text-[--color-brand-blue]" />{pkg.durationDays} Days</span>
+                <span className="flex items-center gap-1.5"><MapPin size={15} className="text-(--color-brand-blue)" />{pkg.destination}</span>
+                <span className="flex items-center gap-1.5"><Calendar size={15} className="text-(--color-brand-blue)" />{pkg.durationDays} Days</span>
                 {pkg.rating && (
                   <span className="flex items-center gap-1.5">
                     <Star size={15} className="fill-yellow-400 text-yellow-400" />
@@ -77,7 +77,7 @@ export default function PackageDetailContent({ pkg }: Props) {
                 <h2 className="text-xl font-bold mb-4">Highlights</h2>
                 <div className="flex flex-wrap gap-2">
                   {highlights.map((h) => (
-                    <span key={h} className="bg-blue-50 text-[--color-brand-blue] px-3 py-1.5 rounded-full text-sm font-medium">✦ {h}</span>
+                    <span key={h} className="bg-blue-50 text-(--color-brand-blue) px-3 py-1.5 rounded-full text-sm font-medium">✦ {h}</span>
                   ))}
                 </div>
               </div>
@@ -94,7 +94,7 @@ export default function PackageDetailContent({ pkg }: Props) {
                         className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50 transition-colors"
                       >
                         <div className="flex items-center gap-4">
-                          <span className="w-9 h-9 rounded-full bg-[--color-brand-blue] text-white flex items-center justify-center text-sm font-bold shrink-0">{day.dayNumber}</span>
+                          <span className="w-9 h-9 rounded-full bg-(--color-brand-blue) text-white flex items-center justify-center text-sm font-bold shrink-0">{day.dayNumber}</span>
                           <span className="font-semibold">{day.title}</span>
                         </div>
                         {openDay === day.dayNumber ? <ChevronUp size={18} className="text-muted-foreground" /> : <ChevronDown size={18} className="text-muted-foreground" />}
@@ -112,17 +112,17 @@ export default function PackageDetailContent({ pkg }: Props) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 {inclusions.length > 0 && (
                   <div>
-                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><Check size={20} className="text-[--color-brand-success]" />What&apos;s Included</h3>
+                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><Check size={20} className="text-(--color-brand-success)" />What&apos;s Included</h3>
                     <ul className="space-y-2">
-                      {inclusions.map((item) => <li key={item} className="flex items-start gap-2 text-sm text-foreground/80"><Check size={15} className="text-[--color-brand-success] mt-0.5 shrink-0" />{item}</li>)}
+                      {inclusions.map((item) => <li key={item} className="flex items-start gap-2 text-sm text-foreground/80"><Check size={15} className="text-(--color-brand-success) mt-0.5 shrink-0" />{item}</li>)}
                     </ul>
                   </div>
                 )}
                 {exclusions.length > 0 && (
                   <div>
-                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><X size={20} className="text-[--color-brand-warning]" />Not Included</h3>
+                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><X size={20} className="text-(--color-brand-warning)" />Not Included</h3>
                     <ul className="space-y-2">
-                      {exclusions.map((item) => <li key={item} className="flex items-start gap-2 text-sm text-foreground/80"><X size={15} className="text-[--color-brand-warning] mt-0.5 shrink-0" />{item}</li>)}
+                      {exclusions.map((item) => <li key={item} className="flex items-start gap-2 text-sm text-foreground/80"><X size={15} className="text-(--color-brand-warning) mt-0.5 shrink-0" />{item}</li>)}
                     </ul>
                   </div>
                 )}
@@ -134,21 +134,21 @@ export default function PackageDetailContent({ pkg }: Props) {
           <div>
             <motion.div
               initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
-              className="sticky top-24 bg-white border-2 border-[--color-brand-blue] rounded-2xl p-6 shadow-xl"
+              className="sticky top-24 bg-white border-2 border-(--color-brand-blue) rounded-2xl p-6 shadow-xl"
             >
               <p className="text-sm text-muted-foreground mb-1">Starting from</p>
-              <p className="text-4xl font-bold text-[--color-brand-blue] mb-6">{pkg.currency} {pkg.price.toLocaleString()}</p>
+              <p className="text-4xl font-bold text-(--color-brand-blue) mb-6">{pkg.currency} {pkg.price.toLocaleString()}</p>
               <div className="space-y-3 mb-6 text-sm">
-                <div className="flex items-center gap-3 text-foreground/80"><Calendar size={16} className="text-[--color-brand-blue]" />{pkg.durationDays} Days / {pkg.durationDays - 1} Nights</div>
-                <div className="flex items-center gap-3 text-foreground/80"><MapPin size={16} className="text-[--color-brand-blue]" />{pkg.destination}</div>
-                <div className="flex items-center gap-3 text-foreground/80"><Users size={16} className="text-[--color-brand-blue]" />Min. 2 Pax</div>
+                <div className="flex items-center gap-3 text-foreground/80"><Calendar size={16} className="text-(--color-brand-blue)" />{pkg.durationDays} Days / {pkg.durationDays - 1} Nights</div>
+                <div className="flex items-center gap-3 text-foreground/80"><MapPin size={16} className="text-(--color-brand-blue)" />{pkg.destination}</div>
+                <div className="flex items-center gap-3 text-foreground/80"><Users size={16} className="text-(--color-brand-blue)" />Min. 2 Pax</div>
               </div>
-              <Button onClick={() => setShowInquiry(true)} className="w-full bg-[--color-brand-blue] hover:bg-blue-700 font-bold py-3 rounded-xl mb-3" size="lg">Get Quotation</Button>
+              <Button onClick={() => setShowInquiry(true)} className="w-full bg-(--color-brand-blue) hover:bg-blue-700 font-bold py-3 rounded-xl mb-3" size="lg">Get Quotation</Button>
               <a
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full justify-center border-2 border-[--color-brand-blue] text-[--color-brand-blue] hover:bg-blue-50 font-bold py-3 rounded-xl gap-2")}
+                className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full justify-center border-2 border-(--color-brand-blue) text-(--color-brand-blue) hover:bg-blue-50 font-bold py-3 rounded-xl gap-2")}
               >
                 <MessageCircle size={18} />Chat on WhatsApp
               </a>

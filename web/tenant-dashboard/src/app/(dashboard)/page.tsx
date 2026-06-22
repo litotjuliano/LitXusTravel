@@ -73,11 +73,11 @@ export default function DashboardPage() {
 
       {/* Quick links */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <a href="/packages" className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5 hover:border-[--color-brand-blue] transition-colors">
+        <a href="/packages" className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5 hover:border-(--color-brand-blue) transition-colors">
           <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Manage Packages</h3>
           <p className="text-xs text-gray-500 dark:text-gray-400">Sync, customize, and manage your packages</p>
         </a>
-        <a href="/settings" className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5 hover:border-[--color-brand-blue] transition-colors">
+        <a href="/settings" className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5 hover:border-(--color-brand-blue) transition-colors">
           <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Account Settings</h3>
           <p className="text-xs text-gray-500 dark:text-gray-400">View and manage your account information</p>
         </a>

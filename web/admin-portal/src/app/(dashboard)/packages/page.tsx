@@ -115,7 +115,7 @@ export default function PackagesPage() {
           </p>
         </div>
         <Button
-          className="bg-[--color-brand-blue] hover:bg-blue-700 text-white gap-2"
+          className="bg-(--color-brand-blue) hover:bg-blue-700 text-white gap-2"
           onClick={() => setEditorOpen(true)}
         >
           <Plus size={16} />
@@ -140,7 +140,7 @@ export default function PackagesPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search packages..."
-            className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue]"
+            className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-(--color-brand-blue)"
           />
         </div>
         {filterTabs.map((s) => (
@@ -149,7 +149,7 @@ export default function PackagesPage() {
             onClick={() => handleFilterChange(s)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               filter === s
-                ? "bg-[--color-brand-blue] text-white"
+                ? "bg-(--color-brand-blue) text-white"
                 : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800/80"
             }`}
           >
@@ -160,7 +160,7 @@ export default function PackagesPage() {
           <select
             value={tenantFilter}
             onChange={(e) => { setTenantFilter(e.target.value); setPage(1) }}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-800 focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue]"
+            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-800 focus:outline-none focus:ring-2 focus:ring-(--color-brand-blue)"
           >
             {tenantOptions.map((t) => (
               <option key={t} value={t}>{t === "All" ? "All Tenants" : t}</option>
@@ -224,7 +224,7 @@ export default function PackagesPage() {
                             if (ok) toast.success(`"${pkg.title}" added to your catalog`)
                             else toast.error("Failed to add package")
                           }}
-                          className="px-3 py-1.5 text-xs font-medium rounded-lg bg-[--color-brand-blue] text-white hover:bg-blue-700 transition-colors"
+                          className="px-3 py-1.5 text-xs font-medium rounded-lg bg-(--color-brand-blue) text-white hover:bg-blue-700 transition-colors"
                         >
                           Add to My Catalog
                         </button>

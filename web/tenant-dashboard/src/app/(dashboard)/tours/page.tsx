@@ -56,7 +56,7 @@ export default function ToursPage() {
     } catch (err) { toast.error(err instanceof Error ? err.message : "Failed") }
   }
 
-  const inputCls = "w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue]"
+  const inputCls = "w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-(--color-brand-blue)"
 
   return (
     <div className="space-y-5">
@@ -65,7 +65,7 @@ export default function ToursPage() {
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Tours</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400">{tours.length} total</p>
         </div>
-        <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2 px-4 py-2 bg-[--color-brand-blue] hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors">
+        <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2 px-4 py-2 bg-(--color-brand-blue) hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors">
           <Plus size={15} /> New Tour
         </button>
       </div>
@@ -81,7 +81,7 @@ export default function ToursPage() {
           </div>
           <div className="flex gap-2 justify-end">
             <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">Cancel</button>
-            <button type="submit" disabled={submitting} className="px-4 py-2 text-sm font-semibold bg-[--color-brand-blue] text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">{submitting ? "Creating..." : "Create"}</button>
+            <button type="submit" disabled={submitting} className="px-4 py-2 text-sm font-semibold bg-(--color-brand-blue) text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">{submitting ? "Creating..." : "Create"}</button>
           </div>
         </form>
       )}

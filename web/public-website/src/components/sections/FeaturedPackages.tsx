@@ -26,7 +26,7 @@ export default function FeaturedPackages({ packages }: Props) {
           className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-12"
         >
           <div>
-            <p className="text-sm font-semibold text-[--color-brand-teal] uppercase tracking-widest mb-2">
+            <p className="text-sm font-semibold text-(--color-brand-teal) uppercase tracking-widest mb-2">
               Handpicked For You
             </p>
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
@@ -37,7 +37,7 @@ export default function FeaturedPackages({ packages }: Props) {
             href="/packages"
             className={cn(
               buttonVariants({ variant: "outline" }),
-              "gap-2 border-[--color-brand-blue] text-[--color-brand-blue] hover:bg-blue-50 self-start sm:self-auto"
+              "gap-2 border-(--color-brand-blue) text-(--color-brand-blue) hover:bg-blue-50 self-start sm:self-auto"
             )}
           >
             View All

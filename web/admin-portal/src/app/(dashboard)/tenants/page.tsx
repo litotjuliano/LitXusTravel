@@ -65,7 +65,7 @@ export default function TenantsPage() {
           </p>
         </div>
         <Button
-          className="bg-[--color-brand-blue] hover:bg-blue-700 text-white gap-2"
+          className="bg-(--color-brand-blue) hover:bg-blue-700 text-white gap-2"
           onClick={() => toast.info("Invite agent coming soon")}
         >
           <Plus size={16} />
@@ -88,7 +88,7 @@ export default function TenantsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search tenants..."
-          className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue]"
+          className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-(--color-brand-blue)"
         />
       </div>
 

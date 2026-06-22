@@ -58,7 +58,7 @@ export default function BillingPage() {
             { label: "Pending / Failed", value: MOCK_INVOICES.filter((i) => i.status !== "Paid").length.toString(), icon: <CreditCard size={18} /> },
           ].map((card) => (
             <div key={card.label} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5 flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-[--color-brand-blue]/10 flex items-center justify-center text-[--color-brand-blue]">
+              <div className="w-10 h-10 rounded-lg bg-(--color-brand-blue)/10 flex items-center justify-center text-(--color-brand-blue)">
                 {card.icon}
               </div>
               <div>
@@ -83,7 +83,7 @@ export default function BillingPage() {
                   onClick={() => setFilter(s)}
                   className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
                     filter === s
-                      ? "bg-[--color-brand-blue] text-white"
+                      ? "bg-(--color-brand-blue) text-white"
                       : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
                   }`}
                 >

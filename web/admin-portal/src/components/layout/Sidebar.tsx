@@ -37,7 +37,7 @@ export default function Sidebar() {
     <aside
       className={cn(
         "hidden md:flex flex-col fixed left-0 top-0 h-screen z-40 transition-all duration-300",
-        "bg-[--color-sidebar] border-r border-white/10",
+        "bg-(--color-sidebar) border-r border-white/10",
         collapsed ? "w-16" : "w-64"
       )}
     >
@@ -64,7 +64,7 @@ export default function Sidebar() {
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                 active
-                  ? "bg-[--color-brand-blue] text-white"
+                  ? "bg-(--color-brand-blue) text-white"
                   : "text-white/60 hover:text-white hover:bg-white/10",
                 collapsed && "justify-center px-2"
               )}

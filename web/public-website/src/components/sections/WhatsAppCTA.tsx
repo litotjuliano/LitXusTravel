@@ -9,7 +9,7 @@ const WHATSAPP_URL = `https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ??
 
 export default function WhatsAppCTA() {
   return (
-    <section className="py-20 px-4 sm:px-6 bg-[--color-brand-blue]">
+    <section className="py-20 px-4 sm:px-6 bg-(--color-brand-blue)">
       <motion.div
         className="max-w-2xl mx-auto text-center"
         initial={{ opacity: 0, scale: 0.96 }}
@@ -32,7 +32,7 @@ export default function WhatsAppCTA() {
             href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className={cn(buttonVariants({ size: "lg" }), "bg-white text-[--color-brand-blue] hover:bg-gray-100 font-bold px-10 py-4 rounded-xl gap-3 shadow-xl text-base")}
+            className={cn(buttonVariants({ size: "lg" }), "bg-white text-(--color-brand-blue) hover:bg-gray-100 font-bold px-10 py-4 rounded-xl gap-3 shadow-xl text-base")}
           >
             <MessageCircle size={20} />
             Chat on WhatsApp
