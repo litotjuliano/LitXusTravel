@@ -191,6 +191,53 @@ Subscription Plan, Joined Date, Status badge, Actions (View Details, Manage Pack
 
 ---
 
+### Requirement: SPEC-ADMIN-BILLING — Billing & Invoices Page
+
+The billing page MUST show platform-wide invoice history in a table (Invoice ID, Tenant, Plan,
+Period, Amount, Status, Date) with a status filter (All/Paid/Pending/Failed) and 3 MRR summary
+cards, visible only to platform-level admins (no `tenantId` claim). Tenant-scoped admins see the
+same table without the Tenant column and summary cards, scoped to their own invoices.
+Invoice data is currently **mocked client-side** (`MOCK_INVOICES`) — not yet wired to a backend
+endpoint; the per-row PDF download button is a stub (`onClick={() => {}}`).
+
+#### Scenario: Platform admin sees MRR summary and tenant column
+- Given: Admin has no `tenantId` claim (Platform Admin or SuperAdmin)
+- When: `/admin/billing` loads
+- Then: 3 summary cards render (MRR for current month, Paid Invoices count, Pending/Failed count); invoice table includes a Tenant column; status filter buttons are shown
+
+#### Scenario: Tenant admin sees only their own invoices
+- Given: Admin has a `tenantId` claim
+- When: `/admin/billing` loads
+- Then: Summary cards and status filter are hidden; Tenant column is omitted; invoice table shows entries scoped to that tenant (currently mock data unfiltered by tenant)
+
+---
+
+### Requirement: SPEC-ADMIN-USERS — User Management Page
+
+The users page MUST list admin-tier users (SuperAdmin, Platform Admin, Tenant Admin) in a table
+with name/email, role badge (color-coded: SuperAdmin red, Admin blue), tenant, status, and created
+date, filterable by a client-side search box. Only SuperAdmin sees the "Invite Admin" button.
+Tenant-scoped admins see only their own user record. Rows animate in with a Framer Motion stagger
+fade. User data is currently **mocked client-side** (`MOCK_USERS`) — Invite/Edit/Suspend/Delete
+actions are stubs that show a "coming soon" toast, not wired to a backend endpoint.
+
+#### Scenario: SuperAdmin sees all users and can invite
+- Given: Admin's role is SuperAdmin
+- When: `/admin/users` loads
+- Then: All mock admin users render across all tenants; "Invite Admin" button is visible in the header; Tenant column is shown
+
+#### Scenario: Tenant admin sees only themselves
+- Given: Admin has a `tenantId` claim
+- When: `/admin/users` loads
+- Then: User list is filtered to the single row matching the admin's own email; Tenant column is hidden
+
+#### Scenario: Delete action hidden for SuperAdmin rows
+- Given: The users table renders
+- When: ActionMenu opens for a row
+- Then: "Edit" and "Suspend/Reactivate" are always present; "Delete" only appears for non-SuperAdmin rows
+
+---
+
 ## Key Reusable Components
 
 All components below are TailAdmin-derived (`src/components/ui/`) — no shadcn/ui, no `@base-ui/react`.

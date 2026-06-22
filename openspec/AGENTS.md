@@ -20,6 +20,7 @@
 | Authentication | `openspec/specs/auth/spec.md` | Login, JWT, RBAC, role hierarchy |
 | Commission system | `openspec/specs/commission/spec.md` | Role hierarchy, commission rules, 10 safeguards, dispute resolution |
 | Admin portal UI | `openspec/specs/admin-portal/spec.md` | Dashboard, packages, tenants pages; sidebar layout; components |
+| Tenant portal UI | `openspec/specs/tenant-portal/spec.md` | Tenant dashboard layout, Tours/Bookings/Staff/Commission pages |
 | Design system | `openspec/specs/design-system/spec.md` | Brand colors (#0066CC/#00A89A/#FF6B35), typography, spacing, Framer Motion |
 
 ---

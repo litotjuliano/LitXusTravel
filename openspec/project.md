@@ -118,4 +118,5 @@ Full behavioral specs live in `openspec/specs/` organized by domain:
 | Auth | `openspec/specs/auth/spec.md` | Login, JWT claims, RBAC, role hierarchy |
 | Commission | `openspec/specs/commission/spec.md` | Role hierarchy, commission rules, 10 safeguards, payout flow |
 | Admin Portal | `openspec/specs/admin-portal/spec.md` | UI layout, pages, components (Next.js dashboard) |
+| Tenant Portal | `openspec/specs/tenant-portal/spec.md` | Tenant dashboard UI — layout, Tours/Bookings/Staff/Commission pages |
 | Design System | `openspec/specs/design-system/spec.md` | Brand colors, typography, spacing, animation presets |
