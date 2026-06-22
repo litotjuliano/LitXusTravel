@@ -29,12 +29,15 @@ public class GetTenantsQueryHandler(IUnitOfWork uow)
             _ => query.OrderByDescending(t => t.CreatedAt).Skip((request.Page - 1) * request.PageSize).Take(request.PageSize).ToList(),
         };
 
+        var tenantIds = tenants.Select(t => t.Id).ToList();
+        var activeSubsByTenant = (await uow.TenantSubscriptions.FindAsync(s => tenantIds.Contains(s.TenantId), ct))
+            .Where(s => s.IsActive)
+            .GroupBy(s => s.TenantId)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(s => s.StartDate).First());
+
         var responses = tenants.Select(t =>
         {
-            var activeSub = t.Subscriptions
-                .Where(s => s.IsActive)
-                .OrderByDescending(s => s.StartDate)
-                .FirstOrDefault();
+            activeSubsByTenant.TryGetValue(t.Id, out var activeSub);
 
             return new TenantListResponse(
                 t.Id, t.Name, t.Slug, t.Subdomain,
