@@ -73,5 +73,12 @@ export const useTenants = (
     fetchTenants()
   }, [page, pageSize, filters?.status, filters?.sortBy, filters?.sortOrder])
 
-  return { tenants, loading, error, pagination }
+  return { tenants, loading, error, pagination, refetch: () => {
+    setLoading(true)
+    // re-trigger by bumping a counter would need state — simplest: reload window or re-fetch
+    adminApi.getTenants({ page, pageSize, ...filters })
+      .then(res => { setTenants(res.data.data ?? []); if (res.data.pagination) setPagination(res.data.pagination) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }}
 }

@@ -15,7 +15,7 @@ export interface TokenClaims {
 export function getTokenClaims(): TokenClaims {
   if (typeof window === "undefined") return {}
   try {
-    const token = localStorage.getItem("nexus_token")
+    const token = localStorage.getItem("litxus_token")
     if (!token) return {}
     const payload = token.split(".")[1]
     const decoded = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")))

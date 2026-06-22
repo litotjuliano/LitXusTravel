@@ -10,6 +10,7 @@ using LitXusTravel.Application.UseCases.Packages.SyncPackagesToTenant;
 using LitXusTravel.Application.UseCases.Packages.GetTenantPackages;
 using LitXusTravel.Application.UseCases.Packages.UpdatePackageOverride;
 using LitXusTravel.Application.UseCases.Packages.UnsyncPackage;
+using LitXusTravel.Application.UseCases.Tenants.AssignPlan;
 
 namespace LitXusTravel.API.Controllers.v1.Admin;
 
@@ -176,6 +177,19 @@ public class TenantsController(IMediator mediator) : ControllerBase
         if (!result.IsSuccess) return BadRequest(new { result.Errors });
         return Ok(result.Value);
     }
+
+    /// <summary>Assign a subscription plan to a tenant</summary>
+    [HttpPost("{tenantId:guid}/assign-plan")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> AssignPlan(Guid tenantId, [FromBody] AssignPlanRequest request, CancellationToken ct)
+    {
+        var result = await mediator.Send(new AssignPlanCommand(tenantId, request.PlanName), ct);
+        if (!result.IsSuccess) return BadRequest(new { result.Errors });
+        return Ok(new { message = result.Value });
+    }
 }
 
 public record UpdateTenantSettingsRequest(string DefaultCurrency);
+public record AssignPlanRequest(string PlanName);

@@ -1,4 +1,14 @@
+import type { LucideIcon } from "lucide-react"
+
 export type InquiryStatus = "New" | "Contacted" | "Quoted" | "Booked" | "Lost"
+
+export interface StatCard {
+  label: string
+  value: string
+  change: string
+  positive: boolean
+  icon: LucideIcon
+}
 
 export interface ResolvedPackage {
   id: string

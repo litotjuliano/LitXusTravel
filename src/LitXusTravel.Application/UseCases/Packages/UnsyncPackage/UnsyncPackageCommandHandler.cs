@@ -16,7 +16,13 @@ public class UnsyncPackageCommandHandler(IUnitOfWork uow)
         if (tenantPackage.TenantId != request.TenantId)
             return Result<string>.Failure("Unauthorized.");
 
-        tenantPackage.Deactivate();
+        // Hard-delete the override first (FK dependency)
+        var @override = await uow.PackageOverrides
+            .FirstOrDefaultAsync(o => o.TenantPackageId == request.TenantPackageId, ct);
+        if (@override is not null)
+            uow.PackageOverrides.Remove(@override);
+
+        uow.TenantPackages.Remove(tenantPackage);
         await uow.SaveChangesAsync(ct);
 
         return Result<string>.Success("Package unsynced successfully.");

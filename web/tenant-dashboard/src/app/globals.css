@@ -1,91 +1,276 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
+
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
-@theme inline {
-  --color-background:           var(--background);
-  --color-foreground:           var(--foreground);
-  --color-card:                 var(--card);
-  --color-card-foreground:      var(--card-foreground);
-  --color-primary:              var(--primary);
-  --color-primary-foreground:   var(--primary-foreground);
-  --color-secondary:            var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted:                var(--muted);
-  --color-muted-foreground:     var(--muted-foreground);
-  --color-accent:               var(--accent);
-  --color-accent-foreground:    var(--accent-foreground);
-  --color-destructive:          var(--destructive);
-  --color-border:               var(--border);
-  --color-input:                var(--input);
-  --color-ring:                 var(--ring);
-  --color-sidebar:              var(--sidebar);
-  --color-sidebar-foreground:   var(--sidebar-foreground);
+@theme {
+  --font-*: initial;
+  --font-outfit: Outfit, sans-serif;
 
-  --color-brand-blue:    #0066CC;
-  --color-brand-teal:    #00A89A;
-  --color-brand-orange:  #FF6B35;
-  --color-brand-success: #2ECC71;
-  --color-brand-warning: #F39C12;
-  --color-brand-error:   #E74C3C;
+  --breakpoint-*: initial;
+  --breakpoint-2xsm: 375px;
+  --breakpoint-xsm: 425px;
+  --breakpoint-3xl: 2000px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
 
-  --font-sans:   var(--font-inter);
-  --radius-sm:   calc(var(--radius) * 0.6);
-  --radius-md:   calc(var(--radius) * 0.8);
-  --radius-lg:   var(--radius);
-  --radius-xl:   calc(var(--radius) * 1.4);
-}
+  --text-title-2xl: 72px;
+  --text-title-2xl--line-height: 90px;
+  --text-title-xl: 60px;
+  --text-title-xl--line-height: 72px;
+  --text-title-lg: 48px;
+  --text-title-lg--line-height: 60px;
+  --text-title-md: 36px;
+  --text-title-md--line-height: 44px;
+  --text-title-sm: 30px;
+  --text-title-sm--line-height: 38px;
+  --text-theme-xl: 20px;
+  --text-theme-xl--line-height: 30px;
+  --text-theme-sm: 14px;
+  --text-theme-sm--line-height: 20px;
+  --text-theme-xs: 12px;
+  --text-theme-xs--line-height: 18px;
 
-:root {
-  --primary:            #0066CC;
-  --primary-foreground: #ffffff;
-  --background:         #F8F9FA;
-  --foreground:         #1A1A1A;
-  --card:               #ffffff;
-  --card-foreground:    #1A1A1A;
-  --popover:            #ffffff;
-  --popover-foreground: #1A1A1A;
-  --secondary:          #F0F2F5;
-  --secondary-foreground: #1A1A1A;
-  --muted:              #F0F2F5;
-  --muted-foreground:   #666666;
-  --accent:             #EFF6FF;
-  --accent-foreground:  #0066CC;
-  --destructive:        #E74C3C;
-  --border:             #E0E0E0;
-  --input:              #E0E0E0;
-  --ring:               #0066CC;
-  --radius:             0.5rem;
-  --sidebar:            #111827;
-  --sidebar-foreground: #F9FAFB;
-}
+  --color-current: currentColor;
+  --color-transparent: transparent;
+  --color-white: #ffffff;
+  --color-black: #101828;
 
-.dark {
-  --primary:            #3B82F6;
-  --primary-foreground: #ffffff;
-  --background:         #0F0F0F;
-  --foreground:         #F9FAFB;
-  --card:               #1A1A1A;
-  --card-foreground:    #F9FAFB;
-  --popover:            #1A1A1A;
-  --popover-foreground: #F9FAFB;
-  --secondary:          #2D2D2D;
-  --secondary-foreground: #F9FAFB;
-  --muted:              #2D2D2D;
-  --muted-foreground:   #9CA3AF;
-  --accent:             #1E3A5F;
-  --accent-foreground:  #93C5FD;
-  --destructive:        #EF4444;
-  --border:             #333333;
-  --input:              #333333;
-  --ring:               #3B82F6;
-  --sidebar:            #111827;
-  --sidebar-foreground: #F9FAFB;
+  /* LitXusTravel brand — blue scale built around #0066CC */
+  --color-brand-25:  #f0f7ff;
+  --color-brand-50:  #e0efff;
+  --color-brand-100: #b9d6ff;
+  --color-brand-200: #80b5ff;
+  --color-brand-300: #4d97ff;
+  --color-brand-400: #1a7aff;
+  --color-brand-500: #0066CC;
+  --color-brand-600: #0055aa;
+  --color-brand-700: #004488;
+  --color-brand-800: #003366;
+  --color-brand-900: #002244;
+  --color-brand-950: #001122;
+
+  --color-blue-light-25: #f5fbff;
+  --color-blue-light-50: #f0f9ff;
+  --color-blue-light-100: #e0f2fe;
+  --color-blue-light-200: #b9e6fe;
+  --color-blue-light-300: #7cd4fd;
+  --color-blue-light-400: #36bffa;
+  --color-blue-light-500: #0ba5ec;
+  --color-blue-light-600: #0086c9;
+  --color-blue-light-700: #026aa2;
+  --color-blue-light-800: #065986;
+  --color-blue-light-900: #0b4a6f;
+  --color-blue-light-950: #062c41;
+
+  --color-gray-25: #fcfcfd;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f2f4f7;
+  --color-gray-200: #e4e7ec;
+  --color-gray-300: #d0d5dd;
+  --color-gray-400: #98a2b3;
+  --color-gray-500: #667085;
+  --color-gray-600: #475467;
+  --color-gray-700: #344054;
+  --color-gray-800: #1d2939;
+  --color-gray-900: #101828;
+  --color-gray-950: #0c111d;
+  --color-gray-dark: #1a2231;
+
+  --color-orange-25: #fffaf5;
+  --color-orange-50: #fff6ed;
+  --color-orange-100: #ffead5;
+  --color-orange-200: #fddcab;
+  --color-orange-300: #feb273;
+  --color-orange-400: #fd853a;
+  --color-orange-500: #fb6514;
+  --color-orange-600: #ec4a0a;
+  --color-orange-700: #c4320a;
+  --color-orange-800: #9c2a10;
+  --color-orange-900: #7e2410;
+  --color-orange-950: #511c10;
+
+  --color-success-25: #f6fef9;
+  --color-success-50: #ecfdf3;
+  --color-success-100: #d1fadf;
+  --color-success-200: #a6f4c5;
+  --color-success-300: #6ce9a6;
+  --color-success-400: #32d583;
+  --color-success-500: #12b76a;
+  --color-success-600: #039855;
+  --color-success-700: #027a48;
+  --color-success-800: #05603a;
+  --color-success-900: #054f31;
+  --color-success-950: #053321;
+
+  --color-error-25: #fffbfa;
+  --color-error-50: #fef3f2;
+  --color-error-100: #fee4e2;
+  --color-error-200: #fecdca;
+  --color-error-300: #fda29b;
+  --color-error-400: #f97066;
+  --color-error-500: #f04438;
+  --color-error-600: #d92d20;
+  --color-error-700: #b42318;
+  --color-error-800: #912018;
+  --color-error-900: #7a271a;
+  --color-error-950: #55160c;
+
+  --color-warning-25: #fffcf5;
+  --color-warning-50: #fffaeb;
+  --color-warning-100: #fef0c7;
+  --color-warning-200: #fedf89;
+  --color-warning-300: #fec84b;
+  --color-warning-400: #fdb022;
+  --color-warning-500: #f79009;
+  --color-warning-600: #dc6803;
+  --color-warning-700: #b54708;
+  --color-warning-800: #93370d;
+  --color-warning-900: #7a2e0e;
+  --color-warning-950: #4e1d09;
+
+  --color-theme-pink-500: #ee46bc;
+  --color-theme-purple-500: #7a5af8;
+
+  --shadow-theme-md: 0px 4px 8px -2px rgba(16, 24, 40, 0.1), 0px 2px 4px -2px rgba(16, 24, 40, 0.06);
+  --shadow-theme-lg: 0px 12px 16px -4px rgba(16, 24, 40, 0.08), 0px 4px 6px -2px rgba(16, 24, 40, 0.03);
+  --shadow-theme-sm: 0px 1px 3px 0px rgba(16, 24, 40, 0.1), 0px 1px 2px 0px rgba(16, 24, 40, 0.06);
+  --shadow-theme-xs: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+  --shadow-theme-xl: 0px 20px 24px -4px rgba(16, 24, 40, 0.08), 0px 8px 8px -4px rgba(16, 24, 40, 0.03);
+  --shadow-focus-ring: 0px 0px 0px 4px rgba(0, 102, 204, 0.12);
+
+  --drop-shadow-4xl: 0 35px 35px rgba(0, 0, 0, 0.25), 0 45px 65px rgba(0, 0, 0, 0.15);
+
+  --z-index-1: 1;
+  --z-index-9: 9;
+  --z-index-99: 99;
+  --z-index-999: 999;
+  --z-index-9999: 9999;
+  --z-index-99999: 99999;
+  --z-index-999999: 999999;
 }
 
 @layer base {
-  * { @apply border-border outline-ring/50; }
-  body { @apply bg-background text-foreground antialiased; }
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  body {
+    @apply relative font-normal font-outfit z-1 bg-gray-50;
+  }
+}
+
+@utility menu-item {
+  @apply relative flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg text-theme-sm;
+}
+@utility menu-item-active {
+  @apply bg-white/[0.08] text-white;
+}
+@utility menu-item-inactive {
+  @apply text-gray-400 hover:bg-white/[0.05] hover:text-gray-200 group-hover:text-gray-200;
+}
+@utility menu-item-icon {
+  @apply text-gray-400;
+}
+@utility menu-item-icon-active {
+  @apply text-brand-400;
+}
+@utility menu-item-icon-size {
+  & svg {
+    @apply !size-6;
+  }
+}
+@utility menu-item-icon-inactive {
+  @apply text-gray-400 group-hover:text-gray-200;
+}
+@utility menu-item-text {
+  @apply text-sm font-medium;
+}
+@utility menu-item-arrow {
+  @apply relative;
+}
+@utility menu-item-arrow-active {
+  @apply rotate-180 text-brand-400;
+}
+@utility menu-item-arrow-inactive {
+  @apply text-gray-400 group-hover:text-gray-200;
+}
+@utility menu-dropdown-item {
+  @apply relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-theme-sm font-medium;
+}
+@utility menu-dropdown-item-active {
+  @apply bg-white/[0.08] text-white;
+}
+@utility menu-dropdown-item-inactive {
+  @apply text-gray-400 hover:bg-white/[0.05] hover:text-gray-200;
+}
+@utility no-scrollbar {
+  &::-webkit-scrollbar { display: none; }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+@utility custom-scrollbar {
+  &::-webkit-scrollbar { @apply size-1.5; }
+  &::-webkit-scrollbar-track { @apply rounded-full; }
+  &::-webkit-scrollbar-thumb { @apply bg-gray-200 rounded-full dark:bg-gray-700; }
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #344054;
+}
+
+/* Bridge CSS variables — used by legacy inline styles */
+:root {
+  --border: #e4e7ec;
+  --muted-foreground: #667085;
+  --card: #ffffff;
+  --background: #f9fafb;
+  --foreground: #101828;
+  --color-brand-blue: #0066CC;
+  --color-brand-success: #12b76a;
+  --color-brand-error: #f04438;
+  --color-sidebar: #101828;
+}
+.dark {
+  --border: #344054;
+  --muted-foreground: #98a2b3;
+  --card: #1d2939;
+  --background: #101828;
+  --foreground: #f9fafb;
+  --color-brand-blue: #0066CC;
+  --color-brand-success: #12b76a;
+  --color-brand-error: #f04438;
+  --color-sidebar: #101828;
+}
+
+/* Sonner toast overrides */
+[data-sonner-toaster] [data-type="success"] {
+  background: #ecfdf3 !important;
+  border-color: #12b76a !important;
+  color: #027a48 !important;
+}
+[data-sonner-toaster] [data-type="error"] {
+  background: #fef3f2 !important;
+  border-color: #f04438 !important;
+  color: #b42318 !important;
+}
+.dark [data-sonner-toaster] [data-type="success"] {
+  background: #053321 !important;
+  border-color: #12b76a !important;
+  color: #6ce9a6 !important;
+}
+.dark [data-sonner-toaster] [data-type="error"] {
+  background: #55160c !important;
+  border-color: #f04438 !important;
+  color: #fda29b !important;
 }

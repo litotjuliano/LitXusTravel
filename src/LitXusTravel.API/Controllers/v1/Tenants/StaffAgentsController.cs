@@ -1,13 +1,18 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using LitXusTravel.Application.UseCases.StaffAgents.CreateStaffAgent;
 using LitXusTravel.Application.UseCases.StaffAgents.GetStaffAgents;
 using LitXusTravel.Application.UseCases.StaffAgents.RotateStaffAgentCode;
 
+using LitXusTravel.API.Filters;
+
 namespace LitXusTravel.API.Controllers.v1.Tenants;
 
 [ApiController]
 [Route("api/v1/tenants/{tenantId:guid}/staff-agents")]
+[Authorize(Roles = "Agent,Admin")]
+[TenantAuthorizationFilter]
 [Tags("Staff Agents")]
 public class StaffAgentsController(IMediator mediator) : ControllerBase
 {

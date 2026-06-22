@@ -6,6 +6,8 @@ using LitXusTravel.Application.UseCases.Packages.GenerateAdminPackagePhoto;
 using LitXusTravel.Application.UseCases.Packages.GetPackages;
 using LitXusTravel.Application.UseCases.Packages.GetPackageById;
 using LitXusTravel.Application.UseCases.Packages.PublishPackage;
+using LitXusTravel.Application.UseCases.Packages.DeletePackage;
+using LitXusTravel.Application.UseCases.Packages.UpdatePackage;
 using LitXusTravel.Application.UseCases.Packages.UploadPackageImage;
 
 namespace LitXusTravel.API.Controllers.v1.Admin;
@@ -109,6 +111,19 @@ public class PackagesController(IMediator mediator, IWebHostEnvironment env) : C
         return Ok(new { featuredImageUrl = result.Value });
     }
 
+    /// <summary>Update a master package</summary>
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdatePackageCommand command, CancellationToken ct)
+    {
+        var cmd = command with { Id = id };
+        var result = await mediator.Send(cmd, ct);
+        if (!result.IsSuccess) return BadRequest(new { result.Errors });
+        return Ok(result.Value);
+    }
+
     /// <summary>Publish a master package (SPEC-ADMIN-003)</summary>
     [HttpPost("{id:guid}/publish")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -119,5 +134,16 @@ public class PackagesController(IMediator mediator, IWebHostEnvironment env) : C
         var result = await mediator.Send(new PublishPackageCommand(id), ct);
         if (!result.IsSuccess) return BadRequest(new { result.Errors });
         return Ok(result.Value);
+    }
+
+    /// <summary>Delete a master package</summary>
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new DeletePackageCommand(id), ct);
+        if (!result.IsSuccess) return NotFound(new { result.Errors });
+        return Ok(new { message = result.Value });
     }
 }

@@ -21,6 +21,7 @@ public class GetMarketplacePackagesQueryHandler(IUnitOfWork uow)
 
         var marketplace = allPackages
             .Where(p =>
+                p.Visibility == LitXusTravel.Domain.Entities.PackageVisibility.Published &&
                 p.CreatedByTenantId != null &&
                 p.CreatedByTenantId != request.TenantId &&
                 !alreadySyncedIds.Contains(p.Id))

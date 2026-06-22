@@ -3,11 +3,13 @@
 ## Overview
 
 The admin portal is the internal dashboard for SuperAdmins and Admins to manage packages,
-tenants, subscriptions, analytics, and settings. It is a Next.js 15 app under `web/admin-portal/`
-using shadcn/ui, Framer Motion, and Tailwind CSS with a fixed dark sidebar layout.
+tenants, subscriptions, analytics, and settings. It is a Next.js 16 app under `web/admin-portal/`
+using a TailAdmin-derived component library (no shadcn/ui, no `@base-ui/react`), Framer Motion,
+and Tailwind CSS v4 with a fixed always-dark sidebar layout.
 
-Tech: Next.js 15 App Router, shadcn/ui, Framer Motion, Tailwind CSS (`dark:` class strategy).
-Design inspiration: Stripe, Linear, Vercel Dashboard.
+Tech: Next.js 16 App Router, TailAdmin (free React template, adapted for Next.js), Framer Motion,
+Tailwind CSS v4 (`dark:` class strategy applies to main content only — sidebar is always dark).
+Design inspiration: TailAdmin dashboard reference (dark navy sidebar + light content area).
 
 ---
 
@@ -30,26 +32,76 @@ Design inspiration: Stripe, Linear, Vercel Dashboard.
 
 ## Requirements
 
-### Requirement: SPEC-ADMIN-LAYOUT — Fixed Sidebar Navigation
+### Requirement: SPEC-ADMIN-LAYOUT — Collapsible Dark Sidebar Navigation
 
-The admin portal MUST use a fixed left sidebar (256px wide on desktop) with dark background
-(`bg-gray-900 dark:bg-gray-950`). On mobile, the sidebar collapses to a hamburger menu.
-Navigation items highlight with `bg-primary-600 text-white` when active.
+The admin portal MUST use a fixed left sidebar that is **always dark** (`bg-gray-dark` / `#1a2231`)
+regardless of the light/dark theme toggle — the toggle only affects the main content area and header.
+On desktop the sidebar is 290px wide when expanded, collapses to a 90px icon rail, and re-expands
+on hover while collapsed. On mobile the sidebar is hidden and opens as a full-width drawer with a
+backdrop overlay.
 
-#### Scenario: Desktop sidebar always visible
+#### Scenario: Desktop sidebar expanded by default
 - Given: Any admin user on a desktop screen (≥ 1024px)
 - When: Admin portal page loads
-- Then: Left sidebar (256px) is fixed; main content area is offset `md:ml-64`; sidebar shows logo, nav items, and user profile footer
+- Then: Left sidebar (290px, `bg-gray-dark`) is fixed; main content area is offset `lg:ml-[290px]`; sidebar shows logo, "MENU" section label, nav items with icons, and submenu accordions
 
-#### Scenario: Mobile sidebar hidden by default
+#### Scenario: Sidebar collapses to icon rail
+- Given: Admin clicks the hamburger toggle in the header on desktop
+- When: `SidebarContext.isExpanded` becomes false
+- Then: Sidebar narrows to 90px showing icons only; main content offset becomes `lg:ml-[90px]`; hovering the collapsed sidebar temporarily re-expands it to 290px (`isHovered`)
+
+#### Scenario: Mobile sidebar hidden by default, opens as drawer
 - Given: Admin user on mobile (< 1024px)
 - When: Page loads
-- Then: Sidebar is hidden; hamburger menu button (`<Menu />` icon) is shown in top-left of header
+- Then: Sidebar is translated off-screen (`-translate-x-full`); hamburger button in header toggles `isMobileOpen`, sliding the sidebar in and rendering a `<Backdrop />` overlay behind it
 
 #### Scenario: Active nav item highlighted
 - Given: Admin is on `/admin/packages`
 - When: Sidebar renders
-- Then: "Packages" NavItem shows `bg-primary-600 text-white`; all other items show `text-gray-300 hover:bg-gray-800`
+- Then: "Packages" NavItem shows `bg-white/[0.08] text-white` with `text-brand-400` icon (the `menu-item-active` / `menu-item-icon-active` utility classes); all other items show `text-gray-400 hover:bg-white/[0.05] hover:text-gray-200`
+
+---
+
+### Requirement: SPEC-ADMIN-HEADER — Sticky Header with Search
+
+The admin portal header MUST be sticky, light-themed (`bg-white dark:bg-gray-900`), and include a
+centered search input (hidden below `md`) with a leading search icon and a trailing "⌘K" shortcut
+badge. The search input is presentational only in the current implementation (not yet wired to a
+command palette or live search).
+
+#### Scenario: Header shows search bar on tablet and above
+- Given: Admin views the dashboard on a viewport ≥ 768px
+- When: Header renders
+- Then: A search input with placeholder "Search or type command..." appears centered between the hamburger toggle and the right-side icon cluster, with a "⌘K" badge anchored to its right edge
+
+#### Scenario: Right-side icon cluster
+- Given: Header renders on any viewport
+- When: Admin looks at the right side of the header
+- Then: Theme toggle (Sun/Moon) → notification bell (with unread dot) → user avatar dropdown appear in that order, each as a 40×40px hover-highlighted button
+
+---
+
+### Requirement: SPEC-ADMIN-LOGIN — Dev Credentials Cheatsheet
+
+The admin-portal login page MUST show a "Dev Credentials" card below the sign-in form listing seed
+accounts (Super Admin, Platform Admin, Tenant Admins). Clicking a row MUST populate the email and
+password fields via `react-hook-form`'s `setValue()` — the admin still clicks "Sign In" manually;
+credentials are not auto-submitted.
+
+#### Scenario: Clicking a credential row fills the form
+- Given: Admin is on `/auth/login`
+- When: Admin clicks the row for `admin@travelpro.com`
+- Then: The email field shows `admin@travelpro.com`; the password field shows `TravelPro@123`; the clicked row is highlighted with `bg-brand-500/10`
+
+#### Scenario: Role badges are color-coded
+- Given: The Dev Credentials table renders
+- When: Rows display
+- Then: Super Admin shows a red-tinted badge, Platform Admin orange, Tenant Admin rows blue — each role tier visually distinct
+
+#### Scenario: Password is discoverable without cluttering the table
+- Given: Admin hovers a credential row
+- When: The row's `title` attribute is read by the browser tooltip
+- Then: Tooltip shows `"Fill: {email} / {password}"` — the password column itself is not rendered in the table
 
 ---
 
@@ -141,6 +193,8 @@ Subscription Plan, Joined Date, Status badge, Actions (View Details, Manage Pack
 
 ## Key Reusable Components
 
+All components below are TailAdmin-derived (`src/components/ui/`) — no shadcn/ui, no `@base-ui/react`.
+
 ### StatusBadge
 ```
 status="active"   → bg-success/20 text-success
@@ -152,15 +206,25 @@ status="Archived" → bg-gray-100 text-gray-600
 ```
 
 ### ActionMenu
-- Trigger: `<MoreVertical />` icon button with `p-8px hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg`
-- Content: `<Popover align="end">` with `w-48` width
-- Danger items: `text-error hover:bg-error/10`
+- Built on `Dropdown` / `DropdownItem` (`src/components/ui/Dropdown.tsx`) — manual `useState` open/close, not a headless popover lib
+- Trigger: `<MoreVertical />` icon button with `dropdown-toggle` class (required for Dropdown's click-outside detection) and `p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg`
+- Content: `w-48` panel anchored via the Dropdown component
+- Danger items: `text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20`
+
+### Modal
+- `src/components/ui/Modal.tsx` — TailAdmin pattern: plain JS, ESC + click-outside handling, **no portal, no focus trap** (acceptable for internal admin tooling)
+- API: `isOpen`, `onClose`, `className`, `showCloseButton`, `isFullscreen`
+- For fixed-header/scrollable-body/fixed-footer modals (e.g. PackageEditorModal): apply `flex flex-col max-h-[90vh] overflow-hidden` on the Modal's `className`, `shrink-0` on header/footer, `flex-1 overflow-y-auto` on the body section
+
+### Select
+- Native `<select>` element wrapped by `src/components/ui/select.tsx`; `SelectTrigger`/`SelectContent`/`SelectItem` are passthrough stubs rendering `<option>` tags — no headless listbox
 
 ### FormSection
-- Container: `p-24px bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl`
+- Container: `p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl`
 - Title: `text-h2 font-bold`
-- Children: `space-y-24px`
+- Children: `space-y-6`
 
 ### Dark Mode Pattern
-All panels use: `bg-white dark:bg-gray-900` backgrounds with `border-gray-200 dark:border-gray-800` borders.
-Text: `text-gray-900 dark:text-white` for primary, `text-gray-600 dark:text-gray-400` for secondary.
+Sidebar is **exempt** — always `bg-gray-dark`, never toggles. All other panels (header, main content,
+cards, modals) use: `bg-white dark:bg-gray-900` backgrounds with `border-gray-200 dark:border-gray-800`
+borders. Text: `text-gray-900 dark:text-white` for primary, `text-gray-500 dark:text-gray-400` for secondary.

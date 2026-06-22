@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using LitXusTravel.Application.DTOs.Response;
 using LitXusTravel.Application.UseCases.AdminUsers.CreateAdminUser;
@@ -10,6 +11,7 @@ namespace LitXusTravel.API.Controllers.v1.Admin;
 
 [ApiController]
 [Route("api/v1/admin/users")]
+[Authorize(Roles = "SuperAdmin,Admin")]
 [Tags("Admin Users")]
 public class AdminUsersController(IMediator mediator) : ControllerBase
 {
@@ -25,11 +27,9 @@ public class AdminUsersController(IMediator mediator) : ControllerBase
         return Ok(result.Value);
     }
 
-    /// <summary>
-    /// Create a new admin user (SuperAdmin or Platform Admin).
-    /// Only SuperAdmin can create other admins. Triggers an audit log entry.
-    /// </summary>
+    /// <summary>Create a new admin user — SuperAdmin only</summary>
     [HttpPost]
+    [Authorize(Roles = "SuperAdmin")]
     [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateAdmin(CreateAdminUserRequest request, CancellationToken ct = default)

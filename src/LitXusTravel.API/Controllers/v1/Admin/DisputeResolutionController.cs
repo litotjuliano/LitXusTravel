@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using LitXusTravel.Application.UseCases.DisputeResolution.CreateDisputeTicket;
 using LitXusTravel.Application.UseCases.DisputeResolution.ReviewDisputeTicket;
@@ -8,6 +9,7 @@ namespace LitXusTravel.API.Controllers.v1.Admin;
 
 [ApiController]
 [Route("api/v1/admin/disputes")]
+[Authorize(Roles = "SuperAdmin,Admin")]
 [Tags("Dispute Resolution")]
 public class DisputeResolutionController(IMediator mediator) : ControllerBase
 {

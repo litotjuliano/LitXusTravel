@@ -19,7 +19,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
           <Loader className="animate-spin mx-auto mb-4" size={32} />
-          <p className="text-muted-foreground">Loading dashboard...</p>
+          <p className="text-gray-500 dark:text-gray-400">Loading dashboard...</p>
         </div>
       </div>
     )
@@ -52,34 +52,34 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent inquiries */}
-      <div className="bg-card border border-border rounded-xl p-5">
-        <h2 className="text-base font-semibold text-foreground mb-4">Recent Inquiries</h2>
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">Recent Inquiries</h2>
         <div className="space-y-3">
           {recentInquiries.length > 0 ? (
             recentInquiries.map((inq) => (
-              <div key={inq.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+              <div key={inq.id} className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-800 last:border-0">
                 <div>
-                  <p className="text-sm font-medium text-foreground">{inq.customerName}</p>
-                  <p className="text-xs text-muted-foreground truncate max-w-48">{inq.customerEmail}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{inq.customerName}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-48">{inq.customerEmail}</p>
                 </div>
                 <StatusBadge status={inq.status} />
               </div>
             ))
           ) : (
-            <p className="text-xs text-muted-foreground py-4">No inquiries yet</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 py-4">No inquiries yet</p>
           )}
         </div>
       </div>
 
       {/* Quick links */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <a href="/packages" className="bg-card border border-border rounded-xl p-5 hover:border-[--color-brand-blue] transition-colors">
-          <h3 className="text-base font-semibold text-foreground mb-2">Manage Packages</h3>
-          <p className="text-xs text-muted-foreground">Sync, customize, and manage your packages</p>
+        <a href="/packages" className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5 hover:border-[--color-brand-blue] transition-colors">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Manage Packages</h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Sync, customize, and manage your packages</p>
         </a>
-        <a href="/settings" className="bg-card border border-border rounded-xl p-5 hover:border-[--color-brand-blue] transition-colors">
-          <h3 className="text-base font-semibold text-foreground mb-2">Account Settings</h3>
-          <p className="text-xs text-muted-foreground">View and manage your account information</p>
+        <a href="/settings" className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5 hover:border-[--color-brand-blue] transition-colors">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Account Settings</h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400">View and manage your account information</p>
         </a>
       </div>
     </div>

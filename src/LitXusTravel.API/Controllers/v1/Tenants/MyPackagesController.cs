@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using LitXusTravel.API.Filters;
 using LitXusTravel.Application.UseCases.Packages.CreateTenantPackage;
 using LitXusTravel.Application.UseCases.Packages.GeneratePackagePhoto;
 using LitXusTravel.Application.UseCases.Packages.GetMarketplacePackages;
@@ -15,6 +16,7 @@ namespace LitXusTravel.API.Controllers.v1.Tenants;
 [ApiController]
 [Route("api/v1/tenants/{tenantId:guid}/packages")]
 [Authorize(Roles = "Agent,Admin")]
+[TenantAuthorizationFilter]
 public class MyPackagesController(IMediator mediator) : ControllerBase
 {
     /// <summary>Create a tenant-owned package (SPEC-TENANT-006)</summary>

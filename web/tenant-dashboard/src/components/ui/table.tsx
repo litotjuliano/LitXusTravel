@@ -1,116 +1,38 @@
-"use client"
+import { ReactNode } from "react";
 
-import * as React from "react"
+interface TableProps { children: ReactNode; className?: string; }
+interface TableHeaderProps { children: ReactNode; className?: string; }
+interface TableBodyProps { children: ReactNode; className?: string; }
+interface TableRowProps { children: ReactNode; className?: string; onClick?: () => void; }
+interface TableCellProps { children: ReactNode; isHeader?: boolean; className?: string; }
 
-import { cn } from "@/lib/utils"
+const Table: React.FC<TableProps> = ({ children, className = "" }) => (
+  <div className="relative w-full overflow-x-auto">
+    <table className={`min-w-full ${className}`}>{children}</table>
+  </div>
+);
 
-function Table({ className, ...props }: React.ComponentProps<"table">) {
-  return (
-    <div
-      data-slot="table-container"
-      className="relative w-full overflow-x-auto"
-    >
-      <table
-        data-slot="table"
-        className={cn("w-full caption-bottom text-sm", className)}
-        {...props}
-      />
-    </div>
-  )
-}
+const TableHeader: React.FC<TableHeaderProps> = ({ children, className = "" }) => (
+  <thead className={className}>{children}</thead>
+);
 
-function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
-  return (
-    <thead
-      data-slot="table-header"
-      className={cn("[&_tr]:border-b", className)}
-      {...props}
-    />
-  )
-}
+const TableBody: React.FC<TableBodyProps> = ({ children, className = "" }) => (
+  <tbody className={className}>{children}</tbody>
+);
 
-function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
-  return (
-    <tbody
-      data-slot="table-body"
-      className={cn("[&_tr:last-child]:border-0", className)}
-      {...props}
-    />
-  )
-}
+const TableRow: React.FC<TableRowProps> = ({ children, className = "", onClick }) => (
+  <tr className={className} onClick={onClick}>{children}</tr>
+);
 
-function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
-  return (
-    <tfoot
-      data-slot="table-footer"
-      className={cn(
-        "border-t bg-muted/50 font-medium [&>tr]:last:border-b-0",
-        className
-      )}
-      {...props}
-    />
-  )
-}
+const TableCell: React.FC<TableCellProps> = ({ children, isHeader = false, className = "" }) => {
+  const Tag = isHeader ? "th" : "td";
+  return <Tag className={className}>{children}</Tag>;
+};
 
-function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
-  return (
-    <tr
-      data-slot="table-row"
-      className={cn(
-        "border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted",
-        className
-      )}
-      {...props}
-    />
-  )
-}
+const TableHead: React.FC<{ children: ReactNode; className?: string }> = ({ children, className = "" }) => (
+  <th className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${className}`}>
+    {children}
+  </th>
+);
 
-function TableHead({ className, ...props }: React.ComponentProps<"th">) {
-  return (
-    <th
-      data-slot="table-head"
-      className={cn(
-        "h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&:has([role=checkbox])]:pr-0",
-        className
-      )}
-      {...props}
-    />
-  )
-}
-
-function TableCell({ className, ...props }: React.ComponentProps<"td">) {
-  return (
-    <td
-      data-slot="table-cell"
-      className={cn(
-        "p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0",
-        className
-      )}
-      {...props}
-    />
-  )
-}
-
-function TableCaption({
-  className,
-  ...props
-}: React.ComponentProps<"caption">) {
-  return (
-    <caption
-      data-slot="table-caption"
-      className={cn("mt-4 text-sm text-muted-foreground", className)}
-      {...props}
-    />
-  )
-}
-
-export {
-  Table,
-  TableHeader,
-  TableBody,
-  TableFooter,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableCaption,
-}
+export { Table, TableHeader, TableBody, TableRow, TableCell, TableHead };

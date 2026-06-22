@@ -11,16 +11,16 @@ export default function SettingsPage() {
   const [tenantId, setTenantId] = useState("")
 
   useEffect(() => {
-    const storedEmail = localStorage.getItem("nexus_user_email") || ""
-    const storedTenantId = localStorage.getItem("nexus_tenant_id") || ""
+    const storedEmail = localStorage.getItem("litxus_user_email") || ""
+    const storedTenantId = localStorage.getItem("litxus_tenant_id") || ""
     setEmail(storedEmail)
     setTenantId(storedTenantId)
   }, [])
 
   const handleLogout = () => {
-    localStorage.removeItem("nexus_token")
-    localStorage.removeItem("nexus_tenant_id")
-    localStorage.removeItem("nexus_user_email")
+    localStorage.removeItem("litxus_token")
+    localStorage.removeItem("litxus_tenant_id")
+    localStorage.removeItem("litxus_user_email")
     toast.success("Logged out successfully")
     router.push("/auth/login")
   }
@@ -28,27 +28,27 @@ export default function SettingsPage() {
   return (
     <div className="max-w-2xl">
       {/* Account Info */}
-      <div className="bg-card border border-border rounded-xl p-6 mb-6">
-        <h2 className="text-lg font-semibold text-foreground mb-6">Account Information</h2>
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 mb-6">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Account Information</h2>
 
         <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Email</label>
+            <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">Email</label>
             <input
               type="email"
               value={email}
               disabled
-              className="w-full px-4 py-2.5 bg-muted border border-border rounded-lg text-foreground text-sm"
+              className="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 rounded-lg text-gray-900 dark:text-white text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Tenant ID</label>
+            <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">Tenant ID</label>
             <input
               type="text"
               value={tenantId}
               disabled
-              className="w-full px-4 py-2.5 bg-muted border border-border rounded-lg text-foreground text-sm font-mono text-xs"
+              className="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 rounded-lg text-gray-900 dark:text-white text-sm font-mono text-xs"
             />
           </div>
         </div>

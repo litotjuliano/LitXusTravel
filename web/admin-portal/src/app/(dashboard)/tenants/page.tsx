@@ -59,8 +59,8 @@ export default function TenantsPage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">Tenants</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Tenants</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {pagination.totalCount} registered agents
           </p>
         </div>
@@ -82,27 +82,27 @@ export default function TenantsPage() {
       <div className="relative max-w-xs">
         <Search
           size={15}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400"
         />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search tenants..."
-          className="w-full pl-9 pr-4 py-2 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue]"
+          className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue]"
         />
       </div>
 
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader className="animate-spin text-muted-foreground mr-2" size={20} />
-            <p className="text-muted-foreground">Loading tenants...</p>
+            <Loader className="animate-spin text-gray-500 dark:text-gray-400 mr-2" size={20} />
+            <p className="text-gray-500 dark:text-gray-400">Loading tenants...</p>
           </div>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-muted/50 border-b border-border">
+                <thead className="bg-gray-100 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800">
                   <tr>
                     <SortableHeader
                       label="Tenant"
@@ -111,13 +111,13 @@ export default function TenantsPage() {
                       sortOrder={sortOrder}
                       onSort={handleSort}
                     />
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                       Subdomain
                     </th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                       Plan
                     </th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                       Packages
                     </th>
                     <SortableHeader
@@ -127,7 +127,7 @@ export default function TenantsPage() {
                       sortOrder={sortOrder}
                       onSort={handleSort}
                     />
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                       Status
                     </th>
                     <th className="px-4 py-3" />
@@ -138,7 +138,7 @@ export default function TenantsPage() {
                     <tr>
                       <td
                         colSpan={7}
-                        className="px-4 py-8 text-center text-muted-foreground"
+                        className="px-4 py-8 text-center text-gray-500 dark:text-gray-400"
                       >
                         No tenants found
                       </td>
@@ -150,26 +150,26 @@ export default function TenantsPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: i * 0.05 }}
-                        className="hover:bg-muted/30 transition-colors"
+                        className="hover:bg-gray-100 dark:bg-gray-800/30 transition-colors"
                       >
                         <td className="px-4 py-3">
-                          <p className="font-medium text-foreground">{t.name}</p>
-                          <p className="text-xs text-muted-foreground">{t.contactEmail}</p>
+                          <p className="font-medium text-gray-900 dark:text-white">{t.name}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{t.contactEmail}</p>
                         </td>
                         <td className="px-4 py-3">
                           {t.subdomain ? (
-                            <code className="text-xs bg-muted px-2 py-0.5 rounded text-foreground">
+                            <code className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-gray-900 dark:text-white">
                               {t.subdomain}.nexustravel.com
                             </code>
                           ) : (
                             <span className="text-muted-foreground text-xs">—</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-foreground">{t.plan ?? "—"}</td>
-                        <td className="px-4 py-3 font-semibold text-foreground">
+                        <td className="px-4 py-3 text-gray-900 dark:text-white">{t.plan ?? "—"}</td>
+                        <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">
                           {t.syncedPackagesCount ?? 0}
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground">
+                        <td className="px-4 py-3 text-gray-500 dark:text-gray-400">
                           {formatDate(t.createdAt)}
                         </td>
                         <td className="px-4 py-3">

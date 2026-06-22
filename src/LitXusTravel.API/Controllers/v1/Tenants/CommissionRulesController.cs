@@ -1,13 +1,18 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using LitXusTravel.Application.UseCases.CommissionRules.ConfigureCommissionRule;
 using LitXusTravel.Application.UseCases.CommissionRules.GetCommissionRules;
 using LitXusTravel.Domain.Entities;
 
+using LitXusTravel.API.Filters;
+
 namespace LitXusTravel.API.Controllers.v1.Tenants;
 
 [ApiController]
 [Route("api/v1/tenants/{tenantId:guid}/commission-rules")]
+[Authorize(Roles = "Agent,Admin")]
+[TenantAuthorizationFilter]
 [Tags("Commission Rules")]
 public class CommissionRulesController(IMediator mediator) : ControllerBase
 {

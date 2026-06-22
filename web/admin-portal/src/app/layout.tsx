@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} dark`}>
-      <body className="min-h-screen bg-background text-foreground">
+      <body className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
         <AppInitializer />
         {children}
         <Toaster richColors position="top-right" />

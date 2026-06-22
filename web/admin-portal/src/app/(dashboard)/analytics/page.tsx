@@ -39,9 +39,9 @@ export default function AnalyticsPage() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Revenue bar chart */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <h2 className="text-base font-semibold text-foreground mb-1">Monthly Revenue</h2>
-          <p className="text-sm text-muted-foreground mb-5">RM performance over time</p>
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Monthly Revenue</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">RM performance over time</p>
           {loading ? (
             <Skeleton className="h-[220px]" />
           ) : (
@@ -61,9 +61,9 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Inquiry status pie */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <h2 className="text-base font-semibold text-foreground mb-1">Inquiry Status</h2>
-          <p className="text-sm text-muted-foreground mb-5">Breakdown by conversion stage</p>
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Inquiry Status</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Breakdown by conversion stage</p>
           {loading ? (
             <Skeleton className="h-[160px]" />
           ) : inquiryByStatus.length > 0 ? (
@@ -77,36 +77,36 @@ export default function AnalyticsPage() {
                 {inquiryByStatus.map((s) => (
                   <div key={s.name} className="flex items-center gap-2 text-sm">
                     <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
-                    <span className="text-muted-foreground">{s.name}</span>
-                    <span className="font-semibold text-foreground ml-auto">{s.value}</span>
+                    <span className="text-gray-500 dark:text-gray-400">{s.name}</span>
+                    <span className="font-semibold text-gray-900 dark:text-white ml-auto">{s.value}</span>
                   </div>
                 ))}
               </div>
             </div>
           ) : (
-            <p className="text-muted-foreground">No inquiries yet</p>
+            <p className="text-gray-500 dark:text-gray-400">No inquiries yet</p>
           )}
         </div>
       </div>
 
       {/* Key metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-card border border-border rounded-xl p-6">
-          <h2 className="text-base font-semibold text-foreground mb-1">Total Inquiries</h2>
-          <p className="text-sm text-muted-foreground mb-3">Lifetime inquiry count</p>
-          {loading ? <Skeleton className="h-8 w-20" /> : <p className="text-3xl font-bold text-foreground">{analyticsData?.totalInquiries ?? 0}</p>}
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Total Inquiries</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Lifetime inquiry count</p>
+          {loading ? <Skeleton className="h-8 w-20" /> : <p className="text-3xl font-bold text-gray-900 dark:text-white">{analyticsData?.totalInquiries ?? 0}</p>}
         </div>
-        <div className="bg-card border border-border rounded-xl p-6">
-          <h2 className="text-base font-semibold text-foreground mb-1">Conversion Rate</h2>
-          <p className="text-sm text-muted-foreground mb-3">Inquiries converted to bookings</p>
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Conversion Rate</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Inquiries converted to bookings</p>
           {loading ? <Skeleton className="h-8 w-20" /> : <p className="text-3xl font-bold text-green-600">{analyticsData?.conversionRate.toFixed(1) ?? 0}%</p>}
         </div>
       </div>
 
       {/* Package popularity */}
-      <div className="bg-card border border-border rounded-xl p-6">
-        <h2 className="text-base font-semibold text-foreground mb-1">Package Sync Popularity</h2>
-        <p className="text-sm text-muted-foreground mb-5">Number of tenants who synced each package</p>
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Package Sync Popularity</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Number of tenants who synced each package</p>
         {loading ? (
           <Skeleton className="h-[200px]" />
         ) : (

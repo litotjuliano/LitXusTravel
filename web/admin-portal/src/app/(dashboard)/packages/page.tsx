@@ -107,10 +107,10 @@ export default function PackagesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             {isTenantAdmin ? "My Packages" : "Master Packages"}
           </h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {pagination.totalCount} total packages
           </p>
         </div>
@@ -134,13 +134,13 @@ export default function PackagesPage() {
         <div className="relative flex-1 max-w-xs">
           <Search
             size={15}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400"
           />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search packages..."
-            className="w-full pl-9 pr-4 py-2 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue]"
+            className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue]"
           />
         </div>
         {filterTabs.map((s) => (
@@ -150,7 +150,7 @@ export default function PackagesPage() {
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               filter === s
                 ? "bg-[--color-brand-blue] text-white"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800/80"
             }`}
           >
             {s}
@@ -160,7 +160,7 @@ export default function PackagesPage() {
           <select
             value={tenantFilter}
             onChange={(e) => { setTenantFilter(e.target.value); setPage(1) }}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-muted text-muted-foreground border border-border focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue]"
+            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-800 focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue]"
           >
             {tenantOptions.map((t) => (
               <option key={t} value={t}>{t === "All" ? "All Tenants" : t}</option>
@@ -171,26 +171,26 @@ export default function PackagesPage() {
 
       {/* Marketplace Table */}
       {isMarketplaceTab && (
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden">
           {marketplaceLoading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader className="animate-spin text-muted-foreground mr-2" size={20} />
-              <p className="text-muted-foreground">Loading marketplace...</p>
+              <Loader className="animate-spin text-gray-500 dark:text-gray-400 mr-2" size={20} />
+              <p className="text-gray-500 dark:text-gray-400">Loading marketplace...</p>
             </div>
           ) : marketplacePackages.length === 0 ? (
-            <div className="px-4 py-12 text-center text-muted-foreground text-sm">
+            <div className="px-4 py-12 text-center text-gray-500 dark:text-gray-400 text-sm">
               No packages available in the marketplace yet.
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-muted/50 border-b border-border">
+                <thead className="bg-gray-100 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800">
                   <tr>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Package</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Destination</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Price</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Duration</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Source</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Package</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Destination</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Price</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Duration</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Source</th>
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
@@ -201,17 +201,17 @@ export default function PackagesPage() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: i * 0.04 }}
-                      className="hover:bg-muted/30 transition-colors"
+                      className="hover:bg-gray-100 dark:bg-gray-800/30 transition-colors"
                     >
                       <td className="px-4 py-3">
-                        <p className="font-medium text-foreground">{pkg.title}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{pkg.category}</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{pkg.title}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{pkg.category}</p>
                       </td>
-                      <td className="px-4 py-3 text-foreground">{pkg.destination}</td>
-                      <td className="px-4 py-3 font-semibold text-foreground">
+                      <td className="px-4 py-3 text-gray-900 dark:text-white">{pkg.destination}</td>
+                      <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">
                         {formatCurrency(pkg.basePrice, tenantSettings?.defaultCurrency || pkg.currency)}
                       </td>
-                      <td className="px-4 py-3 text-foreground">{pkg.durationDays}D</td>
+                      <td className="px-4 py-3 text-gray-900 dark:text-white">{pkg.durationDays}D</td>
                       <td className="px-4 py-3">
                         <span className="inline-block px-2 py-0.5 text-[11px] font-medium rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 whitespace-nowrap">
                           {pkg.sourceTenantName}
@@ -239,17 +239,17 @@ export default function PackagesPage() {
       )}
 
       {/* My Packages Table */}
-      {!isMarketplaceTab && <div className="bg-card border border-border rounded-xl overflow-hidden">
+      {!isMarketplaceTab && <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader className="animate-spin text-muted-foreground mr-2" size={20} />
-            <p className="text-muted-foreground">Loading packages...</p>
+            <Loader className="animate-spin text-gray-500 dark:text-gray-400 mr-2" size={20} />
+            <p className="text-gray-500 dark:text-gray-400">Loading packages...</p>
           </div>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-muted/50 border-b border-border">
+                <thead className="bg-gray-100 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800">
                   <tr>
                     <SortableHeader
                       label="Package"
@@ -258,7 +258,7 @@ export default function PackagesPage() {
                       sortOrder={sortOrder}
                       onSort={handleSort}
                     />
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                       Destination
                     </th>
                     <SortableHeader
@@ -268,15 +268,15 @@ export default function PackagesPage() {
                       sortOrder={sortOrder}
                       onSort={handleSort}
                     />
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                       Duration
                     </th>
                     {!isTenantAdmin && (
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                         Tenants
                       </th>
                     )}
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                       Status
                     </th>
                     <th className="px-4 py-3" />
@@ -287,7 +287,7 @@ export default function PackagesPage() {
                     <tr>
                       <td
                         colSpan={colCount}
-                        className="px-4 py-8 text-center text-muted-foreground"
+                        className="px-4 py-8 text-center text-gray-500 dark:text-gray-400"
                       >
                         No packages found
                       </td>
@@ -299,17 +299,17 @@ export default function PackagesPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: i * 0.04 }}
-                        className="hover:bg-muted/30 transition-colors"
+                        className="hover:bg-gray-100 dark:bg-gray-800/30 transition-colors"
                       >
                         <td className="px-4 py-3">
-                          <p className="font-medium text-foreground">{pkg.title}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{pkg.category}</p>
+                          <p className="font-medium text-gray-900 dark:text-white">{pkg.title}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{pkg.category}</p>
                         </td>
-                        <td className="px-4 py-3 text-foreground">{pkg.destination}</td>
-                        <td className="px-4 py-3 font-semibold text-foreground">
+                        <td className="px-4 py-3 text-gray-900 dark:text-white">{pkg.destination}</td>
+                        <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">
                           {formatCurrency(pkg.basePrice, isTenantAdmin ? (tenantSettings?.defaultCurrency || pkg.currency) : pkg.currency)}
                         </td>
-                        <td className="px-4 py-3 text-foreground">{pkg.durationDays}D</td>
+                        <td className="px-4 py-3 text-gray-900 dark:text-white">{pkg.durationDays}D</td>
                         {!isTenantAdmin && (
                           <td className="px-4 py-3">
                             <div className="flex flex-wrap gap-1">
@@ -378,13 +378,34 @@ export default function PackagesPage() {
                                   }
                                 },
                               }] : []),
+                              ...(!isTenantAdmin && pkg.visibility === "Draft" ? [{
+                                label: "Publish",
+                                action: async () => {
+                                  try {
+                                    await adminApi.publishPackage(pkg.id)
+                                    toast.success(`"${pkg.title}" published`)
+                                    refetch()
+                                  } catch (e) {
+                                    toast.error(e instanceof Error ? e.message : "Publish failed")
+                                  }
+                                },
+                              }] : []),
                               {
                                 label: "Duplicate",
                                 action: () => toast.info("Duplicate coming soon"),
                               },
                               ...(pkg.visibility !== "Synced" ? [{
                                 label: "Delete",
-                                action: () => toast.error("Delete coming soon"),
+                                action: async () => {
+                                  if (!confirm(`Delete "${pkg.title}"? This cannot be undone.`)) return
+                                  try {
+                                    await adminApi.deletePackage(pkg.id)
+                                    toast.success(`"${pkg.title}" deleted`)
+                                    refetch()
+                                  } catch (e) {
+                                    toast.error(e instanceof Error ? e.message : "Delete failed")
+                                  }
+                                },
                                 danger: true,
                               }] : []),
                             ]}

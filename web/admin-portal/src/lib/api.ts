@@ -11,7 +11,7 @@ export const api = axios.create({
 // Attach JWT from localStorage on every request
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
-    const token = localStorage.getItem("nexus_token")
+    const token = localStorage.getItem("litxus_token")
     if (token) config.headers.Authorization = `Bearer ${token}`
   }
   return config
@@ -20,8 +20,9 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401 && typeof window !== "undefined") {
-      localStorage.removeItem("nexus_token")
+    if (err.response?.status === 401 && typeof window !== "undefined"
+        && !err.config?.url?.includes("/auth/login")) {
+      localStorage.removeItem("litxus_token")
       window.location.href = "/auth/login"
     }
     if (!err.response) {
@@ -53,6 +54,10 @@ export const adminApi = {
   },
   createPackage: (data: object) =>
     api.post("/admin/packages", data),
+  updatePackage: (id: string, data: object) =>
+    api.put(`/admin/packages/${id}`, data),
+  deletePackage: (id: string) =>
+    api.delete(`/admin/packages/${id}`),
   publishPackage: (id: string) =>
     api.post(`/admin/packages/${id}/publish`),
 
@@ -67,6 +72,8 @@ export const adminApi = {
     api.put(`/admin/tenants/${id}/settings`, data),
   createTenant: (data: object) =>
     api.post("/admin/tenants", data),
+  assignPlan: (tenantId: string, planName: string) =>
+    api.post(`/admin/tenants/${tenantId}/assign-plan`, { planName }),
 
   // Inquiries (tenant-scoped)
   getInquiries: (tenantId: string, params?: object) =>

@@ -1,29 +1,36 @@
 "use client"
 
+import { useState } from "react"
 import { MoreVertical } from "lucide-react"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { cn } from "@/lib/utils"
+import { Dropdown } from "@/components/ui/Dropdown"
+import { DropdownItem } from "@/components/ui/DropdownItem"
 
 interface MenuItem { label: string; action: () => void; danger?: boolean }
 interface Props { items: MenuItem[] }
 
 export default function ActionMenu({ items }: Props) {
+  const [open, setOpen] = useState(false)
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+    <div className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="dropdown-toggle p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+      >
         <MoreVertical size={16} />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-44">
+      </button>
+      <Dropdown isOpen={open} onClose={() => setOpen(false)} className="w-44">
         {items.map((item) => (
-          <DropdownMenuItem
+          <DropdownItem
             key={item.label}
             onClick={item.action}
-            className={cn("cursor-pointer text-sm", item.danger && "text-destructive focus:text-destructive")}
+            onItemClick={() => setOpen(false)}
+            className={item.danger ? "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20" : ""}
           >
             {item.label}
-          </DropdownMenuItem>
+          </DropdownItem>
         ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </Dropdown>
+    </div>
   )
 }

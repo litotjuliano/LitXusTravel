@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
 using LitXusTravel.Infrastructure.Identity;
 
 namespace LitXusTravel.API.Controllers.v1.Admin;
@@ -8,9 +10,9 @@ namespace LitXusTravel.API.Controllers.v1.Admin;
 [ApiController]
 [Route("api/v1/admin/setup")]
 [AllowAnonymous]
-public class AdminSetupController(UserManager<ApplicationUser> userManager) : ControllerBase
+public class AdminSetupController(UserManager<ApplicationUser> userManager, IWebHostEnvironment env) : ControllerBase
 {
-    /// <summary>Bootstrap: Create SuperAdmin user (safe - idempotent)</summary>
+    /// <summary>Bootstrap: Create SuperAdmin user — Development only</summary>
     [HttpPost("create-superadmin")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -19,6 +21,9 @@ public class AdminSetupController(UserManager<ApplicationUser> userManager) : Co
         [FromBody] CreateSuperAdminRequest request,
         CancellationToken ct)
     {
+        if (!env.IsDevelopment())
+            return StatusCode(403, new { message = "Setup endpoint is only available in Development." });
+
         var existing = await userManager.FindByEmailAsync(request.Email);
         if (existing is not null)
             return Conflict(new { message = "SuperAdmin user already exists" });

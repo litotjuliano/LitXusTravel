@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { Modal } from "@/components/ui/Modal"
 import { Button } from "@/components/ui/button"
 import { adminApi } from "@/lib/api"
 import { toast } from "sonner"
@@ -12,7 +12,6 @@ interface PackageEditorModalProps {
   onSuccess?: () => void
   tenantId?: string
   defaultCurrency?: string
-  // Edit mode — when provided, the modal saves changes instead of creating
   editPackageId?: string
   initialData?: {
     title: string; destination: string; basePrice: number; durationDays: number
@@ -23,19 +22,19 @@ interface PackageEditorModalProps {
 }
 
 const inputCls = (hasError?: boolean) =>
-  `w-full px-3 py-2 text-sm border rounded-lg bg-background focus:outline-none focus:ring-2 transition-colors ${
+  `w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 transition-colors ${
     hasError
       ? "border-red-400 focus:ring-red-400/40"
-      : "border-border focus:ring-blue-500/40 hover:border-blue-400/60"
+      : "border-gray-200 dark:border-gray-800 focus:ring-blue-500/40 hover:border-blue-400/60"
   }`
 
 const selectCls =
-  "w-full px-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-blue-500/40 hover:border-blue-400/60 transition-colors"
+  "w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40 hover:border-blue-400/60 transition-colors"
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-muted border border-border rounded-xl p-4 space-y-3">
-      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">{title}</p>
+    <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 rounded-xl p-4 space-y-3">
+      <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest">{title}</p>
       {children}
     </div>
   )
@@ -47,7 +46,7 @@ function Fld({ children }: { children: React.ReactNode }) {
 
 function Lbl({ children, req }: { children: React.ReactNode; req?: boolean }) {
   return (
-    <label className="block text-sm font-medium text-foreground">
+    <label className="block text-sm font-medium text-gray-900 dark:text-white">
       {children}{req && <span className="text-red-500 ml-0.5">*</span>}
     </label>
   )
@@ -105,7 +104,6 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, de
     contactPhone: "", contactWhatsapp: "",
   })
 
-  // Pre-populate form when opening in edit mode
   useEffect(() => {
     if (open && isEditMode && initialData) {
       setForm({
@@ -207,7 +205,22 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, de
     try {
       setLoading(true)
 
-      if (isEditMode && tenantId && editPackageId) {
+      if (isEditMode && !tenantId && editPackageId) {
+        await adminApi.updatePackage(editPackageId, {
+          title: form.title,
+          destination: form.destination,
+          basePrice: parseFloat(form.basePrice),
+          durationDays: parseInt(form.durationDays),
+          category: form.category || undefined,
+          description: form.description || undefined,
+          shortDescription: form.shortDescription || undefined,
+          region: form.region || undefined,
+          featuredImageUrl: form.featuredImageUrl || undefined,
+          contactPhone: form.contactPhone || undefined,
+          contactWhatsapp: form.contactWhatsapp || undefined,
+        })
+        toast.success("Package updated successfully")
+      } else if (isEditMode && tenantId && editPackageId) {
         await adminApi.updatePackageOverride(tenantId, editPackageId, {
           title: form.title || undefined,
           price: form.basePrice ? parseFloat(form.basePrice) : undefined,
@@ -217,7 +230,6 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, de
           featuredImageUrl: form.featuredImageUrl || undefined,
           contactPhone: form.contactPhone || undefined,
           contactWhatsapp: form.contactWhatsapp || undefined,
-          // Owned-package fields (only submitted when relevant, ignored by backend for synced)
           destination: form.destination || undefined,
           durationDays: form.durationDays ? parseInt(form.durationDays) : undefined,
           category: form.category || undefined,
@@ -269,300 +281,302 @@ export function PackageEditorModal({ open, onOpenChange, onSuccess, tenantId, de
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v) }}>
-      <DialogContent className="sm:max-w-[920px] w-full flex flex-col max-h-[92vh] p-0 gap-0 overflow-hidden bg-background text-foreground backdrop-blur-none">
+    <Modal
+      isOpen={open}
+      onClose={() => { reset(); onOpenChange(false) }}
+      showCloseButton={false}
+      className="rounded-2xl max-w-[920px] flex flex-col max-h-[90vh] overflow-hidden"
+    >
+      {/* Fixed header */}
+      <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800 shrink-0">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          {isEditMode ? "Edit Package" : isTenantMode ? "Create Portal Package" : "Create Master Package"}
+        </h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+          {isEditMode
+            ? "Update the package details. Changes are saved to your portal."
+            : isTenantMode
+              ? "Create a package exclusive to your portal, or extend it to the master catalog."
+              : "Add a new master package to the shared catalog."}
+        </p>
+      </div>
 
-        {/* Fixed header */}
-        <DialogHeader className="px-6 py-5 border-b border-border shrink-0 bg-background">
-          <DialogTitle className="text-lg font-semibold">
-            {isEditMode ? "Edit Package" : isTenantMode ? "Create Portal Package" : "Create Master Package"}
-          </DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground mt-0.5">
-            {isEditMode
-              ? "Update the package details. Changes are saved to your portal."
-              : isTenantMode
-                ? "Create a package exclusive to your portal, or extend it to the master catalog."
-                : "Add a new master package to the shared catalog."}
-          </DialogDescription>
-        </DialogHeader>
+      {/* Scrollable body + fixed footer inside form */}
+      <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+        <div className="flex-1 overflow-y-auto px-6 py-5">
+          <div className="grid grid-cols-[1fr_300px] gap-4 items-start">
 
-        {/* Scrollable body */}
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-          <div className="flex-1 overflow-y-auto px-6 py-5 bg-background">
-            <div className="grid grid-cols-[1fr_300px] gap-4 items-start">
+            {/* ── Left column ── */}
+            <div className="space-y-4">
+              <Card title="Basic Information">
+                <Fld>
+                  <Lbl req>Package Title</Lbl>
+                  <input name="title" value={form.title} onChange={set}
+                    placeholder="e.g., Japan Sakura Experience"
+                    className={inputCls(!!errors.title)} />
+                  <Err msg={errors.title} />
+                </Fld>
 
-              {/* ── Left column ── */}
-              <div className="space-y-4">
-                <Card title="Basic Information">
+                <div className="grid grid-cols-2 gap-3">
                   <Fld>
-                    <Lbl req>Package Title</Lbl>
-                    <input name="title" value={form.title} onChange={set}
-                      placeholder="e.g., Japan Sakura Experience"
-                      className={inputCls(!!errors.title)} />
-                    <Err msg={errors.title} />
+                    <Lbl req>Destination</Lbl>
+                    <input name="destination" value={form.destination} onChange={set}
+                      placeholder="e.g., Japan"
+                      className={inputCls(!!errors.destination)} />
+                    <Err msg={errors.destination} />
                   </Fld>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <Fld>
-                      <Lbl req>Destination</Lbl>
-                      <input name="destination" value={form.destination} onChange={set}
-                        placeholder="e.g., Japan"
-                        className={inputCls(!!errors.destination)} />
-                      <Err msg={errors.destination} />
-                    </Fld>
-                    <Fld>
-                      <Lbl>Region</Lbl>
-                      <select name="region" value={form.region} onChange={set} className={selectCls}>
-                        <option value="">Select region</option>
-                        <option>Asia-Pacific</option>
-                        <option>Europe</option>
-                        <option>Americas</option>
-                        <option>Africa</option>
-                        <option>Middle East</option>
-                      </select>
-                    </Fld>
-                  </div>
-
                   <Fld>
-                    <Lbl>Category</Lbl>
-                    <select name="category" value={form.category} onChange={set} className={selectCls}>
-                      <option value="">Select category</option>
-                      <option value="Beach">Beach &amp; Resort</option>
-                      <option value="Cultural">Cultural</option>
-                      <option value="Adventure">Adventure</option>
-                      <option value="Family">Family</option>
-                      <option value="Luxury">Luxury</option>
-                      <option value="Urban">Urban &amp; City</option>
-                      <option value="Nature">Nature &amp; Hiking</option>
+                    <Lbl>Region</Lbl>
+                    <select name="region" value={form.region} onChange={set} className={selectCls}>
+                      <option value="">Select region</option>
+                      <option>Asia-Pacific</option>
+                      <option>Europe</option>
+                      <option>Americas</option>
+                      <option>Africa</option>
+                      <option>Middle East</option>
                     </select>
                   </Fld>
-                </Card>
+                </div>
 
-                <Card title="Description">
-                  <Fld>
-                    <Lbl>Short Description</Lbl>
-                    <input name="shortDescription" value={form.shortDescription} onChange={set}
-                      placeholder="Brief overview shown in listings"
-                      className={inputCls()} />
-                  </Fld>
-                  <Fld>
-                    <Lbl>Full Description</Lbl>
-                    <textarea name="description" value={form.description} onChange={set}
-                      placeholder="Detailed itinerary, highlights, and inclusions"
-                      rows={6}
-                      className={`${inputCls()} resize-none`} />
-                  </Fld>
-                </Card>
+                <Fld>
+                  <Lbl>Category</Lbl>
+                  <select name="category" value={form.category} onChange={set} className={selectCls}>
+                    <option value="">Select category</option>
+                    <option value="Beach">Beach &amp; Resort</option>
+                    <option value="Cultural">Cultural</option>
+                    <option value="Adventure">Adventure</option>
+                    <option value="Family">Family</option>
+                    <option value="Luxury">Luxury</option>
+                    <option value="Urban">Urban &amp; City</option>
+                    <option value="Nature">Nature &amp; Hiking</option>
+                  </select>
+                </Fld>
+              </Card>
 
-                {/* Extend to Master toggle — create mode only */}
-                {isTenantMode && !isEditMode && (
-                  <div className={`flex items-start gap-4 rounded-xl border p-4 transition-all ${
-                    extendToMaster
-                      ? "bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-800"
-                      : "bg-muted border-border"
-                  }`}>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={extendToMaster}
-                      onClick={() => setExtendToMaster((v) => !v)}
-                      className={`relative mt-0.5 w-11 h-6 rounded-full transition-colors shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
-                        extendToMaster ? "bg-blue-600" : "bg-gray-300 dark:bg-gray-600"
-                      }`}
-                    >
-                      <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${
-                        extendToMaster ? "translate-x-5" : "translate-x-0"
-                      }`} />
-                    </button>
-                    <div>
-                      <p className={`text-sm font-semibold ${
-                        extendToMaster ? "text-blue-700 dark:text-blue-400" : "text-foreground"
-                      }`}>
-                        Extend to Master Catalog
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                        {extendToMaster
-                          ? "This package will be added to the master catalog and can be synced to other tenants."
-                          : "This package stays private to your portal. Other tenants cannot see or sync it."}
-                      </p>
-                    </div>
+              <Card title="Description">
+                <Fld>
+                  <Lbl>Short Description</Lbl>
+                  <input name="shortDescription" value={form.shortDescription} onChange={set}
+                    placeholder="Brief overview shown in listings"
+                    className={inputCls()} />
+                </Fld>
+                <Fld>
+                  <Lbl>Full Description</Lbl>
+                  <textarea name="description" value={form.description} onChange={set}
+                    placeholder="Detailed itinerary, highlights, and inclusions"
+                    rows={6}
+                    className={`${inputCls()} resize-none`} />
+                </Fld>
+              </Card>
+
+              {/* Extend to Master toggle — create mode only */}
+              {isTenantMode && !isEditMode && (
+                <div className={`flex items-start gap-4 rounded-xl border p-4 transition-all ${
+                  extendToMaster
+                    ? "bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-800"
+                    : "bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-800"
+                }`}>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={extendToMaster}
+                    onClick={() => setExtendToMaster((v) => !v)}
+                    className={`relative mt-0.5 w-11 h-6 rounded-full transition-colors shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                      extendToMaster ? "bg-blue-600" : "bg-gray-300 dark:bg-gray-600"
+                    }`}
+                  >
+                    <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${
+                      extendToMaster ? "translate-x-5" : "translate-x-0"
+                    }`} />
+                  </button>
+                  <div>
+                    <p className={`text-sm font-semibold ${
+                      extendToMaster ? "text-blue-700 dark:text-blue-400" : "text-gray-900 dark:text-white"
+                    }`}>
+                      Extend to Master Catalog
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">
+                      {extendToMaster
+                        ? "This package will be added to the master catalog and can be synced to other tenants."
+                        : "This package stays private to your portal. Other tenants cannot see or sync it."}
+                    </p>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+            </div>
 
-              {/* ── Right column ── */}
-              <div className="space-y-4">
-                <Card title="Pricing &amp; Duration">
-                  <Fld>
-                    <Lbl req>Base Price ({resolvedCurrency})</Lbl>
-                    <input type="number" name="basePrice" value={form.basePrice} onChange={set}
-                      placeholder="0.00" step="0.01" min="0"
-                      className={inputCls(!!errors.basePrice)} />
-                    <Err msg={errors.basePrice} />
-                  </Fld>
+            {/* ── Right column ── */}
+            <div className="space-y-4">
+              <Card title="Pricing &amp; Duration">
+                <Fld>
+                  <Lbl req>Base Price ({resolvedCurrency})</Lbl>
+                  <input type="number" name="basePrice" value={form.basePrice} onChange={set}
+                    placeholder="0.00" step="0.01" min="0"
+                    className={inputCls(!!errors.basePrice)} />
+                  <Err msg={errors.basePrice} />
+                </Fld>
 
-                  <Fld>
-                    <Lbl req>Duration (Days)</Lbl>
-                    <input type="number" name="durationDays" value={form.durationDays} onChange={set}
-                      placeholder="5" min="1"
-                      className={inputCls(!!errors.durationDays)} />
-                    <Err msg={errors.durationDays} />
-                  </Fld>
+                <Fld>
+                  <Lbl req>Duration (Days)</Lbl>
+                  <input type="number" name="durationDays" value={form.durationDays} onChange={set}
+                    placeholder="5" min="1"
+                    className={inputCls(!!errors.durationDays)} />
+                  <Err msg={errors.durationDays} />
+                </Fld>
 
-                  <Fld>
-                    <Lbl>Max Group Size</Lbl>
-                    <input type="number" name="maxGroupSize" value={form.maxGroupSize} onChange={set}
-                      placeholder="20" min="1"
-                      className={inputCls()} />
-                  </Fld>
-                </Card>
+                <Fld>
+                  <Lbl>Max Group Size</Lbl>
+                  <input type="number" name="maxGroupSize" value={form.maxGroupSize} onChange={set}
+                    placeholder="20" min="1"
+                    className={inputCls()} />
+                </Fld>
+              </Card>
 
-                <Card title="Media">
-                  <Fld>
-                    <Lbl>Featured Image</Lbl>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      onChange={handleFileChange}
-                      className="hidden"
-                    />
+              <Card title="Media">
+                <Fld>
+                  <Lbl>Featured Image</Lbl>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
 
-                    {/* Preview */}
-                    {form.featuredImageUrl && (
-                      <div className="relative rounded-lg overflow-hidden border border-border aspect-video bg-muted mb-2">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={form.featuredImageUrl}
-                          alt="Preview"
-                          className="w-full h-full object-cover"
-                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => { setForm((p) => ({ ...p, featuredImageUrl: "" })); setImgInfo(null) }}
-                          className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center"
-                          title="Remove image"
-                        >✕</button>
-                      </div>
+                  {/* Preview */}
+                  {form.featuredImageUrl && (
+                    <div className="relative rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800 aspect-video bg-gray-100 dark:bg-gray-800 mb-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={form.featuredImageUrl}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => { setForm((p) => ({ ...p, featuredImageUrl: "" })); setImgInfo(null) }}
+                        className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center"
+                        title="Remove image"
+                      >✕</button>
+                    </div>
+                  )}
+
+                  {/* Upload zone */}
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={imgProcessing}
+                    className={`w-full flex flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed px-4 py-5 text-sm transition-colors ${
+                      imgProcessing
+                        ? "border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400 cursor-wait"
+                        : "border-gray-200 dark:border-gray-800 hover:border-blue-400 hover:bg-blue-50/10 text-gray-500 dark:text-gray-400 cursor-pointer"
+                    }`}
+                  >
+                    {imgProcessing ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                        </svg>
+                        <span>Optimizing image…</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <span>{form.featuredImageUrl ? "Replace image" : "Click to upload"}</span>
+                        <span className="text-xs">JPEG · PNG · WEBP · max {MAX_FILE_SIZE_MB}MB</span>
+                      </>
                     )}
+                  </button>
 
-                    {/* Upload zone */}
+                  {imgInfo && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {imgInfo.name} · optimized to ~{imgInfo.kb}KB
+                    </p>
+                  )}
+                  {imgError && <p className="text-xs text-red-500 mt-1">{imgError}</p>}
+
+                  {/* Generate Photo — available in edit mode for both tenant and admin */}
+                  {isEditMode && (
                     <button
                       type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={imgProcessing}
-                      className={`w-full flex flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed px-4 py-5 text-sm transition-colors ${
-                        imgProcessing
-                          ? "border-border text-muted-foreground cursor-wait"
-                          : "border-border hover:border-blue-400 hover:bg-blue-50/10 text-muted-foreground cursor-pointer"
-                      }`}
+                      onClick={handleGeneratePhoto}
+                      disabled={isGenerating || imgProcessing}
+                      className="mt-2 w-full flex items-center justify-center gap-2 rounded-lg border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm text-gray-500 dark:text-gray-400 hover:border-purple-400 hover:text-purple-600 hover:bg-purple-50/10 transition-colors disabled:opacity-50 disabled:cursor-wait"
                     >
-                      {imgProcessing ? (
+                      {isGenerating ? (
                         <>
-                          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+                          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
                           </svg>
-                          <span>Optimizing image…</span>
+                          Searching Unsplash…
                         </>
                       ) : (
                         <>
-                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3l14 9-14 9V3z"/>
                           </svg>
-                          <span>{form.featuredImageUrl ? "Replace image" : "Click to upload"}</span>
-                          <span className="text-xs">JPEG · PNG · WEBP · max {MAX_FILE_SIZE_MB}MB</span>
+                          Generate Photo
                         </>
                       )}
                     </button>
+                  )}
+                </Fld>
+              </Card>
 
-                    {imgInfo && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {imgInfo.name} · optimized to ~{imgInfo.kb}KB
-                      </p>
-                    )}
-                    {imgError && <p className="text-xs text-red-500 mt-1">{imgError}</p>}
-
-                    {/* Generate Photo — available in edit mode for both tenant and admin */}
-                    {isEditMode && (
-                      <button
-                        type="button"
-                        onClick={handleGeneratePhoto}
-                        disabled={isGenerating || imgProcessing}
-                        className="mt-2 w-full flex items-center justify-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground hover:border-purple-400 hover:text-purple-600 hover:bg-purple-50/10 transition-colors disabled:opacity-50 disabled:cursor-wait"
-                      >
-                        {isGenerating ? (
-                          <>
-                            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                            </svg>
-                            Searching Unsplash…
-                          </>
-                        ) : (
-                          <>
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3l14 9-14 9V3z"/>
-                            </svg>
-                            Generate Photo
-                          </>
-                        )}
-                      </button>
-                    )}
+              {(isTenantMode || isEditMode) && (
+                <Card title="Contact Details">
+                  <Fld>
+                    <Lbl>Phone</Lbl>
+                    <input type="text" name="contactPhone" value={form.contactPhone} onChange={set}
+                      placeholder="+60 12-345 6789"
+                      className={inputCls()} />
+                  </Fld>
+                  <Fld>
+                    <Lbl>WhatsApp</Lbl>
+                    <input type="text" name="contactWhatsapp" value={form.contactWhatsapp} onChange={set}
+                      placeholder="+60 12-345 6789"
+                      className={inputCls()} />
                   </Fld>
                 </Card>
-
-                {(isTenantMode || isEditMode) && (
-                  <Card title="Contact Details">
-                    <Fld>
-                      <Lbl>Phone</Lbl>
-                      <input type="text" name="contactPhone" value={form.contactPhone} onChange={set}
-                        placeholder="+60 12-345 6789"
-                        className={inputCls()} />
-                    </Fld>
-                    <Fld>
-                      <Lbl>WhatsApp</Lbl>
-                      <input type="text" name="contactWhatsapp" value={form.contactWhatsapp} onChange={set}
-                        placeholder="+60 12-345 6789"
-                        className={inputCls()} />
-                    </Fld>
-                  </Card>
-                )}
-              </div>
-
+              )}
             </div>
-          </div>
 
-          {/* Fixed footer */}
-          <div className="shrink-0 px-6 py-4 border-t border-border bg-background flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">
-              Fields marked <span className="text-red-500">*</span> are required
-            </p>
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="bg-blue-600 hover:bg-blue-700 text-white min-w-[130px]"
-                disabled={loading}
-              >
-                {loading ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                    </svg>
-                    {isEditMode ? "Saving…" : "Creating…"}
-                  </span>
-                ) : isEditMode ? "Save Changes" : "Create Package"}
-              </Button>
-            </div>
           </div>
-        </form>
+        </div>
 
-      </DialogContent>
-    </Dialog>
+        {/* Fixed footer */}
+        <div className="shrink-0 px-6 py-4 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Fields marked <span className="text-red-500">*</span> are required
+          </p>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={() => { reset(); onOpenChange(false) }} disabled={loading}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              className="min-w-[130px]"
+              disabled={loading}
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                  {isEditMode ? "Saving…" : "Creating…"}
+                </span>
+              ) : isEditMode ? "Save Changes" : "Create Package"}
+            </Button>
+          </div>
+        </div>
+      </form>
+    </Modal>
   )
 }

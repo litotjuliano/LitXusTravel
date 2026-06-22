@@ -18,7 +18,7 @@ export function usePackages(page = 1, pageSize = 20) {
   const fetchPackages = async () => {
     try {
       setLoading(true)
-      const tenantId = localStorage.getItem("nexus_tenant_id")
+      const tenantId = localStorage.getItem("litxus_tenant_id")
       if (!tenantId) {
         setError("Not authenticated")
         return

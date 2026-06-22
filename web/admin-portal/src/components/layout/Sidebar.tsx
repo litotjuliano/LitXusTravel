@@ -80,7 +80,7 @@ export default function Sidebar() {
       <div className="px-2 pb-4 space-y-1 shrink-0 border-t border-white/10 pt-3">
         <button
           onClick={() => {
-            if (typeof window !== "undefined") localStorage.removeItem("nexus_token")
+            if (typeof window !== "undefined") localStorage.removeItem("litxus_token")
             window.location.href = "/auth/login"
           }}
           className={cn(

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { adminApi } from '@/lib/api'
+import { getTokenClaims } from '@/lib/utils'
 
 export interface DashboardStats {
   activeTenants: { value: string; change: string; positive: boolean }
@@ -48,9 +49,19 @@ export function useDashboard(): DashboardData {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // Fetch tenants list
-        const tenantsRes = await adminApi.getTenants({ page: 1, pageSize: 4 })
-        const tenants = tenantsRes.data.data || []
+        const { tenantId } = getTokenClaims()
+
+        let tenants: any[] = []
+
+        if (tenantId) {
+          // Tenant Admin — scope to their own tenant only
+          const res = await adminApi.getTenant(tenantId)
+          tenants = [res.data]
+        } else {
+          // SuperAdmin / Platform Admin — all tenants
+          const res = await adminApi.getTenants({ page: 1, pageSize: 4 })
+          tenants = res.data.data || []
+        }
 
         // Fetch packages list
         const packagesRes = await adminApi.getPackages({ page: 1, pageSize: 100 })

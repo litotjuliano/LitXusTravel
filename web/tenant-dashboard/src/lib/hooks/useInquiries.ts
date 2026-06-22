@@ -18,7 +18,7 @@ export function useInquiries(statusFilter?: string, page = 1, pageSize = 20) {
   const fetchInquiries = async () => {
     try {
       setLoading(true)
-      const tenantId = localStorage.getItem("nexus_tenant_id")
+      const tenantId = localStorage.getItem("litxus_tenant_id")
       if (!tenantId) {
         setError("Not authenticated")
         return

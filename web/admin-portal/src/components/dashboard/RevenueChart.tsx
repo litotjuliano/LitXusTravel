@@ -10,11 +10,11 @@ export default function RevenueChart() {
   const [period, setPeriod] = useState("30d")
 
   return (
-    <div className="bg-card border border-border rounded-xl p-6">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-base font-semibold text-foreground">Revenue Overview</h2>
-          <p className="text-sm text-muted-foreground">Monthly subscription revenue</p>
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white">Revenue Overview</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Monthly subscription revenue</p>
         </div>
         <div className="flex gap-1">
           {PERIODS.map((p) => (
@@ -23,8 +23,8 @@ export default function RevenueChart() {
               onClick={() => setPeriod(p)}
               className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors ${
                 period === p
-                  ? "bg-[--color-brand-blue] text-white"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  ? "bg-brand-500 text-white"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
               }`}
             >
               {p}

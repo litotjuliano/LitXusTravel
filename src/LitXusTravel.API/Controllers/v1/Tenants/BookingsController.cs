@@ -1,13 +1,18 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using LitXusTravel.Application.UseCases.Bookings.CreateBooking;
 using LitXusTravel.Application.UseCases.Bookings.CancelBooking;
 using LitXusTravel.Application.UseCases.Bookings.GetBookings;
 
+using LitXusTravel.API.Filters;
+
 namespace LitXusTravel.API.Controllers.v1.Tenants;
 
 [ApiController]
 [Route("api/v1/tenants/{tenantId:guid}/bookings")]
+[Authorize(Roles = "Agent,Admin")]
+[TenantAuthorizationFilter]
 [Tags("Bookings")]
 public class BookingsController(IMediator mediator) : ControllerBase
 {

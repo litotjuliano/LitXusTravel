@@ -30,7 +30,7 @@ export default function InquiriesPage() {
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
           <Loader className="animate-spin mx-auto mb-4" size={32} />
-          <p className="text-muted-foreground">Loading inquiries...</p>
+          <p className="text-gray-500 dark:text-gray-400">Loading inquiries...</p>
         </div>
       </div>
     )
@@ -50,7 +50,7 @@ export default function InquiriesPage() {
             className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
               activeFilter === status
                 ? "bg-[--color-brand-blue] text-white"
-                : "bg-card border border-border text-foreground hover:bg-muted"
+                : "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white hover:bg-gray-100 dark:bg-gray-800"
             }`}
           >
             {status}
@@ -59,35 +59,35 @@ export default function InquiriesPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-muted/50 border-b border-border">
+          <thead className="bg-gray-100/50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800">
             <tr>
-              <th className="px-4 py-3 text-left font-medium text-foreground">Customer</th>
-              <th className="px-4 py-3 text-left font-medium text-foreground">Email</th>
-              <th className="px-4 py-3 text-left font-medium text-foreground">Phone</th>
-              <th className="px-4 py-3 text-left font-medium text-foreground">Status</th>
-              <th className="px-4 py-3 text-left font-medium text-foreground">Received</th>
-              <th className="px-4 py-3 text-right font-medium text-foreground">Action</th>
+              <th className="px-4 py-3 text-left font-medium text-gray-900 dark:text-white">Customer</th>
+              <th className="px-4 py-3 text-left font-medium text-gray-900 dark:text-white">Email</th>
+              <th className="px-4 py-3 text-left font-medium text-gray-900 dark:text-white">Phone</th>
+              <th className="px-4 py-3 text-left font-medium text-gray-900 dark:text-white">Status</th>
+              <th className="px-4 py-3 text-left font-medium text-gray-900 dark:text-white">Received</th>
+              <th className="px-4 py-3 text-right font-medium text-gray-900 dark:text-white">Action</th>
             </tr>
           </thead>
           <tbody>
             {inquiries.length > 0 ? (
               inquiries.map((inq) => (
-                <tr key={inq.id} className="border-b border-border hover:bg-muted/30 transition-colors last:border-0">
-                  <td className="px-4 py-3 text-foreground font-medium">{inq.customerName}</td>
-                  <td className="px-4 py-3 text-foreground text-sm">{inq.customerEmail}</td>
-                  <td className="px-4 py-3 text-foreground text-sm">{inq.customerPhone || "-"}</td>
+                <tr key={inq.id} className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-100/30 dark:bg-gray-800/30 transition-colors last:border-0">
+                  <td className="px-4 py-3 text-gray-900 dark:text-white font-medium">{inq.customerName}</td>
+                  <td className="px-4 py-3 text-gray-900 dark:text-white text-sm">{inq.customerEmail}</td>
+                  <td className="px-4 py-3 text-gray-900 dark:text-white text-sm">{inq.customerPhone || "-"}</td>
                   <td className="px-4 py-3">
                     <StatusBadge status={inq.status} />
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground text-sm">{formatDate(inq.createdAt)}</td>
+                  <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-sm">{formatDate(inq.createdAt)}</td>
                   <td className="px-4 py-3 text-right">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleStatusChange(inq)}
-                      className="text-[--color-brand-blue] hover:bg-muted"
+                      className="text-[--color-brand-blue] hover:bg-gray-100 dark:bg-gray-800"
                     >
                       Change Status
                     </Button>
@@ -96,7 +96,7 @@ export default function InquiriesPage() {
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={6} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                   No inquiries yet
                 </td>
               </tr>
@@ -108,7 +108,7 @@ export default function InquiriesPage() {
       {/* Pagination */}
       {pagination && (
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm text-gray-500 dark:text-gray-400">
             {inquiries.length > 0 ? `${(page - 1) * pageSize + 1}-${Math.min(page * pageSize, pagination.totalCount)}` : "0"} of {pagination.totalCount}
           </span>
           <div className="flex gap-2">

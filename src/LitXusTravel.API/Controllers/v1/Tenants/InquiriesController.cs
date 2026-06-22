@@ -1,7 +1,9 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using LitXusTravel.API.Filters;
 using LitXusTravel.Application.UseCases.Inquiries.GetInquiries;
+using LitXusTravel.Application.UseCases.Inquiries.GetInquiryDetail;
 using LitXusTravel.Application.UseCases.Inquiries.GetInquiryStats;
 using LitXusTravel.Application.UseCases.Inquiries.UpdateInquiryStatus;
 
@@ -10,6 +12,7 @@ namespace LitXusTravel.API.Controllers.v1.Tenants;
 [ApiController]
 [Route("api/v1/tenants/{tenantId:guid}/inquiries")]
 [Authorize(Roles = "Agent,Admin")]
+[TenantAuthorizationFilter]
 public class InquiriesController(IMediator mediator) : ControllerBase
 {
     /// <summary>List inquiries (SPEC-TENANT-006)</summary>
@@ -49,8 +52,10 @@ public class InquiriesController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> GetById(Guid tenantId, Guid inquiryId, CancellationToken ct)
     {
         if (!IsAuthorizedForTenant(tenantId)) return Forbid();
-        // TODO: Implement GetInquiryDetailQuery
-        return NotFound();
+
+        var result = await mediator.Send(new GetInquiryDetailQuery(tenantId, inquiryId), ct);
+        if (!result.IsSuccess) return NotFound(new { result.Errors });
+        return Ok(result.Value);
     }
 
     /// <summary>Update inquiry status (SPEC-TENANT-008)</summary>

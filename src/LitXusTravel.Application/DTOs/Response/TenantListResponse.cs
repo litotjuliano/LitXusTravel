@@ -14,5 +14,6 @@ public record TenantListResponse(
     int syncedPackagesCount,
     int totalInquiries,
     double conversionRate,
-    DateTimeOffset CreatedAt
+    DateTimeOffset CreatedAt,
+    string? Plan = null
 );

@@ -74,6 +74,31 @@ public class LitXusTravelDbContext(
         builder.Entity<Notification>()
             .HasQueryFilter(e =>
                 !currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.GetValueOrDefault());
+
+        // Commission & booking entities — tenant-scoped, no soft-delete
+        builder.Entity<Tour>()
+            .HasQueryFilter(e =>
+                !currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.GetValueOrDefault());
+
+        builder.Entity<Booking>()
+            .HasQueryFilter(e =>
+                !currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.GetValueOrDefault());
+
+        builder.Entity<CommissionRule>()
+            .HasQueryFilter(e =>
+                !currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.GetValueOrDefault());
+
+        builder.Entity<CommissionAccrual>()
+            .HasQueryFilter(e =>
+                !currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.GetValueOrDefault());
+
+        builder.Entity<CommissionPayout>()
+            .HasQueryFilter(e =>
+                !currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.GetValueOrDefault());
+
+        builder.Entity<StaffAgent>()
+            .HasQueryFilter(e =>
+                !currentTenant.Id.HasValue || e.TenantId == currentTenant.Id.GetValueOrDefault());
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken ct = default)

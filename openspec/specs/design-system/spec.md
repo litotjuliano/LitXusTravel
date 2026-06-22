@@ -2,9 +2,25 @@
 
 ## Overview
 
-LitXusTravel uses a unified design system across both the public website and admin portal.
-The system is implemented in Tailwind CSS and applied via shadcn/ui components. The design
-philosophy is: visual-first, mobile-first, accessible (WCAG AA), and smooth (Framer Motion animations).
+LitXusTravel uses a unified design system across the public website, admin portal, and tenant
+dashboard. **shadcn/ui has been fully removed from all three frontends** (no `@base-ui/react`
+dependency in either dashboard). The design philosophy is: visual-first, mobile-first, accessible
+(WCAG AA), and smooth (Framer Motion animations).
+
+### UI Component Strategy (per app)
+
+```
+admin-portal/      → TailAdmin (free React template) components adapted for Next.js + pure Tailwind.
+tenant-dashboard/   → Same TailAdmin-derived component set as admin-portal (mirrored 1:1).
+public-website/    → Pure Tailwind CSS. Keeps @base-ui/react ONLY for Dialog and Sheet
+                     (accessibility-critical primitives: focus trap, ESC handling, portal).
+                     All other components (Button, Badge) are plain Tailwind + CVA, no headless lib.
+```
+
+No `shadcn`, `next-themes`, or `tw-animate-css` packages remain in any `package.json`.
+Animations on `@base-ui/react` Dialog/Sheet use the primitive's native
+`data-starting-style` / `data-ending-style` attributes with Tailwind transition utilities —
+NOT the `tw-animate-css` `animate-in`/`fade-in-0` class names (removed).
 
 ---
 
@@ -96,8 +112,10 @@ Hero section:
   min-height: 500px  (mobile: 320px)
   padding: 64px 24px
 
-Admin sidebar:
-  width: 256px (fixed, desktop); drawer on mobile
+Admin sidebar (admin-portal AND tenant-dashboard — same pattern):
+  width: 290px expanded / 90px collapsed (desktop, hover-to-expand when collapsed)
+  background: ALWAYS dark — `bg-gray-dark` (#1a2231) — does not change with light/dark theme toggle
+  mobile: hidden by default, opens as full drawer via SidebarContext.isMobileOpen + Backdrop overlay
 ```
 
 ---
@@ -184,6 +202,36 @@ Base: px-12px py-6px rounded-full text-caption font-semibold
 
 ---
 
+## Dashboard Header Pattern (admin-portal & tenant-dashboard)
+
+```
+Sticky header: bg-white dark:bg-gray-900, border-b border-gray-200 dark:border-gray-800
+Left:   hamburger toggle (desktop = collapse sidebar, mobile = open drawer)
+Center: search input (hidden < md) — placeholder "Search or type command...",
+        leading <Search> icon, trailing "⌘K" badge (visual hint only, not yet wired to a command palette)
+Right:  theme toggle (Sun/Moon) → notification bell (with dot) → user avatar dropdown
+        (Profile / Settings / Logout via Dropdown + DropdownItem)
+```
+
+## Login Page — Dev Credentials Cheatsheet
+
+Admin-portal (and pending: tenant-dashboard, see Pending Work) login pages show a card below the
+sign-in form listing seed accounts. Clicking a row autofills the form via
+`react-hook-form`'s `setValue()` — no manual typing required.
+
+```
+Header: <KeyRound> icon + "Dev Credentials" label + "click row to fill" badge (top-right)
+Table:  Email (mono) | Role (color-coded badge per role tier)
+Row click: setValue("email", ...) + setValue("password", ...); row highlights bg-brand-500/10
+Row hover: title tooltip shows "email / password" (password not shown in the table itself)
+```
+
+This pattern is adapted from `C:\LitXus Systems\TIMD Portal` (`timd-portal-frontend/src/pages/auth/Login.tsx`),
+which uses the same click-to-fill mechanic (its variant has one shared password for all rows;
+LitXusTravel's variant has a distinct password per row, carried in the same credentials array).
+
+---
+
 ## Accessibility Requirements
 
 - Minimum contrast ratio: 4.5:1 for normal text, 3:1 for large text and UI elements (WCAG AA)
@@ -200,15 +248,39 @@ Base: px-12px py-6px rounded-full text-caption font-semibold
 ## File Locations
 
 ```
-web/admin-portal/
+web/admin-portal/  +  web/tenant-dashboard/   (same structure in both)
   src/
-    lib/
-      animations.ts   — Framer Motion presets (EASING, TRANSITIONS, pageVariants, stagger*)
-    tailwind.config.ts — color tokens (primary-600=#0066CC, secondary-500=#00A89A, accent-500=#FF6B35)
+    app/globals.css          — TailAdmin @theme block (brand/gray/success/error/warning scales),
+                                menu-item-* / menu-dropdown-item-* @utility classes, bg-gray-dark token
+    context/
+      SidebarContext.tsx      — isExpanded / isMobileOpen / isHovered state
+      ThemeContext.tsx        — localStorage light/dark toggle, applies .dark to <html>
+    components/layout/
+      AppSidebar.tsx           — dark sidebar, collapsible nav, submenu accordion
+      AppHeader.tsx             — sticky header, search bar, theme/bell/user dropdown
+      Backdrop.tsx              — mobile drawer overlay
+    components/ui/
+      Modal.tsx                 — TailAdmin modal (no portal, no focus trap — acceptable for internal tools)
+      Dropdown.tsx / DropdownItem.tsx
+      button.tsx, badge.tsx, select.tsx (native <select> passthrough), sonner.tsx
+    lib/animations.ts         — Framer Motion presets (EASING, TRANSITIONS, pageVariants, stagger*)
 
 web/public-website/
   src/
-    lib/
-      animations.ts   — shared animation presets
-    tailwind.config.ts — same color tokens
+    app/globals.css          — plain Tailwind + @theme inline (no shadcn import)
+    components/ui/
+      dialog.tsx, sheet.tsx   — @base-ui/react/dialog wrappers (kept for accessibility)
+      button.tsx, badge.tsx   — plain Tailwind + CVA (no headless lib)
+      sonner.tsx               — no next-themes; richColors toaster only
+    lib/animations.ts         — shared animation presets
 ```
+
+---
+
+## Pending Work
+
+- `tenant-dashboard` login page (`src/app/auth/login/page.tsx`) still references the dead
+  `bg-[--color-sidebar]` CSS variable (leftover from the shadcn era) and uses a light
+  `bg-white dark:bg-gray-900` card instead of the dark `bg-gray-dark` / `bg-gray-800` treatment
+  applied to admin-portal's login page. It also lacks the Dev Credentials cheatsheet table.
+  Bring it in line with admin-portal's login page (see "Login Page — Dev Credentials Cheatsheet" above).

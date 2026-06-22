@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Loader2 } from "lucide-react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Modal } from "@/components/ui/Modal"
 import { Button } from "@/components/ui/button"
 import { tenantApi } from "@/lib/api"
 import { toast } from "sonner"
@@ -23,7 +23,7 @@ export default function InquiryStatusModal({ isOpen, onClose, inquiry, onSuccess
   const handleSubmit = async () => {
     try {
       setLoading(true)
-      const tenantId = localStorage.getItem("nexus_tenant_id")
+      const tenantId = localStorage.getItem("litxus_tenant_id")
       if (!tenantId) {
         toast.error("Not authenticated")
         return
@@ -41,48 +41,52 @@ export default function InquiryStatusModal({ isOpen, onClose, inquiry, onSuccess
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Update Inquiry Status</DialogTitle>
-        </DialogHeader>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      className="max-w-md mx-4 rounded-2xl shadow-theme-xl"
+    >
+      <div className="px-6 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Update Inquiry Status</h3>
+      </div>
 
-        <div className="space-y-4">
-          <div>
-            <p className="text-sm text-muted-foreground mb-2">Customer: <span className="text-foreground font-medium">{inquiry.customerName}</span></p>
-          </div>
+      <div className="p-6 space-y-4">
+        <div>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+            Customer: <span className="text-gray-900 dark:text-white font-medium">{inquiry.customerName}</span>
+          </p>
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-3">Select New Status</label>
-            <div className="space-y-2">
-              {STATUSES.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setStatus(s)}
-                  className={`w-full px-4 py-2.5 rounded-lg text-left text-sm font-medium transition-colors ${
-                    status === s
-                      ? "bg-[--color-brand-blue] text-white"
-                      : "bg-muted text-foreground hover:bg-muted/80"
-                  }`}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex gap-3 pt-6">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={loading || status === inquiry.status}
-              className="flex-1 bg-[--color-brand-blue] hover:bg-blue-700"
-            >
-              {loading ? <><Loader2 size={16} className="animate-spin mr-2" />Updating...</> : "Update Status"}
-            </Button>
+        <div>
+          <label className="block text-sm font-medium text-gray-900 dark:text-white mb-3">Select New Status</label>
+          <div className="space-y-2">
+            {STATUSES.map((s) => (
+              <button
+                key={s}
+                onClick={() => setStatus(s)}
+                className={`w-full px-4 py-2.5 rounded-lg text-left text-sm font-medium transition-colors ${
+                  status === s
+                    ? "bg-brand-500 text-white"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
+                }`}
+              >
+                {s}
+              </button>
+            ))}
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+
+        <div className="flex gap-3 pt-2">
+          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={loading || status === inquiry.status}
+            className="flex-1"
+          >
+            {loading ? <><Loader2 size={16} className="animate-spin mr-2" />Updating...</> : "Update Status"}
+          </Button>
+        </div>
+      </div>
+    </Modal>
   )
 }
