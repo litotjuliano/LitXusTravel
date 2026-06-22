@@ -75,6 +75,16 @@ export const adminApi = {
   assignPlan: (tenantId: string, planName: string) =>
     api.post(`/admin/tenants/${tenantId}/assign-plan`, { planName }),
 
+  // Subscription Plans
+  getSubscriptionPlans: () =>
+    api.get("/admin/subscription-plans"),
+  createSubscriptionPlan: (data: { name: string; price: number; maxPackages: number; maxTeamMembers: number }) =>
+    api.post("/admin/subscription-plans", data),
+  updateSubscriptionPlan: (id: string, data: { name: string; price: number; maxPackages: number; maxTeamMembers: number }) =>
+    api.put(`/admin/subscription-plans/${id}`, data),
+  deleteSubscriptionPlan: (id: string) =>
+    api.delete(`/admin/subscription-plans/${id}`),
+
   // Inquiries (tenant-scoped)
   getInquiries: (tenantId: string, params?: object) =>
     api.get(`/tenants/${tenantId}/inquiries`, { params }),

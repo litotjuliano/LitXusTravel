@@ -13,6 +13,7 @@ public class LitXusTravelDbContext(
 {
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<TenantSubscription> TenantSubscriptions => Set<TenantSubscription>();
+    public DbSet<SubscriptionPlan> SubscriptionPlans => Set<SubscriptionPlan>();
     public DbSet<Package> Packages => Set<Package>();
     public DbSet<TenantPackage> TenantPackages => Set<TenantPackage>();
     public DbSet<PackageOverride> PackageOverrides => Set<PackageOverride>();
@@ -44,6 +45,7 @@ public class LitXusTravelDbContext(
         // Soft-delete filters for admin-accessible tables (no tenant scope)
         builder.Entity<Tenant>().HasQueryFilter(e => !e.DeletedAt.HasValue);
         builder.Entity<Package>().HasQueryFilter(e => !e.DeletedAt.HasValue);
+        builder.Entity<SubscriptionPlan>().HasQueryFilter(e => !e.DeletedAt.HasValue);
 
         // Tenant-scoped filters — closure captures currentTenant so the filter
         // is re-evaluated per query. When Id is null (admin / design-time) the

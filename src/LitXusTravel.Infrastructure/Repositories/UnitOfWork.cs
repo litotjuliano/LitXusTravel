@@ -11,6 +11,7 @@ public class UnitOfWork(LitXusTravelDbContext context) : IUnitOfWork
 {
     public IRepository<Tenant> Tenants { get; } = new Repository<Tenant>(context);
     public IRepository<TenantSubscription> TenantSubscriptions { get; } = new Repository<TenantSubscription>(context);
+    public IRepository<SubscriptionPlan> SubscriptionPlans { get; } = new Repository<SubscriptionPlan>(context);
     public IRepository<Package> Packages { get; } = new Repository<Package>(context);
     public ITenantPackageRepository TenantPackages { get; } = new TenantPackageRepository(context);
     public IRepository<PackageOverride> PackageOverrides { get; } = new Repository<PackageOverride>(context);

@@ -30,6 +30,7 @@ public class DatabaseSeeder(
         await SeedRolesAsync();
         await SeedSuperAdminUserAsync();
         await SeedAdminUserAsync();
+        await SeedSubscriptionPlansAsync();
         await SeedTenantsAsync();
         await PatchTenantSubdomainsAsync();
         await SeedTenantAdminUsersAsync();
@@ -41,6 +42,22 @@ public class DatabaseSeeder(
         await CleanupCrossTenantSyncAsync();
         await BackfillTenantDefaultCurrencyAsync();
         await SeedCommissionTestDataAsync();
+    }
+
+    private async Task SeedSubscriptionPlansAsync()
+    {
+        if (await dbContext.SubscriptionPlans.AnyAsync()) return;
+
+        var plans = new[]
+        {
+            SubscriptionPlan.Create("Starter",    99,  10,  2),
+            SubscriptionPlan.Create("Pro",        299, 50,  10),
+            SubscriptionPlan.Create("Enterprise", 999, 999, 50),
+        };
+
+        await dbContext.SubscriptionPlans.AddRangeAsync(plans);
+        await dbContext.SaveChangesAsync();
+        logger.LogInformation("✅ Seeded {Count} subscription plans", plans.Length);
     }
 
     private async Task PatchPackageImagesAsync()

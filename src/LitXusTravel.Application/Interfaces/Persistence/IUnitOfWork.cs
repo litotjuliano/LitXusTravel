@@ -6,6 +6,7 @@ public interface IUnitOfWork : IAsyncDisposable
 {
     IRepository<Tenant> Tenants { get; }
     IRepository<TenantSubscription> TenantSubscriptions { get; }
+    IRepository<SubscriptionPlan> SubscriptionPlans { get; }
     IRepository<Package> Packages { get; }
     ITenantPackageRepository TenantPackages { get; }
     IRepository<PackageOverride> PackageOverrides { get; }
