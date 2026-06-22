@@ -24,6 +24,7 @@ export interface UseTenantsResult {
     hasNextPage: boolean
     hasPreviousPage: boolean
   }
+  refetch: () => void
 }
 
 export const useTenants = (

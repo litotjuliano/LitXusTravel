@@ -4,6 +4,7 @@ import { useState } from "react"
 import StatusBadge from "@/components/common/StatusBadge"
 import { Pagination } from "@/components/common/Pagination"
 import { SortableHeader } from "@/components/common/SortableHeader"
+import { Modal } from "@/components/ui/Modal"
 import { formatDate, getTokenClaims } from "@/lib/utils"
 import { useTenants } from "@/lib/hooks/useTenants"
 import { adminApi } from "@/lib/api"
@@ -22,8 +23,32 @@ function PlatformView() {
   const [sortBy, setSortBy] = useState<string | undefined>(undefined)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
   const [assigning, setAssigning] = useState<string | null>(null)
+  const [pendingPlan, setPendingPlan] = useState<{ tenantId: string; tenantName: string; planName: string } | null>(null)
+  const [resetNonce, setResetNonce] = useState(0)
 
   const { tenants, loading, pagination, refetch } = useTenants(page, pageSize, { sortBy, sortOrder })
+
+  async function confirmAssignPlan() {
+    if (!pendingPlan) return
+    const { tenantId, tenantName, planName } = pendingPlan
+    setAssigning(tenantId)
+    try {
+      await adminApi.assignPlan(tenantId, planName)
+      toast.success(`${tenantName} → ${planName}`)
+      refetch()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed")
+      setResetNonce((n) => n + 1)
+    } finally {
+      setAssigning(null)
+      setPendingPlan(null)
+    }
+  }
+
+  function cancelAssignPlan() {
+    setPendingPlan(null)
+    setResetNonce((n) => n + 1)
+  }
 
   function handleSort(key: string) {
     if (sortBy === key) {
@@ -126,22 +151,13 @@ function PlatformView() {
                         </td>
                         <td className="px-4 py-3">
                           <select
-                            key={t.plan ?? "none"}
+                            key={`${t.plan ?? "none"}-${resetNonce}`}
                             defaultValue={t.plan ?? ""}
                             disabled={assigning === t.id}
-                            onChange={async (e) => {
+                            onChange={(e) => {
                               const plan = e.target.value
                               if (!plan) return
-                              setAssigning(t.id)
-                              try {
-                                await adminApi.assignPlan(t.id, plan)
-                                toast.success(`${t.name} → ${plan}`)
-                                refetch()
-                              } catch (err) {
-                                toast.error(err instanceof Error ? err.message : "Failed")
-                              } finally {
-                                setAssigning(null)
-                              }
+                              setPendingPlan({ tenantId: t.id, tenantName: t.name, planName: plan })
                             }}
                             className="text-sm border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[--color-brand-blue] disabled:opacity-50"
                           >
@@ -186,6 +202,38 @@ function PlatformView() {
           </>
         )}
       </div>
+
+      <Modal isOpen={!!pendingPlan} onClose={cancelAssignPlan} className="max-w-sm rounded-2xl p-6">
+        {pendingPlan && (
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">Assign plan</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Assign <span className="font-semibold text-gray-900 dark:text-white">{pendingPlan.planName}</span> to{" "}
+                <span className="font-semibold text-gray-900 dark:text-white">{pendingPlan.tenantName}</span>?
+                This expires their current active subscription.
+              </p>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={cancelAssignPlan}
+                disabled={assigning === pendingPlan.tenantId}
+                className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmAssignPlan}
+                disabled={assigning === pendingPlan.tenantId}
+                className="px-4 py-2 text-sm font-semibold bg-[--color-brand-blue] hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {assigning === pendingPlan.tenantId && <Loader size={14} className="animate-spin" />}
+                Confirm
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }
