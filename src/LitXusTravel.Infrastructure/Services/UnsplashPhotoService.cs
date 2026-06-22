@@ -23,6 +23,12 @@ public class UnsplashPhotoService(IHttpClientFactory httpFactory, IConfiguration
             var result = await client.GetFromJsonAsync<UnsplashPhotoResult>(url, ct);
             return result?.Urls?.Regular;
         }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            // Caller (HTTP request) was aborted client-side — not an Unsplash failure, nothing to report.
+            logger.LogInformation("Unsplash fetch cancelled by caller for query '{Query}'", query);
+            throw;
+        }
         catch (Exception ex)
         {
             logger.LogWarning(ex, "Unsplash fetch failed for query '{Query}'", query);

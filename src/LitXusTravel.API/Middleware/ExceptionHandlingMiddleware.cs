@@ -25,6 +25,11 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         {
             await WriteErrorAsync(context, HttpStatusCode.Forbidden, ex.Message);
         }
+        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+        {
+            // Client disconnected/navigated away mid-request — nothing to write back, nothing to log as an error.
+            logger.LogInformation("Request cancelled by client: {Method} {Path}", context.Request.Method, context.Request.Path);
+        }
         catch (Exception ex)
         {
             logger.LogError(ex, "Unhandled exception");
