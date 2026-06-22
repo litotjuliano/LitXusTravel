@@ -206,7 +206,7 @@ function PlatformView() {
       <Modal isOpen={!!pendingPlan} onClose={cancelAssignPlan} className="max-w-sm rounded-2xl p-6">
         {pendingPlan && (
           <div className="space-y-4">
-            <div>
+            <div className="pr-10 sm:pr-12">
               <h3 className="text-base font-semibold text-gray-900 dark:text-white">Assign plan</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Assign <span className="font-semibold text-gray-900 dark:text-white">{pendingPlan.planName}</span> to{" "}
