@@ -242,6 +242,7 @@ function PlatformView() {
       await adminApi.assignPlan(tenantId, planName)
       toast.success(`${tenantName} → ${planName}`)
       refetch()
+      refetchPlans()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed")
       setResetNonce((n) => n + 1)
