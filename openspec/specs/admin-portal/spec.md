@@ -191,6 +191,35 @@ Subscription Plan, Joined Date, Status badge, Actions (View Details, Manage Pack
 
 ---
 
+### Requirement: SPEC-ADMIN-SUBSCRIPTIONS — Subscription Plan Management
+
+The subscriptions page (Platform Admin/SuperAdmin view, i.e. no `tenantId` claim) MUST show
+subscription plans as cards backed by `GET /api/v1/admin/subscription-plans` (live data, not
+mocked), each with hover-revealed Edit/Delete icon buttons and a "New Plan" button. Create/Edit
+use a shared modal form (Name, Price, Max Packages, Max Team Members); Delete uses a confirmation
+modal that warns how many tenants are actively subscribed to that plan before removing it
+(soft-delete — existing tenant subscriptions are unaffected, but the plan can no longer be
+assigned to new tenants). The Tenant Subscriptions table's per-row "Assign plan" dropdown is
+populated from the same live plan list (active plans only) and requires confirming in a modal
+(see SPEC-ADMIN-TENANTS-LIST's sibling assign-plan flow) before the API call fires.
+
+#### Scenario: Creating a plan
+- Given: Admin clicks "New Plan" and fills Name/Price/Max Packages/Max Team Members
+- When: Form is submitted
+- Then: `POST /api/v1/admin/subscription-plans` is called; on success the modal closes and the plan card list reloads
+
+#### Scenario: Deleting a plan with active subscribers
+- Given: A plan has `activeTenantCount > 0`
+- When: Admin clicks the trash icon on that plan's card
+- Then: Confirmation modal states the active subscriber count and that they keep their current subscription; confirming calls `DELETE /api/v1/admin/subscription-plans/{id}` (soft-delete) and the plan disappears from future assignment
+
+#### Scenario: Tenant-facing "My Subscription" view reads live plan data
+- Given: A Tenant Admin (has a `tenantId` claim) loads `/admin/subscriptions`
+- When: Page renders
+- Then: Current plan card and the "Available Plans" grid render from the same `GET /api/v1/admin/subscription-plans` data — no hardcoded plan list
+
+---
+
 ### Requirement: SPEC-ADMIN-BILLING — Billing & Invoices Page
 
 The billing page MUST show platform-wide invoice history in a table (Invoice ID, Tenant, Plan,

@@ -52,6 +52,34 @@ An authenticated Admin MUST be able to list all tenants with filtering and pagin
 
 ---
 
+### Requirement: SPEC-ADMIN-006 — Subscription Plan Management & Assignment
+
+Subscription plans (Name, Price, MaxPackages, MaxTeamMembers) are managed entities, not hardcoded
+values — an Admin/SuperAdmin MUST be able to create, update, and soft-delete plans via
+`api/v1/admin/subscription-plans`. Plan names are unique among non-deleted plans. Assigning a plan
+to a tenant (`POST /api/v1/admin/tenants/{tenantId}/assign-plan`) MUST look up the named plan from
+the database (not a hardcoded table) and reject the request if the plan doesn't exist or has been
+deleted/deactivated. Assigning expires the tenant's current active `TenantSubscription` and creates
+a new one snapshotting the plan's price/limits at assignment time — later edits to a plan do not
+retroactively change already-assigned subscriptions.
+
+#### Scenario: Creating a plan with a duplicate name is rejected
+- Given: A plan named "Pro" already exists
+- When: POST /api/v1/admin/subscription-plans with `{ name: "Pro", ... }`
+- Then: 400 Bad Request — "A plan named 'Pro' already exists."
+
+#### Scenario: Assigning a deleted plan is rejected
+- Given: A plan was soft-deleted via DELETE /api/v1/admin/subscription-plans/{id}
+- When: POST /api/v1/admin/tenants/{tenantId}/assign-plan with that plan's name
+- Then: 400 Bad Request — "Unknown or inactive plan '{name}'."; the tenant's existing active subscription is untouched
+
+#### Scenario: Assigning a plan expires the prior subscription
+- Given: A tenant has an active TenantSubscription on plan "Starter"
+- When: POST /api/v1/admin/tenants/{tenantId}/assign-plan with `{ planName: "Pro" }`
+- Then: 200 OK; the Starter subscription's Status becomes Expired; a new Active TenantSubscription is created with Pro's current Price/MaxPackages/MaxTeamMembers
+
+---
+
 ### Requirement: SPEC-TENANT-SETTINGS — Get and Update Tenant Settings
 
 An authenticated Agent MUST be able to read and update their tenant's settings,
