@@ -39,8 +39,8 @@ LitXusTravel is a multi-tenant travel package distribution SaaS platform built w
 
 ```bash
 # Clone the repository
-git clone https://github.com/nexus-systems/nexus-travel.git
-cd nexus-travel
+git clone https://github.com/litxus-systems/litxus-travel.git
+cd litxus-travel
 
 # Restore .NET dependencies
 dotnet restore
@@ -148,8 +148,8 @@ ConnectionStrings__LitXusTravel=Host=localhost;Port=5432;Database=litxustravel_d
 
 # JWT
 Jwt__Key=your-256-bit-secret-key-here
-Jwt__Issuer=nexustravel.com
-Jwt__Audience=nexustravel-api
+Jwt__Issuer=litxustravel.com
+Jwt__Audience=litxustravel-api
 Jwt__ExpirationMinutes=1440
 
 # API
@@ -170,17 +170,17 @@ ConnectionStrings__LitXusTravel=Host=<TODO>;Port=5432;Database=litxustravel_stag
 
 # JWT
 Jwt__Key=staging-secret-key-min-256-characters-required
-Jwt__Issuer=nexustravel.com
-Jwt__Audience=nexustravel-api
+Jwt__Issuer=litxustravel.com
+Jwt__Audience=litxustravel-api
 Jwt__ExpirationMinutes=1440
 
 # API
-API_URL=https://api-staging.nexustravel.com
-PUBLIC_API_URL=https://api-staging.nexustravel.com
+API_URL=https://api-staging.litxustravel.com
+PUBLIC_API_URL=https://api-staging.litxustravel.com
 
 # Frontend
-NEXT_PUBLIC_API_URL=https://api-staging.nexustravel.com
-NEXT_PUBLIC_APP_URL=https://staging.nexustravel.com
+NEXT_PUBLIC_API_URL=https://api-staging.litxustravel.com
+NEXT_PUBLIC_APP_URL=https://staging.litxustravel.com
 ```
 
 ### Production (.env.production)
@@ -192,17 +192,17 @@ ConnectionStrings__LitXusTravel=Host=<TODO>;Port=5432;Database=litxustravel_prod
 
 # JWT
 Jwt__Key=production-secret-key-min-256-characters-required
-Jwt__Issuer=nexustravel.com
-Jwt__Audience=nexustravel-api
+Jwt__Issuer=litxustravel.com
+Jwt__Audience=litxustravel-api
 Jwt__ExpirationMinutes=1440
 
 # API
-API_URL=https://api.nexustravel.com
-PUBLIC_API_URL=https://api.nexustravel.com
+API_URL=https://api.litxustravel.com
+PUBLIC_API_URL=https://api.litxustravel.com
 
 # Frontend
-NEXT_PUBLIC_API_URL=https://api.nexustravel.com
-NEXT_PUBLIC_APP_URL=https://nexustravel.com
+NEXT_PUBLIC_API_URL=https://api.litxustravel.com
+NEXT_PUBLIC_APP_URL=https://litxustravel.com
 
 # Logging
 ASPNETCORE_ENVIRONMENT=Production
@@ -298,14 +298,14 @@ npm run build
 
 ```bash
 # Build Docker image for API
-docker build -f src/LitXusTravel.API/Dockerfile -t nexustravel-api:latest .
+docker build -f src/LitXusTravel.API/Dockerfile -t litxustravel-api:latest .
 
 # Build Docker image for Admin Portal
-docker build -f web/admin-portal/Dockerfile -t nexustravel-admin:latest .
+docker build -f web/admin-portal/Dockerfile -t litxustravel-admin:latest .
 
 # Run locally
-docker run -p 5000:80 nexustravel-api:latest
-docker run -p 3000:3000 nexustravel-admin:latest
+docker run -p 5000:80 litxustravel-api:latest
+docker run -p 3000:3000 litxustravel-admin:latest
 ```
 
 ---
@@ -337,10 +337,10 @@ git push origin feature/your-feature
 **3. Verify Deployment:**
 ```bash
 # Check API health
-curl https://api-staging.nexustravel.com/health
+curl https://api-staging.litxustravel.com/health
 
 # Check admin portal
-https://staging.nexustravel.com/admin
+https://staging.litxustravel.com/admin
 
 # Verify database migrations
 # Connect via psql and run: SELECT * FROM "__EFMigrationsHistory";
@@ -349,12 +349,12 @@ https://staging.nexustravel.com/admin
 **4. Smoke Tests:**
 ```bash
 # Test SuperAdmin login
-curl -X POST https://api-staging.nexustravel.com/api/v1/auth/login \
+curl -X POST https://api-staging.litxustravel.com/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@nexustravel.com","password":"Admin@123"}'
+  -d '{"email":"admin@litxustravel.com","password":"Admin@123"}'
 
 # Test package listing
-curl https://api-staging.nexustravel.com/api/v1/admin/packages \
+curl https://api-staging.litxustravel.com/api/v1/admin/packages \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -410,8 +410,8 @@ git push origin v1.3.0
 ```powershell
 # Using Azure CLI
 az webapp deployment slot swap \
-  --resource-group nexustravel-prod \
-  --name nexustravel-api \
+  --resource-group litxustravel-prod \
+  --name litxustravel-api \
   --slot green
 ```
 
@@ -470,8 +470,8 @@ az webapp deployment slot swap \
 ```bash
 # View logs in Azure
 az webapp log tail \
-  --resource-group nexustravel-prod \
-  --name nexustravel-api
+  --resource-group litxustravel-prod \
+  --name litxustravel-api
 
 # Or via Application Insights
 # Navigate to: Logs → customEvents
@@ -540,19 +540,19 @@ jobs:
         run: dotnet publish src/LitXusTravel.API -c Release -o publish
       
       - name: Build Docker Image
-        run: docker build -f src/LitXusTravel.API/Dockerfile -t ${{ secrets.REGISTRY }}/nexustravel-api:${{ github.sha }} .
+        run: docker build -f src/LitXusTravel.API/Dockerfile -t ${{ secrets.REGISTRY }}/litxustravel-api:${{ github.sha }} .
       
       - name: Push to ACR
-        run: docker push ${{ secrets.REGISTRY }}/nexustravel-api:${{ github.sha }}
+        run: docker push ${{ secrets.REGISTRY }}/litxustravel-api:${{ github.sha }}
       
       - name: Deploy to Staging
         if: github.ref == 'refs/heads/main'
         run: |
           az webapp deployment slot create \
-            --resource-group nexustravel-staging \
-            --name nexustravel-api \
+            --resource-group litxustravel-staging \
+            --name litxustravel-api \
             --slot green \
-            --image ${{ secrets.REGISTRY }}/nexustravel-api:${{ github.sha }}
+            --image ${{ secrets.REGISTRY }}/litxustravel-api:${{ github.sha }}
       
       - name: Deploy to Production
         if: startsWith(github.ref, 'refs/tags/v')
@@ -570,8 +570,8 @@ jobs:
 ```powershell
 # Immediately swap back to previous version
 az webapp deployment slot swap \
-  --resource-group nexustravel-prod \
-  --name nexustravel-api \
+  --resource-group litxustravel-prod \
+  --name litxustravel-api \
   --slot green
 
 # Current running: v1.2.0
@@ -648,9 +648,9 @@ public override void Down(MigrationBuilder migrationBuilder)
 **L3 Support**: DevOps/SRE for infrastructure issues
 
 **Contact:**
-- **Slack**: #nexustravel-ops
+- **Slack**: #litxustravel-ops
 - **PagerDuty**: Escalation chain
-- **Email**: ops@nexustravel.com
+- **Email**: ops@litxustravel.com
 
 ---
 
@@ -658,26 +658,26 @@ public override void Down(MigrationBuilder migrationBuilder)
 
 ```bash
 # Check deployment status
-az webapp show --resource-group nexustravel-prod --name nexustravel-api
+az webapp show --resource-group litxustravel-prod --name litxustravel-api
 
 # View recent deployments
 az webapp deployment list-publishing-profiles \
-  --resource-group nexustravel-prod \
-  --name nexustravel-api
+  --resource-group litxustravel-prod \
+  --name litxustravel-api
 
 # Scale up for traffic surge
 az appservice plan update \
-  --resource-group nexustravel-prod \
-  --name nexustravel-plan \
+  --resource-group litxustravel-prod \
+  --name litxustravel-plan \
   --sku P2V2
 
 # Database connection string
 az sql db show-connection-string \
-  --server-name nexustravel-prod \
+  --server-name litxustravel-prod \
   --name LitXusTravel_Prod
 
 # Tail logs
-az webapp log tail --resource-group nexustravel-prod --name nexustravel-api
+az webapp log tail --resource-group litxustravel-prod --name litxustravel-api
 ```
 
 ---

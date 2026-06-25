@@ -4,13 +4,13 @@ Analyze OpenSpec.md and update task status markers.
 
 INSTRUCTIONS:
 
-1\. Read the file: C:\\Nexus Systems\\LitXusTravel\\OPENSPEC.md
+1\. Read the file: C:\\LitXus Systems\\LitXusTravel\\OPENSPEC.md
 
 2\. Review the current project status based on what exists:
 
-&#x20;  - Check C:\\Nexus Systems\\LitXusTravel/ for completed files
+&#x20;  - Check C:\\LitXus Systems\\LitXusTravel/ for completed files
 
-&#x20;  - Check C:\\Nexus Systems\\DevTool/ for completed files
+&#x20;  - Check C:\\LitXus Systems\\DevTool/ for completed files
 
 &#x20;  - Check git status or file modification dates
 

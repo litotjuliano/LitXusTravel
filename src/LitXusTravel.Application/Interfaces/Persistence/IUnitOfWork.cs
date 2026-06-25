@@ -15,6 +15,7 @@ public interface IUnitOfWork : IAsyncDisposable
     IRepository<Quotation> Quotations { get; }
     IRepository<Notification> Notifications { get; }
     IRepository<AuditLog> AuditLogs { get; }
+    IRepository<Invoice> Invoices { get; }
 
     // Booking & Tour
     ITourRepository Tours { get; }

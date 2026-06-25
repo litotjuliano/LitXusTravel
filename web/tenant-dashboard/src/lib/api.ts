@@ -1,4 +1,5 @@
 import axios from "axios"
+import { toast } from "sonner"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5085/api/v1"
 
@@ -25,6 +26,12 @@ api.interceptors.response.use(
       localStorage.removeItem("litxus_tenant_id")
       localStorage.removeItem("litxus_user_email")
       window.location.href = "/auth/login"
+    }
+    if (err.response?.status === 402) {
+      const description = err.response.data?.message
+        ?? "Your subscription has expired. This action is disabled in read-only mode."
+      toast.error("Access Restricted", { description })
+      return Promise.reject(new Error(description))
     }
     if (!err.response) return Promise.reject(new Error("NETWORK_ERROR"))
     const message = err.response?.data?.message ?? err.response?.data?.errors?.[0] ?? "Something went wrong."
@@ -86,4 +93,8 @@ export const tenantApi = {
     api.post(`/tenants/${tenantId}/bookings`, data),
   cancelBooking: (tenantId: string, bookingId: string, reason?: string) =>
     api.post(`/tenants/${tenantId}/bookings/${bookingId}/cancel`, { reason }),
+
+  // Subscription
+  getSubscriptionStatus: (tenantId: string) =>
+    api.get(`/tenants/${tenantId}/subscription`),
 }

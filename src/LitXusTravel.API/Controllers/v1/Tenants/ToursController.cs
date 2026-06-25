@@ -14,6 +14,7 @@ namespace LitXusTravel.API.Controllers.v1.Tenants;
 [Route("api/v1/tenants/{tenantId:guid}/tours")]
 [Authorize(Roles = "Agent,Admin")]
 [TenantAuthorizationFilter]
+[SubscriptionWriteGuard]
 [Tags("Tours")]
 public class ToursController(IMediator mediator) : ControllerBase
 {

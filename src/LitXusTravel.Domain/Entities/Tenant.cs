@@ -53,7 +53,7 @@ public class Tenant : AggregateRoot
             throw new DomainException("Subdomain cannot be empty.");
 
         Subdomain = subdomain.ToLowerInvariant();
-        WebsiteUrl = $"https://{Subdomain}.nexustravel.com";
+        WebsiteUrl = $"https://{Subdomain}.litxustravel.com";
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 

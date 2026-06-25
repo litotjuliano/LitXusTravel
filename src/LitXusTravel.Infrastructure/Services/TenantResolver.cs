@@ -20,7 +20,7 @@ public class TenantResolver(LitXusTravelDbContext context) : ITenantResolver
 
     public async Task<Guid?> ResolveFromHostAsync(string host, CancellationToken ct = default)
     {
-        // Extract subdomain from host (e.g., "agency.nexustravel.com" → "agency")
+        // Extract subdomain from host (e.g., "agency.litxustravel.com" → "agency")
         var parts = host.Split('.');
         if (parts.Length >= 2)
             return await ResolveFromSubdomainAsync(parts[0], ct);

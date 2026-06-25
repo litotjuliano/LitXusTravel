@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using LitXusTravel.Application.Interfaces.Persistence;
 using LitXusTravel.Application.Interfaces.Services;
+using LitXusTravel.Infrastructure.BackgroundServices;
 using LitXusTravel.Infrastructure.Data.Contexts;
 using LitXusTravel.Infrastructure.Identity;
 using LitXusTravel.Infrastructure.Repositories;
@@ -26,7 +27,9 @@ public static class DependencyInjection
         services.AddDbContext<LitXusTravelDbContext>(options =>
             options.UseNpgsql(
                 configuration.GetConnectionString("DefaultConnection"),
-                npgsql => npgsql.MigrationsAssembly(typeof(LitXusTravelDbContext).Assembly.FullName)));
+                npgsql => npgsql
+                    .MigrationsAssembly(typeof(LitXusTravelDbContext).Assembly.FullName)
+                    .EnableRetryOnFailure()));
 
         services.AddIdentityCore<ApplicationUser>(options =>
         {
@@ -54,6 +57,7 @@ public static class DependencyInjection
         services.AddHttpClient("Unsplash");
         services.AddScoped<IPhotoService, UnsplashPhotoService>();
         services.AddScoped<Seeding.DatabaseSeeder>();
+        services.AddHostedService<SubscriptionExpiryCheckerService>();
 
         return services;
     }

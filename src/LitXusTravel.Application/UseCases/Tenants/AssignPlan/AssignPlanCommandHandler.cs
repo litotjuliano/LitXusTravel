@@ -34,6 +34,8 @@ public class AssignPlanCommandHandler(IUnitOfWork uow)
             plan.MaxPackages,
             plan.MaxTeamMembers);
 
+        sub.SetEndDate(DateTime.UtcNow.AddDays(30));
+
         await uow.TenantSubscriptions.AddAsync(sub, ct);
         await uow.SaveChangesAsync(ct);
 

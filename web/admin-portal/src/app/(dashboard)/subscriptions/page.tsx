@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import StatusBadge from "@/components/common/StatusBadge"
 import { Pagination } from "@/components/common/Pagination"
 import { SortableHeader } from "@/components/common/SortableHeader"
@@ -9,7 +10,7 @@ import { formatDate, getTokenClaims } from "@/lib/utils"
 import { useTenants } from "@/lib/hooks/useTenants"
 import { useSubscriptionPlans, type SubscriptionPlan } from "@/lib/hooks/useSubscriptionPlans"
 import { adminApi } from "@/lib/api"
-import { Package, Users, CalendarDays, Loader, Plus, Pencil, Trash2 } from "lucide-react"
+import { Package, Users, CalendarDays, Loader, Plus, Pencil, Trash2, CheckCircle2, XCircle, Clock, Lock, AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
 
 type PlanFormState = { name: string; price: string; maxPackages: string; maxTeamMembers: string }
@@ -352,7 +353,7 @@ function PlatformView() {
           <h2 className="text-base font-semibold text-gray-900 dark:text-white">Tenant Subscriptions</h2>
         </div>
 
-        {loading ? (
+        {loading || plansLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader className="animate-spin text-gray-500 dark:text-gray-400 mr-2" size={20} />
             <p className="text-gray-500 dark:text-gray-400">Loading subscriptions...</p>
@@ -376,6 +377,9 @@ function PlatformView() {
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                       Status
                     </th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                      Expires
+                    </th>
                     <SortableHeader
                       label="Joined"
                       sortKey="createdat"
@@ -392,7 +396,7 @@ function PlatformView() {
                   {tenants.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={5}
+                        colSpan={6}
                         className="px-4 py-8 text-center text-gray-500 dark:text-gray-400"
                       >
                         No tenants found
@@ -425,14 +429,16 @@ function PlatformView() {
                         </td>
                         <td className="px-4 py-3">
                           <StatusBadge
-                            status={
-                              t.plan === "Trial"
-                                ? "Trial"
-                                : t.isActive
-                                ? "Active"
-                                : "Suspended"
+                            status={t.subscriptionHealth ?? (t.isActive ? "Active" : "Suspended")}
+                            label={
+                              t.subscriptionHealth === "ExpiringSoon" && t.daysRemaining !== null
+                                ? `Expiring in ${t.daysRemaining}d`
+                                : undefined
                             }
                           />
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                          {t.subscriptionEndDate ? formatDate(t.subscriptionEndDate) : "—"}
                         </td>
                         <td className="px-4 py-3 text-gray-500 dark:text-gray-400">
                           {formatDate(t.createdAt)}
@@ -512,6 +518,7 @@ function TenantView() {
   const { plans, loading: plansLoading } = useSubscriptionPlans()
   const { tenantId } = getTokenClaims()
   const myTenant = tenants.find((t) => t.id === tenantId)
+  const router = useRouter()
 
   if (loading || plansLoading) {
     return (
@@ -532,6 +539,14 @@ function TenantView() {
     )
   }
 
+  const health = myTenant?.subscriptionHealth ?? (myTenant?.isActive ? "Active" : "Suspended")
+  const isExpiredOrGrace = health === "Expired" || health === "GracePeriod"
+
+  const gracePeriodEndsAt = myTenant?.subscriptionEndDate
+    ? new Date(new Date(myTenant.subscriptionEndDate).getTime() + 7 * 24 * 3600 * 1000)
+    : null
+  const gracePeriodEnded = gracePeriodEndsAt ? gracePeriodEndsAt < new Date() : true
+
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
@@ -540,7 +555,11 @@ function TenantView() {
       </div>
 
       {/* Current plan card */}
-      <div className="bg-white dark:bg-gray-900 border border-(--color-brand-blue)/40 rounded-xl p-6 space-y-5">
+      <div className={`bg-white dark:bg-gray-900 border rounded-xl p-6 space-y-5 ${
+        health === "Expired" ? "border-red-300 dark:border-red-800"
+        : health === "GracePeriod" ? "border-orange-300 dark:border-orange-800"
+        : "border-(--color-brand-blue)/40"
+      }`}>
         <div className="flex items-start justify-between">
           <div>
             <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
@@ -552,7 +571,16 @@ function TenantView() {
               <span className="text-sm font-normal text-gray-500 dark:text-gray-400">/month</span>
             </p>
           </div>
-          <StatusBadge status={myTenant?.isActive ? "Active" : "Suspended"} />
+          <StatusBadge
+            status={health}
+            label={
+              health === "ExpiringSoon" && myTenant?.daysRemaining != null
+                ? `Expiring in ${myTenant.daysRemaining}d`
+                : health === "GracePeriod"
+                  ? "Grace period"
+                  : undefined
+            }
+          />
         </div>
 
         <div className="grid grid-cols-3 gap-4 pt-2 border-t border-gray-200 dark:border-gray-800">
@@ -568,63 +596,229 @@ function TenantView() {
           </div>
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
-              <Users size={14} />
-              <span className="text-xs uppercase tracking-wide">Members</span>
+              <CalendarDays size={14} />
+              <span className="text-xs uppercase tracking-wide">Started</span>
             </div>
-            <p className="text-sm font-semibold text-gray-900 dark:text-white">— / {planDetails.maxTeamMembers}</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+              {myTenant?.subscriptionStartDate
+                ? formatDate(myTenant.subscriptionStartDate)
+                : myTenant?.createdAt
+                  ? formatDate(myTenant.createdAt)
+                  : "—"}
+            </p>
           </div>
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
               <CalendarDays size={14} />
-              <span className="text-xs uppercase tracking-wide">Since</span>
+              <span className="text-xs uppercase tracking-wide">Expires</span>
             </div>
-            <p className="text-sm font-semibold text-gray-900 dark:text-white">
-              {myTenant?.createdAt ? formatDate(myTenant.createdAt) : "—"}
+            <p className={`text-sm font-semibold ${
+              isExpiredOrGrace ? "text-red-600 dark:text-red-400" : "text-gray-900 dark:text-white"
+            }`}>
+              {myTenant?.subscriptionEndDate ? formatDate(myTenant.subscriptionEndDate) : "Never"}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Available plans */}
-      <div>
-        <p className="text-sm font-medium text-gray-900 dark:text-white mb-3">Available Plans</p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {plans.map((p) => (
-            <div
-              key={p.id}
-              className={`rounded-xl border p-4 ${
-                p.name === plan
-                  ? "border-(--color-brand-blue) bg-(--color-brand-blue)/5"
-                  : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
-              }`}
-            >
-              <p className="font-semibold text-gray-900 dark:text-white text-sm">{p.name}</p>
-              <p className="text-(--color-brand-blue) font-bold mt-0.5">
-                RM {p.price}
-                <span className="text-xs font-normal text-gray-500 dark:text-gray-400">/mo</span>
-              </p>
-              <div className="mt-2 space-y-0.5 text-xs text-gray-500 dark:text-gray-400">
-                <p>{p.maxPackages >= 999 ? "Unlimited" : `${p.maxPackages}`} packages</p>
-                <p>{p.maxTeamMembers} members</p>
+      {/* Subscription lifecycle timeline — shown when expired or in grace period */}
+      {isExpiredOrGrace && myTenant && (
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5">
+          <p className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Subscription Timeline</p>
+          <div className="space-y-0">
+            {/* Row 1: Started */}
+            <div className="flex items-start gap-3">
+              <div className="flex flex-col items-center">
+                <CheckCircle2 size={18} className="text-green-500 shrink-0" />
+                <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mt-1" />
               </div>
-              {p.name === plan ? (
-                <p className="mt-3 text-xs font-semibold text-(--color-brand-blue)">
-                  Current plan
+              <div className="pb-4">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">Subscription started</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  {myTenant.subscriptionStartDate
+                    ? formatDate(myTenant.subscriptionStartDate)
+                    : formatDate(myTenant.createdAt)}
                 </p>
-              ) : (
-                <button className="mt-3 text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-foreground transition-colors">
-                  {p.price > planDetails.price ? "Upgrade →" : "Downgrade →"}
-                </button>
-              )}
+              </div>
             </div>
-          ))}
+
+            {/* Row 2: Expired */}
+            <div className="flex items-start gap-3">
+              <div className="flex flex-col items-center">
+                <XCircle size={18} className="text-red-500 shrink-0" />
+                <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mt-1" />
+              </div>
+              <div className="pb-4">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">Subscription expired</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  {myTenant.subscriptionEndDate ? formatDate(myTenant.subscriptionEndDate) : "—"}
+                </p>
+              </div>
+            </div>
+
+            {/* Row 3: Grace period ends */}
+            <div className="flex items-start gap-3">
+              <div className="flex flex-col items-center">
+                {gracePeriodEnded
+                  ? <XCircle size={18} className="text-red-400 shrink-0" />
+                  : <Clock size={18} className="text-orange-500 shrink-0" />
+                }
+                <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mt-1" />
+              </div>
+              <div className="pb-4">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                  7-day grace period {gracePeriodEnded ? "ended" : "ends"}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  {gracePeriodEndsAt ? formatDate(gracePeriodEndsAt.toISOString()) : "—"}
+                  {!gracePeriodEnded && (
+                    <span className="ml-2 text-orange-600 dark:text-orange-400 font-medium">
+                      Full access still available
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            {/* Row 4: Current status */}
+            <div className="flex items-start gap-3">
+              <div className="flex flex-col items-center">
+                {health === "Expired"
+                  ? <Lock size={18} className="text-red-600 shrink-0" />
+                  : <Clock size={18} className="text-orange-500 shrink-0" />
+                }
+              </div>
+              <div>
+                <p className={`text-sm font-semibold ${
+                  health === "Expired"
+                    ? "text-red-600 dark:text-red-400"
+                    : "text-orange-600 dark:text-orange-400"
+                }`}>
+                  {health === "Expired" ? "Read-only mode active" : "Grace period — renew soon"}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  {health === "Expired"
+                    ? "Creating, editing, and deleting records is disabled until you renew."
+                    : "All features are available. Renew now to avoid losing access."}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Renewal / billing panel — shown when expired or in grace period */}
+      {isExpiredOrGrace ? (
+        <div className={`border rounded-xl p-5 space-y-4 ${
+          health === "Expired"
+            ? "bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800"
+            : "bg-orange-50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-800"
+        }`}>
+          <div className="flex items-start gap-3">
+            <AlertTriangle size={18} className={`shrink-0 mt-0.5 ${
+              health === "Expired" ? "text-red-600" : "text-orange-500"
+            }`} />
+            <div>
+              <p className={`text-sm font-semibold ${
+                health === "Expired"
+                  ? "text-red-800 dark:text-red-200"
+                  : "text-orange-800 dark:text-orange-200"
+              }`}>
+                {health === "Expired" ? "Restore Full Access" : "Renew Your Subscription Early"}
+              </p>
+              <p className={`text-xs mt-0.5 ${
+                health === "Expired"
+                  ? "text-red-700 dark:text-red-300"
+                  : "text-orange-700 dark:text-orange-300"
+              }`}>
+                {health === "Expired"
+                  ? `Your ${plan} plan expired on ${myTenant?.subscriptionEndDate ? formatDate(myTenant.subscriptionEndDate) : "—"}. Select a plan below to restore access.`
+                  : `Your ${plan} plan has expired but you're still in the grace period. Renew now to avoid interruption.`}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {plans.map((p) => (
+              <div
+                key={p.id}
+                className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4"
+              >
+                <p className="font-semibold text-gray-900 dark:text-white text-sm">{p.name}</p>
+                <p className="text-(--color-brand-blue) font-bold mt-0.5">
+                  RM {p.price}
+                  <span className="text-xs font-normal text-gray-500 dark:text-gray-400">/mo</span>
+                </p>
+                <div className="mt-2 space-y-0.5 text-xs text-gray-500 dark:text-gray-400">
+                  <p>{p.maxPackages >= 999 ? "Unlimited" : p.maxPackages} packages</p>
+                  <p>{p.maxTeamMembers} members</p>
+                </div>
+                <button
+                  onClick={() => router.push(`/subscriptions/renew?plan=${encodeURIComponent(p.name)}`)}
+                  className="mt-3 w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-(--color-brand-blue) hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                  {`Renew with ${p.name} →`}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        /* Available plans — shown for active / expiring soon tenants */
+        <div>
+          <p className="text-sm font-medium text-gray-900 dark:text-white mb-3">Available Plans</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {plans.map((p) => (
+              <div
+                key={p.id}
+                className={`rounded-xl border p-4 ${
+                  p.name === plan
+                    ? "border-(--color-brand-blue) bg-(--color-brand-blue)/5"
+                    : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+                }`}
+              >
+                <p className="font-semibold text-gray-900 dark:text-white text-sm">{p.name}</p>
+                <p className="text-(--color-brand-blue) font-bold mt-0.5">
+                  RM {p.price}
+                  <span className="text-xs font-normal text-gray-500 dark:text-gray-400">/mo</span>
+                </p>
+                <div className="mt-2 space-y-0.5 text-xs text-gray-500 dark:text-gray-400">
+                  <p>{p.maxPackages >= 999 ? "Unlimited" : `${p.maxPackages}`} packages</p>
+                  <p>{p.maxTeamMembers} members</p>
+                </div>
+                {p.name === plan ? (
+                  <p className="mt-3 text-xs font-semibold text-(--color-brand-blue)">
+                    Current plan
+                  </p>
+                ) : (
+                  <button className="mt-3 text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-foreground transition-colors">
+                    {p.price > planDetails.price ? "Upgrade →" : "Downgrade →"}
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
 export default function SubscriptionsPage() {
-  const { tenantId } = getTokenClaims()
+  const [tenantId, setTenantId] = useState<string | null | undefined>(undefined)
+
+  useEffect(() => {
+    const { tenantId: id } = getTokenClaims()
+    setTenantId(id ?? null)
+  }, [])
+
+  if (tenantId === undefined) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader className="animate-spin text-gray-400" size={20} />
+      </div>
+    )
+  }
+
   return tenantId ? <TenantView /> : <PlatformView />
 }

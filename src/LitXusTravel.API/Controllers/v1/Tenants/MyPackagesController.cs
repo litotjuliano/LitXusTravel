@@ -17,6 +17,7 @@ namespace LitXusTravel.API.Controllers.v1.Tenants;
 [Route("api/v1/tenants/{tenantId:guid}/packages")]
 [Authorize(Roles = "Agent,Admin")]
 [TenantAuthorizationFilter]
+[SubscriptionWriteGuard]
 public class MyPackagesController(IMediator mediator) : ControllerBase
 {
     /// <summary>Create a tenant-owned package (SPEC-TENANT-006)</summary>

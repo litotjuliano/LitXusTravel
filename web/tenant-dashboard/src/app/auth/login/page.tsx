@@ -20,6 +20,8 @@ const DEV_CREDENTIALS = [
   { email: "admin@travelpro.com",       password: "TravelPro@123",  role: "Tenant Admin — TravelPro",     color: "text-blue-400  border-blue-500/30  bg-blue-500/10"  },
   { email: "admin@wanderlust.com",      password: "Wanderlust@123", role: "Tenant Admin — Wanderlust",    color: "text-blue-400  border-blue-500/30  bg-blue-500/10"  },
   { email: "admin@adventureseek.com",   password: "Adventure@123",  role: "Tenant Admin — AdventureSeek", color: "text-blue-400  border-blue-500/30  bg-blue-500/10"  },
+  { email: "admin@democorp.test",       password: "DemoCorp@123",   role: "Tenant Admin — Demo Corp (Expired)", color: "text-red-400  border-red-500/30  bg-red-500/10"  },
+  { email: "admin@gracecorp.test",      password: "GraceCorp@123",  role: "Tenant Admin — Grace Corp (Grace Period)", color: "text-orange-400  border-orange-500/30  bg-orange-500/10"  },
 ]
 
 export default function LoginPage() {

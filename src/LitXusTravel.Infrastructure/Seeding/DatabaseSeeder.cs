@@ -33,6 +33,7 @@ public class DatabaseSeeder(
         await SeedSubscriptionPlansAsync();
         await SeedTenantsAsync();
         await PatchTenantSubdomainsAsync();
+        await SeedSubscriptionScenariosAsync();
         await SeedTenantAdminUsersAsync();
         await SeedPackagesAsync();
         await PatchPackageImagesAsync();
@@ -42,6 +43,8 @@ public class DatabaseSeeder(
         await CleanupCrossTenantSyncAsync();
         await BackfillTenantDefaultCurrencyAsync();
         await SeedCommissionTestDataAsync();
+        await SeedInvoicesAsync();
+        await PurgeCrossTenantNotificationsAsync();
     }
 
     private async Task SeedSubscriptionPlansAsync()
@@ -237,6 +240,8 @@ public class DatabaseSeeder(
             (email: "admin@travelpro.com",      password: "TravelPro@123",   firstName: "Travel",    lastName: "Pro",      tenantName: "Travel Pro"),
             (email: "admin@wanderlust.com",     password: "Wanderlust@123",  firstName: "Wanderlust", lastName: "Tours",   tenantName: "Wanderlust Tours"),
             (email: "admin@adventureseek.com",  password: "Adventure@123",   firstName: "Adventure", lastName: "Seekers", tenantName: "Adventure Seekers"),
+            (email: "admin@democorp.test",      password: "DemoCorp@123",    firstName: "Demo",      lastName: "Admin",   tenantName: "Demo Corp"),
+            (email: "admin@gracecorp.test",     password: "GraceCorp@123",   firstName: "Grace",     lastName: "Admin",   tenantName: "Grace Corp"),
         };
 
         foreach (var (email, password, firstName, lastName, tenantName) in tenantAdmins)
@@ -591,5 +596,298 @@ public class DatabaseSeeder(
         logger.LogInformation("   Staff: John Smith ({JohnCode}), Jane Doe ({JaneCode})", john.UniqueCode, jane.UniqueCode);
         logger.LogInformation("   Tours: Bali (Scheduled), Tokyo (Scheduled), Langkawi (Completed)");
         logger.LogInformation("   Bookings: Alice/Bali (Accrued MYR150), Bob/Tokyo (Accrued MYR150), Carol/Langkawi (Finalized MYR120)");
+    }
+
+    private async Task SeedSubscriptionScenariosAsync()
+    {
+        var plans = await dbContext.SubscriptionPlans.ToListAsync();
+        if (plans.Count == 0) return;
+
+        var starter = plans.FirstOrDefault(p => p.Name == "Starter");
+        var pro     = plans.FirstOrDefault(p => p.Name == "Pro");
+
+        if (starter is null || pro is null)
+        {
+            logger.LogWarning("⚠️ Standard plans not found — skipping subscription scenarios");
+            return;
+        }
+
+        bool changed = false;
+
+        // ── Core 3 tenants: always reset to the intended demo scenario ────────
+        // Deleting + recreating ensures all 5 health states are visible on every
+        // fresh API start, regardless of any mock-payment renewals in prior sessions.
+        //
+        //  Travel Pro     → Active       (Pro,     90 days remaining)
+        //  Wanderlust     → ExpiringSoon (Starter,  8 days remaining — urgent warning)
+        //  Adventure      → Trial        (free 30-day trial)
+
+        var coreScenarios = new (string tenantName, Func<Guid, TenantSubscription> factory, string health)[]
+        {
+            ("Travel Pro",
+                id => TenantSubscription.CreateWithEndDate(
+                    id, pro.Name, pro.Price, pro.MaxPackages, pro.MaxTeamMembers,
+                    DateTime.UtcNow.AddDays(90)),
+                "Active"),
+
+            ("Wanderlust Tours",
+                id => TenantSubscription.CreateWithEndDate(
+                    id, starter.Name, starter.Price, starter.MaxPackages, starter.MaxTeamMembers,
+                    DateTime.UtcNow.AddDays(8)),
+                "ExpiringSoon"),
+
+            ("Adventure Seekers",
+                id => TenantSubscription.CreateTrial(id),
+                "Trial"),
+        };
+
+        foreach (var (tenantName, factory, health) in coreScenarios)
+        {
+            var tenant = await dbContext.Tenants.FirstOrDefaultAsync(t => t.Name == tenantName);
+            if (tenant is null) continue;
+
+            var existingSubs = await dbContext.TenantSubscriptions
+                .Where(x => x.TenantId == tenant.Id)
+                .ToListAsync();
+
+            if (existingSubs.Count > 0)
+            {
+                dbContext.TenantSubscriptions.RemoveRange(existingSubs);
+                await dbContext.SaveChangesAsync();
+            }
+
+            await dbContext.TenantSubscriptions.AddAsync(factory(tenant.Id));
+            await dbContext.SaveChangesAsync();
+            changed = true;
+            logger.LogInformation("✅ Set {Tenant} subscription → {Health}", tenantName, health);
+        }
+
+        // ── Demo Corp: Expired (past 7-day grace window, read-only mode) ─────
+        const string expiredTenantName = "Demo Corp";
+        var expiredTenant = await dbContext.Tenants.FirstOrDefaultAsync(t => t.Name == expiredTenantName);
+        if (expiredTenant is null)
+        {
+            expiredTenant = Tenant.Create(expiredTenantName, new Email("admin@democorp.test"));
+            expiredTenant.AssignSubdomain("democorp");
+            await dbContext.Tenants.AddAsync(expiredTenant);
+            dbContext.Entry(expiredTenant).Property("CreatedAt").CurrentValue =
+                DateTimeOffset.UtcNow.AddDays(-45);
+            await dbContext.SaveChangesAsync();
+            logger.LogInformation("✅ Created Demo Corp tenant (backdated 45d)");
+        }
+
+        var existingExpiredSubs = await dbContext.TenantSubscriptions
+            .Where(x => x.TenantId == expiredTenant.Id)
+            .ToListAsync();
+        var demoHasActive = existingExpiredSubs.Any(s => s.Status == SubscriptionStatus.Active);
+        if (!demoHasActive)
+        {
+            if (existingExpiredSubs.Count > 0)
+            {
+                dbContext.TenantSubscriptions.RemoveRange(existingExpiredSubs);
+                await dbContext.SaveChangesAsync();
+            }
+            await dbContext.TenantSubscriptions.AddAsync(TenantSubscription.CreateExpired(
+                expiredTenant.Id, starter.Name, starter.Price,
+                starter.MaxPackages, starter.MaxTeamMembers,
+                DateTime.UtcNow.AddDays(-10)));
+            await dbContext.SaveChangesAsync();
+            changed = true;
+            logger.LogInformation("✅ Set Demo Corp subscription → Expired (10d past grace)");
+        }
+        else
+        {
+            logger.LogInformation("ℹ️ Demo Corp subscription preserved (Active — tenant has renewed)");
+        }
+
+        // ── Grace Corp: Expired (past 7-day grace window, read-only mode) ────
+        const string graceTenantName = "Grace Corp";
+        var graceTenant = await dbContext.Tenants.FirstOrDefaultAsync(t => t.Name == graceTenantName);
+        if (graceTenant is null)
+        {
+            graceTenant = Tenant.Create(graceTenantName, new Email("admin@gracecorp.test"));
+            graceTenant.AssignSubdomain("gracecorp");
+            await dbContext.Tenants.AddAsync(graceTenant);
+            dbContext.Entry(graceTenant).Property("CreatedAt").CurrentValue =
+                DateTimeOffset.UtcNow.AddDays(-35);
+            await dbContext.SaveChangesAsync();
+            logger.LogInformation("✅ Created Grace Corp tenant");
+        }
+
+        var existingGraceSubs = await dbContext.TenantSubscriptions
+            .Where(x => x.TenantId == graceTenant.Id)
+            .ToListAsync();
+        var graceHasActive = existingGraceSubs.Any(s => s.Status == SubscriptionStatus.Active);
+        if (!graceHasActive)
+        {
+            if (existingGraceSubs.Count > 0)
+            {
+                dbContext.TenantSubscriptions.RemoveRange(existingGraceSubs);
+                await dbContext.SaveChangesAsync();
+            }
+            await dbContext.TenantSubscriptions.AddAsync(TenantSubscription.CreateExpired(
+                graceTenant.Id, starter.Name, starter.Price,
+                starter.MaxPackages, starter.MaxTeamMembers,
+                DateTime.UtcNow.AddDays(-10)));
+            await dbContext.SaveChangesAsync();
+            changed = true;
+            logger.LogInformation("✅ Set Grace Corp subscription → Expired (10d past grace)");
+        }
+        else
+        {
+            logger.LogInformation("ℹ️ Grace Corp subscription preserved (Active — tenant has renewed)");
+        }
+
+        if (changed) await dbContext.SaveChangesAsync();
+    }
+
+    private async Task SeedInvoicesAsync()
+    {
+        var travelPro     = await dbContext.Tenants.FirstOrDefaultAsync(t => t.Name == "Travel Pro");
+        var wanderlust    = await dbContext.Tenants.FirstOrDefaultAsync(t => t.Name == "Wanderlust Tours");
+        var adventureSeek = await dbContext.Tenants.FirstOrDefaultAsync(t => t.Name == "Adventure Seekers");
+
+        if (travelPro is not null && !await dbContext.Invoices.AnyAsync(i => i.TenantId == travelPro.Id))
+        {
+            await dbContext.Invoices.AddRangeAsync(
+                Invoice.Create(travelPro.Id, "Travel Pro Agency", "INV-2026-035", "Pro", 299, "Jun 2026", "Paid",
+                    new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc)),
+                Invoice.Create(travelPro.Id, "Travel Pro Agency", "INV-2026-028", "Pro", 299, "May 2026", "Paid",
+                    new DateTime(2026, 5, 1, 0, 0, 0, DateTimeKind.Utc)),
+                Invoice.Create(travelPro.Id, "Travel Pro Agency", "INV-2026-021", "Pro", 299, "Apr 2026", "Paid",
+                    new DateTime(2026, 4, 1, 0, 0, 0, DateTimeKind.Utc)));
+            await dbContext.SaveChangesAsync();
+            logger.LogInformation("✅ Seeded invoices for Travel Pro Agency");
+        }
+
+        if (wanderlust is not null && !await dbContext.Invoices.AnyAsync(i => i.TenantId == wanderlust.Id))
+        {
+            await dbContext.Invoices.AddRangeAsync(
+                Invoice.Create(wanderlust.Id, "Wanderlust Tours", "INV-2026-036", "Starter", 99, "Jun 2026", "Paid",
+                    new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc)),
+                Invoice.Create(wanderlust.Id, "Wanderlust Tours", "INV-2026-029", "Starter", 99, "May 2026", "Paid",
+                    new DateTime(2026, 5, 1, 0, 0, 0, DateTimeKind.Utc)),
+                Invoice.Create(wanderlust.Id, "Wanderlust Tours", "INV-2026-022", "Starter", 99, "Apr 2026", "Failed",
+                    new DateTime(2026, 4, 1, 0, 0, 0, DateTimeKind.Utc)));
+            await dbContext.SaveChangesAsync();
+            logger.LogInformation("✅ Seeded invoices for Wanderlust Tours");
+        }
+
+        if (adventureSeek is not null && !await dbContext.Invoices.AnyAsync(i => i.TenantId == adventureSeek.Id))
+        {
+            await dbContext.Invoices.AddRangeAsync(
+                Invoice.Create(adventureSeek.Id, "Adventure Seekers", "INV-2026-037", "Enterprise", 999, "Jun 2026", "Pending",
+                    new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc)),
+                Invoice.Create(adventureSeek.Id, "Adventure Seekers", "INV-2026-030", "Enterprise", 999, "May 2026", "Paid",
+                    new DateTime(2026, 5, 1, 0, 0, 0, DateTimeKind.Utc)),
+                Invoice.Create(adventureSeek.Id, "Adventure Seekers", "INV-2026-023", "Enterprise", 999, "Apr 2026", "Paid",
+                    new DateTime(2026, 4, 1, 0, 0, 0, DateTimeKind.Utc)));
+            await dbContext.SaveChangesAsync();
+            logger.LogInformation("✅ Seeded invoices for Adventure Seekers");
+        }
+
+        var demoCorp = await dbContext.Tenants.FirstOrDefaultAsync(t => t.Name == "Demo Corp");
+        if (demoCorp is not null)
+        {
+            if (!await dbContext.Invoices.AnyAsync(i => i.InvoiceNumber == "INV-2026-015"))
+            {
+                await dbContext.Invoices.AddAsync(Invoice.Create(
+                    demoCorp.Id, "Demo Corp", "INV-2026-015", "Starter", 99, "May 2026", "Paid",
+                    new DateTime(2026, 5, 16, 0, 0, 0, DateTimeKind.Utc)));
+                await dbContext.SaveChangesAsync();
+            }
+            if (!await dbContext.Invoices.AnyAsync(i => i.InvoiceNumber == "INV-2026-038"))
+            {
+                await dbContext.Invoices.AddAsync(Invoice.Create(
+                    demoCorp.Id, "Demo Corp", "INV-2026-038", "Starter", 99, "Jun 2026", "Failed",
+                    new DateTime(2026, 6, 15, 0, 0, 0, DateTimeKind.Utc)));
+                await dbContext.SaveChangesAsync();
+                logger.LogInformation("✅ Seeded Failed renewal invoice for Demo Corp");
+            }
+        }
+
+        var graceCorp = await dbContext.Tenants.FirstOrDefaultAsync(t => t.Name == "Grace Corp");
+        if (graceCorp is not null)
+        {
+            if (!await dbContext.Invoices.AnyAsync(i => i.InvoiceNumber == "INV-2026-016"))
+            {
+                await dbContext.Invoices.AddAsync(Invoice.Create(
+                    graceCorp.Id, "Grace Corp", "INV-2026-016", "Starter", 99, "May 2026", "Paid",
+                    new DateTime(2026, 5, 16, 0, 0, 0, DateTimeKind.Utc)));
+                await dbContext.SaveChangesAsync();
+            }
+            if (!await dbContext.Invoices.AnyAsync(i => i.InvoiceNumber == "INV-2026-039"))
+            {
+                await dbContext.Invoices.AddAsync(Invoice.Create(
+                    graceCorp.Id, "Grace Corp", "INV-2026-039", "Starter", 99, "Jun 2026", "Failed",
+                    new DateTime(2026, 6, 15, 0, 0, 0, DateTimeKind.Utc)));
+                await dbContext.SaveChangesAsync();
+                logger.LogInformation("✅ Seeded Failed renewal invoice for Grace Corp");
+            }
+        }
+    }
+
+    private async Task PurgeCrossTenantNotificationsAsync()
+    {
+        // Remove subscription lifecycle notifications that were incorrectly delivered to
+        // tenant-scoped admins about tenants other than their own (created before the
+        // tenant-scoping filter was added to NotificationService).
+        var subscriptionTypes = new[]
+        {
+            "subscription_expiring_soon",
+            "subscription_grace_period",
+            "subscription_fully_expired",
+            "subscription_renewed",
+        };
+
+        var tenantAdmins = await dbContext.Users
+            .Where(u => u.TenantId != null)
+            .Select(u => new { u.Id, u.TenantId })
+            .ToListAsync();
+
+        if (tenantAdmins.Count == 0) return;
+
+        var deleted = 0;
+        foreach (var admin in tenantAdmins)
+        {
+            var wrong = await dbContext.Notifications
+                .Where(n => n.UserId == admin.Id
+                         && subscriptionTypes.Contains(n.Type)
+                         && n.RelatedEntityType == "Tenant"
+                         && n.RelatedEntityId != admin.TenantId)
+                .ToListAsync();
+
+            if (wrong.Count == 0) continue;
+
+            dbContext.Notifications.RemoveRange(wrong);
+            deleted += wrong.Count;
+        }
+
+        if (deleted > 0)
+        {
+            await dbContext.SaveChangesAsync();
+            logger.LogInformation("✅ Purged {Count} cross-tenant notification(s) from tenant-scoped admins", deleted);
+        }
+    }
+
+    private async Task PatchDemoCorpCreatedAtAsync(Tenant tenant)
+    {
+        var sub = await dbContext.TenantSubscriptions
+            .Where(s => s.TenantId == tenant.Id && s.Status == SubscriptionStatus.Expired)
+            .FirstOrDefaultAsync();
+
+        if (sub is null) return;
+
+        // CreatedAt must precede the subscription's StartDate. If it doesn't, backdate it.
+        // SpecifyKind ensures the DateTime is treated as UTC regardless of what Npgsql returned.
+        var startUtc = DateTime.SpecifyKind(sub.StartDate, DateTimeKind.Utc);
+        var expectedCreatedAt = new DateTimeOffset(startUtc.AddDays(-5), TimeSpan.Zero);
+        if (tenant.CreatedAt > expectedCreatedAt)
+        {
+            dbContext.Entry(tenant).Property("CreatedAt").CurrentValue = expectedCreatedAt;
+            await dbContext.SaveChangesAsync();
+            logger.LogInformation("✅ Patched Demo Corp CreatedAt → {Date}",
+                expectedCreatedAt.ToString("yyyy-MM-dd"));
+        }
     }
 }

@@ -30,22 +30,36 @@ public class GetTenantsQueryHandler(IUnitOfWork uow)
         };
 
         var tenantIds = tenants.Select(t => t.Id).ToList();
-        var activeSubsByTenant = (await uow.TenantSubscriptions.FindAsync(s => tenantIds.Contains(s.TenantId), ct))
-            .Where(s => s.IsActive)
+
+        // Fetch all subscriptions (not just active) so expired ones are visible to admins.
+        // Prefer active/trial subs; fall back to the most recent historical record.
+        var allSubsByTenant = (await uow.TenantSubscriptions.FindAsync(s => tenantIds.Contains(s.TenantId), ct))
             .GroupBy(s => s.TenantId)
-            .ToDictionary(g => g.Key, g => g.OrderByDescending(s => s.StartDate).First());
+            .ToDictionary(g => g.Key, g =>
+                g.OrderByDescending(s => s.IsActive)
+                 .ThenByDescending(s => s.StartDate)
+                 .First());
+
+        var packageCountsByTenant = (await uow.TenantPackages.FindAsync(p => tenantIds.Contains(p.TenantId) && p.IsActive, ct))
+            .GroupBy(p => p.TenantId)
+            .ToDictionary(g => g.Key, g => g.Count());
 
         var responses = tenants.Select(t =>
         {
-            activeSubsByTenant.TryGetValue(t.Id, out var activeSub);
+            allSubsByTenant.TryGetValue(t.Id, out var sub);
+            packageCountsByTenant.TryGetValue(t.Id, out var packageCount);
 
             return new TenantListResponse(
                 t.Id, t.Name, t.Slug, t.Subdomain,
                 t.ContactEmail.Value, t.ContactPhone, t.LogoUrl,
                 t.IsActive, t.ProvisioningStatus.ToString(), t.WebsiteUrl,
-                syncedPackagesCount: 0, totalInquiries: 0, conversionRate: 0.0,
+                syncedPackagesCount: packageCount, totalInquiries: 0, conversionRate: 0.0,
                 t.CreatedAt,
-                Plan: activeSub?.PlanName
+                Plan:                  sub?.PlanName,
+                SubscriptionHealth:    sub?.SubscriptionHealth,
+                DaysRemaining:         sub?.DaysRemaining,
+                SubscriptionEndDate:   sub?.EndDate,
+                SubscriptionStartDate: sub?.StartDate
             );
         }).ToList();
 

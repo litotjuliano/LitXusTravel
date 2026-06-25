@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import AppSidebar from "@/components/layout/AppSidebar";
 import AppHeader from "@/components/layout/AppHeader";
 import Backdrop from "@/components/layout/Backdrop";
+import { NotificationsProvider } from "@/context/NotificationsContext";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const { isExpanded, isHovered } = useSidebar();
@@ -28,7 +29,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <ThemeProvider>
       <SidebarProvider>
-        <LayoutContent>{children}</LayoutContent>
+        <NotificationsProvider>
+          <LayoutContent>{children}</LayoutContent>
+        </NotificationsProvider>
       </SidebarProvider>
     </ThemeProvider>
   );

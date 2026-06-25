@@ -14,6 +14,7 @@ import { usePackages, type Package } from "@/lib/hooks/usePackages"
 import { adminApi } from "@/lib/api"
 import { useMarketplace } from "@/lib/hooks/useMarketplace"
 import { useSettings } from "@/lib/hooks/useSettings"
+import { useTenants } from "@/lib/hooks/useTenants"
 import { formatCurrency, getTokenClaims } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -43,6 +44,9 @@ export default function PackagesPage() {
   const isMarketplaceTab = isTenantAdmin && filter === "Marketplace"
 
   const { settings: tenantSettings } = useSettings(tenantId)
+  const { tenants: allTenants } = useTenants(1, 100)
+  const myTenant = isTenantAdmin ? allTenants.find((t) => t.id === tenantId) : undefined
+  const isReadOnly = myTenant?.subscriptionHealth === "Expired"
 
   // Admin: status filter is server-side. Tenant: filtered client-side after fetch.
   const serverStatus = !isTenantAdmin && filter !== "All" ? filter : undefined
@@ -115,8 +119,10 @@ export default function PackagesPage() {
           </p>
         </div>
         <Button
-          className="bg-(--color-brand-blue) hover:bg-blue-700 text-white gap-2"
-          onClick={() => setEditorOpen(true)}
+          className="bg-(--color-brand-blue) hover:bg-blue-700 text-white gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isReadOnly}
+          title={isReadOnly ? "Read-only mode: renew your subscription to create packages" : undefined}
+          onClick={() => !isReadOnly && setEditorOpen(true)}
         >
           <Plus size={16} />
           New Package
@@ -360,6 +366,7 @@ export default function PackagesPage() {
                               ...(pkg.visibility !== "Synced" ? [{
                                 label: "Edit",
                                 action: () => {
+                                  if (isReadOnly) { toast.error("Read-only mode: renew your subscription to edit packages"); return }
                                   setEditPackageId(pkg.id)
                                   setEditInitialData(pkg)
                                   setEditorOpen(true)
@@ -368,6 +375,7 @@ export default function PackagesPage() {
                               ...(isTenantAdmin && pkg.packageVisibility === "Draft" ? [{
                                 label: "Publish",
                                 action: async () => {
+                                  if (isReadOnly) { toast.error("Read-only mode: renew your subscription to publish packages"); return }
                                   if (!tenantId) return
                                   try {
                                     await adminApi.publishTenantPackage(tenantId, pkg.id)
@@ -392,11 +400,15 @@ export default function PackagesPage() {
                               }] : []),
                               {
                                 label: "Duplicate",
-                                action: () => toast.info("Duplicate coming soon"),
+                                action: () => {
+                                  if (isReadOnly) { toast.error("Read-only mode: renew your subscription to duplicate packages"); return }
+                                  toast.info("Duplicate coming soon")
+                                },
                               },
                               ...(pkg.visibility !== "Synced" ? [{
                                 label: "Delete",
                                 action: async () => {
+                                  if (isReadOnly) { toast.error("Read-only mode: renew your subscription to delete packages"); return }
                                   if (!confirm(`Delete "${pkg.title}"? This cannot be undone.`)) return
                                   try {
                                     await adminApi.deletePackage(pkg.id)

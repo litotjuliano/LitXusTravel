@@ -9,6 +9,8 @@ import { useSidebar } from "@/context/SidebarContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { DropdownItem } from "@/components/ui/DropdownItem";
+import { NotificationDropdown } from "@/components/layout/NotificationDropdown";
+import { useNotificationsContext } from "@/context/NotificationsContext";
 
 interface UserInfo {
   email: string;
@@ -23,7 +25,11 @@ const AppHeader: React.FC = () => {
 
   const [user, setUser] = useState<UserInfo | null>(null);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const userDropdownRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  const { notifications, unreadCount, loading, markRead, markAllRead } = useNotificationsContext();
 
   const loadUser = () => {
     const storedUserInfo = localStorage.getItem("user_info");
@@ -118,10 +124,29 @@ const AppHeader: React.FC = () => {
           </button>
 
           {/* Notifications */}
-          <button className="relative flex items-center justify-center w-10 h-10 text-gray-500 rounded-lg hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800">
-            <Bell size={18} />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-error-500 rounded-full" />
-          </button>
+          <div className="relative" ref={notifRef}>
+            <button
+              onClick={() => setIsNotifOpen((o) => !o)}
+              className="dropdown-toggle relative flex items-center justify-center w-10 h-10 text-gray-500 rounded-lg hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+              aria-label="Notifications"
+            >
+              <Bell size={18} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-brand-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none">
+                  {unreadCount > 99 ? "99+" : String(unreadCount).padStart(2, "0")}
+                </span>
+              )}
+            </button>
+            <NotificationDropdown
+              isOpen={isNotifOpen}
+              onClose={() => setIsNotifOpen(false)}
+              notifications={notifications}
+              unreadCount={unreadCount}
+              loading={loading}
+              onMarkRead={markRead}
+              onMarkAllRead={markAllRead}
+            />
+          </div>
 
           {/* User dropdown */}
           <div className="relative" ref={userDropdownRef}>

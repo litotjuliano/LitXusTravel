@@ -14,8 +14,10 @@ import {
   MoreHorizontal,
   Receipt,
   UserCog,
+  Bell,
 } from "lucide-react";
 import { useSidebar } from "@/context/SidebarContext";
+import { useNotificationsContext } from "@/context/NotificationsContext";
 
 type NavItem = {
   name: string;
@@ -29,6 +31,7 @@ const navItems: NavItem[] = [
   { icon: <Package size={22} />, name: "Packages", path: "/packages" },
   { icon: <Users size={22} />, name: "Tenants", path: "/tenants" },
   { icon: <CreditCard size={22} />, name: "Subscriptions", path: "/subscriptions" },
+  { icon: <Bell size={22} />, name: "Notifications", path: "/notifications" },
   { icon: <BarChart3 size={22} />, name: "Analytics", path: "/analytics" },
   { icon: <Receipt size={22} />, name: "Billing", path: "/billing" },
   { icon: <UserCog size={22} />, name: "Users", path: "/users" },
@@ -38,6 +41,7 @@ const navItems: NavItem[] = [
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
+  const { unreadCount } = useNotificationsContext();
 
   const [openSubmenu, setOpenSubmenu] = useState<{ index: number } | null>(null);
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
@@ -130,10 +134,20 @@ const AppSidebar: React.FC = () => {
                           href={nav.path}
                           className={`menu-item group ${isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"}`}
                         >
-                          <span className={`menu-item-icon-size ${isActive(nav.path) ? "menu-item-icon-active" : "menu-item-icon-inactive"}`}>
+                          <span className={`menu-item-icon-size relative ${isActive(nav.path) ? "menu-item-icon-active" : "menu-item-icon-inactive"}`}>
                             {nav.icon}
+                            {nav.name === "Notifications" && unreadCount > 0 && (
+                              <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-brand-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
+                                {unreadCount > 99 ? "99+" : unreadCount}
+                              </span>
+                            )}
                           </span>
                           {showLabel && <span className="menu-item-text">{nav.name}</span>}
+                          {showLabel && nav.name === "Notifications" && unreadCount > 0 && (
+                            <span className="ml-auto min-w-[20px] h-5 px-1.5 bg-brand-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                              {unreadCount > 99 ? "99+" : unreadCount}
+                            </span>
+                          )}
                         </Link>
                       )
                     )}

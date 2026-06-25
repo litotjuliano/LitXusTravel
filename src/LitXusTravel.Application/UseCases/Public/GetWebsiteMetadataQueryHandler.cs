@@ -48,7 +48,7 @@ public class GetWebsiteMetadataQueryHandler(IUnitOfWork uow)
 
         var response = new WebsiteMetadataResponse(
             TenantName: "LitXusTravel",
-            TenantSubdomain: request.Subdomain ?? "nexustravel",
+            TenantSubdomain: request.Subdomain ?? "litxustravel",
             TotalPackages: published.Count,
             FeaturedPackagesCount: featured.Count,
             AveragePackagePrice: (decimal)avgPrice,

@@ -1,7 +1,7 @@
 import { createCipheriv, createDecipheriv, createHash } from "crypto"
 
 // SECRET must be set in .env.local for production — never commit real keys
-const SECRET = process.env.SLUG_SECRET ?? "nexustravel-default-slug-secret-32!"
+const SECRET = process.env.SLUG_SECRET ?? "litxustravel-default-slug-secret-32!"
 
 // 32-byte AES key derived from secret
 const KEY = createHash("sha256").update(SECRET).digest()

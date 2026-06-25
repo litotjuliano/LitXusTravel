@@ -1,0 +1,6 @@
+@LitXusTravel.API_HostAddress = http://localhost:5084
+
+GET {{LitXusTravel.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

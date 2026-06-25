@@ -2,7 +2,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ── NexusTravel brand tokens ──────────────────────────────────── */
+/* ── LitXusTravel brand tokens ──────────────────────────────────── */
 @theme inline {
   --color-background:          var(--background);
   --color-foreground:          var(--foreground);

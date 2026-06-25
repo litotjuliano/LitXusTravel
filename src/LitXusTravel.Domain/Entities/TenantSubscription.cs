@@ -22,6 +22,40 @@ public class TenantSubscription : BaseEntity
     public bool IsActive => Status is SubscriptionStatus.Active or SubscriptionStatus.Trial
                             && (EndDate == null || EndDate > DateTime.UtcNow);
 
+    public int? DaysRemaining =>
+        EndDate.HasValue && Status is SubscriptionStatus.Active or SubscriptionStatus.Trial
+            ? Math.Max(0, (int)(EndDate.Value - DateTime.UtcNow).TotalDays)
+            : null;
+
+    private const int GracePeriodDays = 7;
+
+    public DateTime? GracePeriodEndsAt =>
+        Status == SubscriptionStatus.Expired && EndDate.HasValue
+            ? EndDate.Value.AddDays(GracePeriodDays)
+            : null;
+
+    public bool IsInGracePeriod =>
+        Status == SubscriptionStatus.Expired &&
+        GracePeriodEndsAt.HasValue &&
+        DateTime.UtcNow <= GracePeriodEndsAt.Value;
+
+    public bool IsReadOnly =>
+        Status == SubscriptionStatus.Expired && !IsInGracePeriod;
+
+    public int? GracePeriodDaysRemaining =>
+        IsInGracePeriod && GracePeriodEndsAt.HasValue
+            ? Math.Max(0, (int)(GracePeriodEndsAt.Value - DateTime.UtcNow).TotalDays)
+            : null;
+
+    // "Active" | "GracePeriod" | "ExpiringSoon" | "Expired" | "Trial" | "Suspended"
+    public string SubscriptionHealth =>
+        IsReadOnly                                          ? "Expired"
+        : IsInGracePeriod                                  ? "GracePeriod"
+        : Status == SubscriptionStatus.Suspended           ? "Suspended"
+        : Status == SubscriptionStatus.Trial               ? "Trial"
+        : (DaysRemaining.HasValue && DaysRemaining <= 30)  ? "ExpiringSoon"
+        : "Active";
+
     private TenantSubscription() { }
 
     public static TenantSubscription CreateTrial(Guid tenantId)
@@ -53,6 +87,46 @@ public class TenantSubscription : BaseEntity
             MaxTeamMembers = maxTeamMembers,
             AutoRenew = true
         };
+
+    public static TenantSubscription CreateWithEndDate(
+        Guid tenantId, string planName, decimal monthlyPrice,
+        int maxPackages, int maxTeamMembers, DateTime endDate)
+        => new()
+        {
+            TenantId = tenantId,
+            PlanName = planName,
+            MonthlyPrice = monthlyPrice,
+            StartDate = DateTime.UtcNow.AddDays(-10),
+            EndDate = endDate,
+            Status = SubscriptionStatus.Active,
+            IsTrial = false,
+            MaxPackages = maxPackages,
+            MaxTeamMembers = maxTeamMembers,
+            AutoRenew = true
+        };
+
+    public static TenantSubscription CreateExpired(
+        Guid tenantId, string planName, decimal monthlyPrice,
+        int maxPackages, int maxTeamMembers, DateTime expiredAt)
+        => new()
+        {
+            TenantId = tenantId,
+            PlanName = planName,
+            MonthlyPrice = monthlyPrice,
+            StartDate = expiredAt.AddDays(-30),
+            EndDate = expiredAt,
+            Status = SubscriptionStatus.Expired,
+            IsTrial = false,
+            MaxPackages = maxPackages,
+            MaxTeamMembers = maxTeamMembers,
+            AutoRenew = false
+        };
+
+    public void SetEndDate(DateTime endDate)
+    {
+        EndDate = endDate;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
 
     public void Suspend()
     {

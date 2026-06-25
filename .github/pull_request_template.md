@@ -79,4 +79,4 @@ Closes #
 
 ---
 
-**Generated from**: https://github.com/nexus-systems/nexus-travel
+**Generated from**: https://github.com/litxus-systems/litxus-travel

@@ -15,5 +15,9 @@ public record TenantListResponse(
     int totalInquiries,
     double conversionRate,
     DateTimeOffset CreatedAt,
-    string? Plan = null
+    string? Plan = null,
+    string? SubscriptionHealth = null,
+    int? DaysRemaining = null,
+    DateTime? SubscriptionEndDate = null,
+    DateTime? SubscriptionStartDate = null
 );

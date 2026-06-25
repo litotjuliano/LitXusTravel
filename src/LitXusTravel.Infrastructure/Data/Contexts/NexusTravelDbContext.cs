@@ -22,6 +22,7 @@ public class LitXusTravelDbContext(
     public DbSet<Quotation> Quotations => Set<Quotation>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<Invoice> Invoices => Set<Invoice>();
 
     // Booking & Tour
     public DbSet<Tour> Tours => Set<Tour>();

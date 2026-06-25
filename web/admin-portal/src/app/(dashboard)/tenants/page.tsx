@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Plus, Search, Loader } from "lucide-react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
@@ -11,12 +12,15 @@ import { SortableHeader } from "@/components/common/SortableHeader"
 import { TenantDetailsModal } from "@/components/modals/TenantDetailsModal"
 import { useTenants } from "@/lib/hooks/useTenants"
 import { formatDate, getTokenClaims } from "@/lib/utils"
+import { adminApi } from "@/lib/api"
 import { toast } from "sonner"
 
 export default function TenantsPage() {
   const [search, setSearch] = useState("")
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null)
   const [detailsOpen, setDetailsOpen] = useState(false)
+
+  const router = useRouter()
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
@@ -29,6 +33,7 @@ export default function TenantsPage() {
   })
 
   const { tenantId: myTenantId } = getTokenClaims()
+  const isPlatformAdmin = !myTenantId
 
   // Tenant Admins (role=Admin with a tenantId claim) only see their own tenant
   const scoped = myTenantId ? tenants.filter((t) => t.id === myTenantId) : tenants
@@ -159,7 +164,7 @@ export default function TenantsPage() {
                         <td className="px-4 py-3">
                           {t.subdomain ? (
                             <code className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-gray-900 dark:text-white">
-                              {t.subdomain}.nexustravel.com
+                              {t.subdomain}.litxustravel.com
                             </code>
                           ) : (
                             <span className="text-muted-foreground text-xs">—</span>
@@ -173,7 +178,14 @@ export default function TenantsPage() {
                           {formatDate(t.createdAt)}
                         </td>
                         <td className="px-4 py-3">
-                          <StatusBadge status={t.isActive ? "Active" : "Suspended"} />
+                          <StatusBadge
+                            status={t.subscriptionHealth ?? (t.isActive ? "Active" : "Suspended")}
+                            label={
+                              t.subscriptionHealth === "ExpiringSoon" && t.daysRemaining !== null
+                                ? `Expiring in ${t.daysRemaining}d`
+                                : undefined
+                            }
+                          />
                         </td>
                         <td className="px-4 py-3">
                           <ActionMenu
@@ -186,14 +198,39 @@ export default function TenantsPage() {
                                 },
                               },
                               {
+                                label: "Renew Subscription",
+                                action: () => router.push("/subscriptions"),
+                              },
+                              ...(isPlatformAdmin && t.subscriptionHealth === "ExpiringSoon" ? [{
+                                label: "Send Expiry Warning",
+                                action: () =>
+                                  adminApi.sendSubscriptionNotification(t.id, "expiring_soon")
+                                    .then(() => toast.success(`Expiry warning sent to ${t.name}`))
+                                    .catch(() => toast.error("Failed to send notification")),
+                              }] : []),
+                              ...(isPlatformAdmin && t.subscriptionHealth === "GracePeriod" ? [{
+                                label: "Send Grace Period Alert",
+                                action: () =>
+                                  adminApi.sendSubscriptionNotification(t.id, "grace_period")
+                                    .then(() => toast.success(`Grace period alert sent to ${t.name}`))
+                                    .catch(() => toast.error("Failed to send notification")),
+                              }] : []),
+                              ...(isPlatformAdmin && t.subscriptionHealth === "Expired" ? [{
+                                label: "Send Expired Notice",
+                                action: () =>
+                                  adminApi.sendSubscriptionNotification(t.id, "fully_expired")
+                                    .then(() => toast.success(`Expired notice sent to ${t.name}`))
+                                    .catch(() => toast.error("Failed to send notification")),
+                              }] : []),
+                              {
                                 label: "Edit",
                                 action: () => toast.info("Edit coming soon"),
                               },
-                              {
+                              ...(isPlatformAdmin ? [{
                                 label: "Suspend",
                                 action: () => toast.warning(`${t.name} suspended`),
                                 danger: true,
-                              },
+                              }] : []),
                             ]}
                           />
                         </td>

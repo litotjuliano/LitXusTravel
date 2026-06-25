@@ -10,8 +10,8 @@ export const MOCK_PACKAGES: Package[] = [
 ]
 
 export const MOCK_TENANTS: Tenant[] = [
-  { id: "t1", name: "TravelPro Agency", slug: "travelpro", subdomain: "travelpro", contactEmail: "hello@travelpro.com", contactPhone: "+60 11-1234 5678", isActive: true, provisioningStatus: "Completed", websiteUrl: "https://travelpro.nexustravel.com", plan: "Pro", createdAt: "2026-01-20", syncedPackagesCount: 8, totalInquiries: 45 },
-  { id: "t2", name: "Wanderlust Travels", slug: "wanderlust", subdomain: "wanderlust", contactEmail: "info@wanderlust.com", contactPhone: "+60 12-8765 4321", isActive: true, provisioningStatus: "Completed", websiteUrl: "https://wanderlust.nexustravel.com", plan: "Starter", createdAt: "2026-02-05", syncedPackagesCount: 4, totalInquiries: 23 },
+  { id: "t1", name: "TravelPro Agency", slug: "travelpro", subdomain: "travelpro", contactEmail: "hello@travelpro.com", contactPhone: "+60 11-1234 5678", isActive: true, provisioningStatus: "Completed", websiteUrl: "https://travelpro.litxustravel.com", plan: "Pro", createdAt: "2026-01-20", syncedPackagesCount: 8, totalInquiries: 45 },
+  { id: "t2", name: "Wanderlust Travels", slug: "wanderlust", subdomain: "wanderlust", contactEmail: "info@wanderlust.com", contactPhone: "+60 12-8765 4321", isActive: true, provisioningStatus: "Completed", websiteUrl: "https://wanderlust.litxustravel.com", plan: "Starter", createdAt: "2026-02-05", syncedPackagesCount: 4, totalInquiries: 23 },
   { id: "t3", name: "Globe Hoppers", slug: "globehoppers", subdomain: "globehoppers", contactEmail: "admin@globehoppers.com", isActive: false, provisioningStatus: "Completed", plan: "Pro", createdAt: "2026-02-18", syncedPackagesCount: 10, totalInquiries: 67 },
   { id: "t4", name: "Sunrise Tours", slug: "sunrise", subdomain: "sunrise", contactEmail: "tours@sunrise.com", isActive: true, provisioningStatus: "Pending", plan: "Trial", createdAt: "2026-05-20", syncedPackagesCount: 0, totalInquiries: 0 },
 ]

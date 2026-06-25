@@ -111,7 +111,7 @@
 
 - **Test Case 3.2 - Subdomain Assignment**
   1. Create tenant with name "Travel Pro".
-  2. Verify subdomain created: `travel-pro.nexustravel.com` (or configured suffix).
+  2. Verify subdomain created: `travel-pro.litxustravel.com` (or configured suffix).
   3. Verify DNS resolves to tenant website.
   4. Access subdomain; verify tenant website loads.
   - **Expected Result:** Subdomain auto-assigned and functional.
@@ -172,7 +172,7 @@
 **Purpose:** Verify tenants receive inquiries; can generate and send quotes.
 
 - **Test Case 5.1 - Customer Submits Inquiry**
-  1. Public user visits tenant website (e.g., travel-pro.nexustravel.com).
+  1. Public user visits tenant website (e.g., travel-pro.litxustravel.com).
   2. Selects a package and clicks "Request Quote" or "Make Inquiry".
   3. Fills inquiry form: name, email, phone, travel dates, special requests.
   4. Submits form.

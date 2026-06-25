@@ -10,6 +10,10 @@ export interface Tenant {
   syncedPackagesCount: number
   isActive: boolean
   createdAt: string
+  subscriptionHealth: string | null
+  daysRemaining: number | null
+  subscriptionEndDate: string | null
+  subscriptionStartDate: string | null
 }
 
 export interface UseTenantsResult {

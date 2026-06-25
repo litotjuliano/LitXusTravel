@@ -20,6 +20,7 @@ public class UnitOfWork(LitXusTravelDbContext context) : IUnitOfWork
     public IRepository<Quotation> Quotations { get; } = new Repository<Quotation>(context);
     public IRepository<Notification> Notifications { get; } = new Repository<Notification>(context);
     public IRepository<AuditLog> AuditLogs { get; } = new Repository<AuditLog>(context);
+    public IRepository<Invoice> Invoices { get; } = new Repository<Invoice>(context);
 
     // Booking & Tour Repositories
     public ITourRepository Tours { get; } = new TourRepository(context);

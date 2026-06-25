@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 const CONTACT_INFO = [
   { icon: Phone,          label: "Phone",    value: "+60 12-345 6789" },
-  { icon: Mail,           label: "Email",    value: "hello@nexustravel.com" },
+  { icon: Mail,           label: "Email",    value: "hello@litxustravel.com" },
   { icon: MapPin,         label: "Address",  value: "Kuala Lumpur, Malaysia" },
   { icon: MessageCircle,  label: "WhatsApp", value: "+60 12-345 6789" },
 ]

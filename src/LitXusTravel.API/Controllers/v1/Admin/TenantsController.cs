@@ -11,6 +11,8 @@ using LitXusTravel.Application.UseCases.Packages.GetTenantPackages;
 using LitXusTravel.Application.UseCases.Packages.UpdatePackageOverride;
 using LitXusTravel.Application.UseCases.Packages.UnsyncPackage;
 using LitXusTravel.Application.UseCases.Tenants.AssignPlan;
+using LitXusTravel.Application.UseCases.Tenants.ProcessMockPayment;
+using LitXusTravel.Application.UseCases.Tenants.SendSubscriptionNotification;
 
 namespace LitXusTravel.API.Controllers.v1.Admin;
 
@@ -189,7 +191,40 @@ public class TenantsController(IMediator mediator) : ControllerBase
         if (!result.IsSuccess) return BadRequest(new { result.Errors });
         return Ok(new { message = result.Value });
     }
+
+    /// <summary>Manually send a subscription lifecycle notification for a tenant</summary>
+    [HttpPost("{tenantId:guid}/send-subscription-notification")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SendSubscriptionNotification(
+        Guid tenantId,
+        [FromBody] SendSubscriptionNotificationRequest request,
+        CancellationToken ct)
+    {
+        var result = await mediator.Send(new SendSubscriptionNotificationCommand(tenantId, request.Type), ct);
+        if (!result.IsSuccess) return BadRequest(new { result.Errors });
+        return Ok(new { message = "Notification sent successfully." });
+    }
+
+    /// <summary>Simulate a payment to renew a tenant's subscription (mock/demo only)</summary>
+    [HttpPost("{tenantId:guid}/process-mock-payment")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ProcessMockPayment(
+        Guid tenantId,
+        [FromBody] ProcessMockPaymentRequest request,
+        CancellationToken ct)
+    {
+        var result = await mediator.Send(new ProcessMockPaymentCommand(tenantId, request.PlanName), ct);
+        if (!result.IsSuccess) return BadRequest(new { result.Errors });
+        return Ok(new { message = result.Value });
+    }
 }
 
 public record UpdateTenantSettingsRequest(string DefaultCurrency);
 public record AssignPlanRequest(string PlanName);
+public record ProcessMockPaymentRequest(string PlanName, string CardholderName,
+    string CardNumber, string ExpiryDate, string Cvv);
+public record SendSubscriptionNotificationRequest(string Type);

@@ -9,10 +9,10 @@ on:
     types: [published]
 
 env:
-  REGISTRY: nexustravel.azurecr.io
-  API_IMAGE: nexustravel-api
-  ADMIN_IMAGE: nexustravel-admin
-  WEBSITE_IMAGE: nexustravel-website
+  REGISTRY: litxustravel.azurecr.io
+  API_IMAGE: litxustravel-api
+  ADMIN_IMAGE: litxustravel-admin
+  WEBSITE_IMAGE: litxustravel-website
 
 jobs:
   # ============================================================================
@@ -206,7 +206,7 @@ jobs:
 
     environment:
       name: staging
-      url: https://staging.nexustravel.com
+      url: https://staging.litxustravel.com
 
     steps:
       - uses: actions/checkout@v4
@@ -219,30 +219,30 @@ jobs:
       - name: Deploy API to App Service
         uses: azure/webapps-deploy@v2
         with:
-          app-name: nexustravel-api-staging
+          app-name: litxustravel-api-staging
           images: ${{ env.REGISTRY }}/${{ env.API_IMAGE }}:${{ github.sha }}
 
       - name: Deploy Admin Portal to App Service
         uses: azure/webapps-deploy@v2
         with:
-          app-name: nexustravel-admin-staging
+          app-name: litxustravel-admin-staging
           images: ${{ env.REGISTRY }}/${{ env.ADMIN_IMAGE }}:${{ github.sha }}
 
       - name: Deploy Website to App Service
         uses: azure/webapps-deploy@v2
         with:
-          app-name: nexustravel-website-staging
+          app-name: litxustravel-website-staging
           images: ${{ env.REGISTRY }}/${{ env.WEBSITE_IMAGE }}:${{ github.sha }}
 
       - name: Run smoke tests
         run: |
           echo "Running smoke tests against staging..."
           # API health check
-          curl -f https://api-staging.nexustravel.com/health || exit 1
+          curl -f https://api-staging.litxustravel.com/health || exit 1
           echo "✓ API health check passed"
 
           # Admin portal accessibility
-          curl -f https://staging.nexustravel.com/admin/login || exit 1
+          curl -f https://staging.litxustravel.com/admin/login || exit 1
           echo "✓ Admin portal accessible"
 
       - name: Notify Slack
@@ -265,7 +265,7 @@ jobs:
 
     environment:
       name: production
-      url: https://nexustravel.com
+      url: https://litxustravel.com
 
     steps:
       - uses: actions/checkout@v4
@@ -278,7 +278,7 @@ jobs:
       - name: Get current slot
         id: current-slot
         run: |
-          SLOT=$(az webapp deployment slot list -g nexustravel-prod -n nexustravel-api --query "[?name=='blue'] | [0].name" -o tsv)
+          SLOT=$(az webapp deployment slot list -g litxustravel-prod -n litxustravel-api --query "[?name=='blue'] | [0].name" -o tsv)
           if [ "$SLOT" == "blue" ]; then
             echo "target-slot=green" >> $GITHUB_OUTPUT
             echo "current-slot=blue" >> $GITHUB_OUTPUT
@@ -290,21 +290,21 @@ jobs:
       - name: Deploy to green slot
         uses: azure/webapps-deploy@v2
         with:
-          app-name: nexustravel-api
+          app-name: litxustravel-api
           slot-name: ${{ steps.current-slot.outputs.target-slot }}
           images: ${{ env.REGISTRY }}/${{ env.API_IMAGE }}:${{ github.ref_name }}
 
       - name: Deploy Admin to green slot
         uses: azure/webapps-deploy@v2
         with:
-          app-name: nexustravel-admin
+          app-name: litxustravel-admin
           slot-name: ${{ steps.current-slot.outputs.target-slot }}
           images: ${{ env.REGISTRY }}/${{ env.ADMIN_IMAGE }}:${{ github.ref_name }}
 
       - name: Deploy Website to green slot
         uses: azure/webapps-deploy@v2
         with:
-          app-name: nexustravel-website
+          app-name: litxustravel-website
           slot-name: ${{ steps.current-slot.outputs.target-slot }}
           images: ${{ env.REGISTRY }}/${{ env.WEBSITE_IMAGE }}:${{ github.ref_name }}
 
@@ -315,7 +315,7 @@ jobs:
           sleep 30
 
           # Get green slot URL
-          GREEN_URL=$(az webapp show -g nexustravel-prod -n nexustravel-api --slot ${{ steps.current-slot.outputs.target-slot }} --query defaultHostName -o tsv)
+          GREEN_URL=$(az webapp show -g litxustravel-prod -n litxustravel-api --slot ${{ steps.current-slot.outputs.target-slot }} --query defaultHostName -o tsv)
 
           echo "Testing API on green slot..."
           curl -f https://${GREEN_URL}/health || exit 1
@@ -325,14 +325,14 @@ jobs:
         if: steps.smoke-tests.outcome == 'success'
         run: |
           az webapp deployment slot swap \
-            -g nexustravel-prod \
-            -n nexustravel-api \
+            -g litxustravel-prod \
+            -n litxustravel-api \
             --slot ${{ steps.current-slot.outputs.target-slot }}
 
       - name: Verify production
         run: |
           echo "Running production smoke tests..."
-          curl -f https://api.nexustravel.com/health || exit 1
+          curl -f https://api.litxustravel.com/health || exit 1
           echo "✓ Production API is live"
 
       - name: Notify on success

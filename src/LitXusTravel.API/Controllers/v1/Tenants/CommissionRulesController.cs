@@ -13,6 +13,7 @@ namespace LitXusTravel.API.Controllers.v1.Tenants;
 [Route("api/v1/tenants/{tenantId:guid}/commission-rules")]
 [Authorize(Roles = "Agent,Admin")]
 [TenantAuthorizationFilter]
+[SubscriptionWriteGuard]
 [Tags("Commission Rules")]
 public class CommissionRulesController(IMediator mediator) : ControllerBase
 {
