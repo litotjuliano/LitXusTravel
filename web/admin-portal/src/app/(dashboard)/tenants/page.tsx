@@ -10,8 +10,10 @@ import ActionMenu from "@/components/common/ActionMenu"
 import { Pagination } from "@/components/common/Pagination"
 import { SortableHeader } from "@/components/common/SortableHeader"
 import { TenantDetailsModal } from "@/components/modals/TenantDetailsModal"
+import { CreateTenantModal } from "@/components/modals/CreateTenantModal"
 import { useTenants } from "@/lib/hooks/useTenants"
 import { formatDate, getTokenClaims } from "@/lib/utils"
+import { STATUS, activityStatus, healthLabel } from "@/lib/statuses"
 import { adminApi } from "@/lib/api"
 import { toast } from "sonner"
 
@@ -19,6 +21,7 @@ export default function TenantsPage() {
   const [search, setSearch] = useState("")
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null)
   const [detailsOpen, setDetailsOpen] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
 
   const router = useRouter()
 
@@ -27,7 +30,7 @@ export default function TenantsPage() {
   const [sortBy, setSortBy] = useState<string | undefined>(undefined)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
 
-  const { tenants, loading, error, pagination } = useTenants(page, pageSize, {
+  const { tenants, loading, error, pagination, refetch } = useTenants(page, pageSize, {
     sortBy,
     sortOrder,
   })
@@ -69,13 +72,15 @@ export default function TenantsPage() {
             {pagination.totalCount} registered agents
           </p>
         </div>
-        <Button
-          className="bg-(--color-brand-blue) hover:bg-blue-700 text-white gap-2"
-          onClick={() => toast.info("Invite agent coming soon")}
-        >
-          <Plus size={16} />
-          Invite Agent
-        </Button>
+        {isPlatformAdmin && (
+          <Button
+            className="bg-(--color-brand-blue) hover:bg-blue-700 text-white gap-2"
+            onClick={() => setCreateOpen(true)}
+          >
+            <Plus size={16} />
+            New Tenant
+          </Button>
+        )}
       </div>
 
       {error && (
@@ -179,12 +184,8 @@ export default function TenantsPage() {
                         </td>
                         <td className="px-4 py-3">
                           <StatusBadge
-                            status={t.subscriptionHealth ?? (t.isActive ? "Active" : "Suspended")}
-                            label={
-                              t.subscriptionHealth === "ExpiringSoon" && t.daysRemaining !== null
-                                ? `Expiring in ${t.daysRemaining}d`
-                                : undefined
-                            }
+                            status={t.subscriptionHealth ?? activityStatus(t.isActive)}
+                            label={healthLabel(t.subscriptionHealth ?? "", t.daysRemaining)}
                           />
                         </td>
                         <td className="px-4 py-3">
@@ -201,21 +202,21 @@ export default function TenantsPage() {
                                 label: "Renew Subscription",
                                 action: () => router.push("/subscriptions"),
                               },
-                              ...(isPlatformAdmin && t.subscriptionHealth === "ExpiringSoon" ? [{
+                              ...(isPlatformAdmin && t.subscriptionHealth === STATUS.EXPIRING_SOON ? [{
                                 label: "Send Expiry Warning",
                                 action: () =>
                                   adminApi.sendSubscriptionNotification(t.id, "expiring_soon")
                                     .then(() => toast.success(`Expiry warning sent to ${t.name}`))
                                     .catch(() => toast.error("Failed to send notification")),
                               }] : []),
-                              ...(isPlatformAdmin && t.subscriptionHealth === "GracePeriod" ? [{
+                              ...(isPlatformAdmin && t.subscriptionHealth === STATUS.GRACE_PERIOD ? [{
                                 label: "Send Grace Period Alert",
                                 action: () =>
                                   adminApi.sendSubscriptionNotification(t.id, "grace_period")
                                     .then(() => toast.success(`Grace period alert sent to ${t.name}`))
                                     .catch(() => toast.error("Failed to send notification")),
                               }] : []),
-                              ...(isPlatformAdmin && t.subscriptionHealth === "Expired" ? [{
+                              ...(isPlatformAdmin && t.subscriptionHealth === STATUS.EXPIRED ? [{
                                 label: "Send Expired Notice",
                                 action: () =>
                                   adminApi.sendSubscriptionNotification(t.id, "fully_expired")
@@ -257,6 +258,12 @@ export default function TenantsPage() {
         tenantId={selectedTenantId}
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
+      />
+
+      <CreateTenantModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onSuccess={() => { setCreateOpen(false); refetch() }}
       />
     </div>
   )

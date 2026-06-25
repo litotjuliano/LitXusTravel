@@ -5,6 +5,8 @@ import { Modal } from "@/components/ui/Modal"
 import { Button } from "@/components/ui/button"
 import { adminApi } from "@/lib/api"
 import { formatDate } from "@/lib/utils"
+import StatusBadge from "@/components/common/StatusBadge"
+import { activityStatus } from "@/lib/statuses"
 
 interface TenantDetailsModalProps {
   tenantId: string | null
@@ -85,13 +87,7 @@ export function TenantDetailsModal({ tenantId, open, onOpenChange }: TenantDetai
 
               <div>
                 <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Status</label>
-                <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full ${
-                  details.isActive
-                    ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                    : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                }`}>
-                  {details.isActive ? "Active" : "Inactive"}
-                </span>
+                <StatusBadge status={activityStatus(details.isActive)} />
               </div>
 
               <div>
@@ -111,15 +107,7 @@ export function TenantDetailsModal({ tenantId, open, onOpenChange }: TenantDetai
 
               <div>
                 <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Provisioning Status</label>
-                <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full ${
-                  details.provisioningStatus === "Completed"
-                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                    : details.provisioningStatus === "Pending"
-                    ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-                    : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                }`}>
-                  {details.provisioningStatus}
-                </span>
+                <StatusBadge status={details.provisioningStatus} />
               </div>
             </div>
           </div>

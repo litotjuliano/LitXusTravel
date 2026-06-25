@@ -17,9 +17,7 @@ public class GetAdminUsersQueryHandler : IRequestHandler<GetAdminUsersQuery, Res
     {
         var admins = request.TenantId.HasValue
             ? await _unitOfWork.AdminUsers.GetTenantAdminsAsync(request.TenantId.Value, ct)
-            : request.ActiveOnly
-                ? await _unitOfWork.AdminUsers.GetActiveAdminsAsync(ct)
-                : await _unitOfWork.AdminUsers.GetPlatformAdminsAsync(ct);
+            : await _unitOfWork.AdminUsers.GetActiveAdminsAsync(ct);
 
         var dtos = admins.Select(a => new AdminUserListDto(
             a.Id,

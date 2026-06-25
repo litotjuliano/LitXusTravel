@@ -40,27 +40,4 @@ export function formatDate(dateStr: string) {
   })
 }
 
-export function getStatusColor(status: string): string {
-  const map: Record<string, string> = {
-    Published: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-    Active:    "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-    Completed: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-    Booked:    "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-    Draft:     "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-    Trial:     "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-    New:       "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-    Contacted: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-    Quoted:    "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
-    Archived:  "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
-    Suspended:    "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-    Lost:         "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-    Expired:      "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-    ExpiringSoon: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-    GracePeriod:  "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
-    Pending:   "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-    Synced:    "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-    Customized:"bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-    Owned:     "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  }
-  return map[status] ?? "bg-gray-100 text-gray-600"
-}
+export { getStatusColor } from "@/lib/statuses"

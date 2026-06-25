@@ -139,6 +139,23 @@ export const adminApi = {
   // Subscription notifications (manual trigger)
   sendSubscriptionNotification: (tenantId: string, type: "expiring_soon" | "grace_period" | "fully_expired") =>
     api.post(`/admin/tenants/${tenantId}/send-subscription-notification`, { type }),
+
+  // Admin Users
+  getAdminUsers: (params?: { tenantId?: string; activeOnly?: boolean }) =>
+    api.get<AdminUserListDto[]>("/admin/users", { params }),
+  createAdminUser: (data: { name: string; email: string; role: string; scope: string; assignedTenantId?: string }) =>
+    api.post<string>("/admin/users", data),
+}
+
+export type AdminUserListDto = {
+  id: string
+  name: string
+  email: string
+  role: string
+  scope: string
+  assignedTenantId?: string
+  isActive: boolean
+  createdAt: string
 }
 
 export interface NotificationItem {

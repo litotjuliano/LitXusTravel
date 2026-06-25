@@ -5,6 +5,7 @@ import StatCard from "@/components/dashboard/StatCard"
 import RevenueChart from "@/components/dashboard/RevenueChart"
 import StatusBadge from "@/components/common/StatusBadge"
 import { formatDate, getTokenClaims } from "@/lib/utils"
+import { activityStatus } from "@/lib/statuses"
 import { useDashboard } from "@/lib/hooks/useDashboard"
 import type { StatCard as StatCardType } from "@/types"
 
@@ -70,7 +71,7 @@ export default function DashboardPage() {
                     <p className="text-xs text-gray-500 dark:text-gray-400">{t.contactEmail}</p>
                   </div>
                   <div className="text-right">
-                    <StatusBadge status={t.isActive ? "Active" : "Suspended"} />
+                    <StatusBadge status={activityStatus(t.isActive)} />
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{formatDate(t.createdAt)}</p>
                   </div>
                 </div>

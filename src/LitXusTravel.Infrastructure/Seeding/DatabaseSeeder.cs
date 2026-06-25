@@ -35,6 +35,7 @@ public class DatabaseSeeder(
         await PatchTenantSubdomainsAsync();
         await SeedSubscriptionScenariosAsync();
         await SeedTenantAdminUsersAsync();
+        await SeedDomainAdminUsersAsync();
         await SeedPackagesAsync();
         await PatchPackageImagesAsync();
         await SeedTenantPackagesAsync();
@@ -279,6 +280,50 @@ public class DatabaseSeeder(
             logger.LogInformation("   Email: {Email}", email);
             logger.LogInformation("   Password: {Password}", password);
         }
+    }
+
+    private async Task SeedDomainAdminUsersAsync()
+    {
+        var allIdentityUsers = userManager.Users.ToList();
+
+        foreach (var identityUser in allIdentityUsers)
+        {
+            var email = identityUser.Email!;
+
+            var alreadyExists = await dbContext.AdminUsers.AnyAsync(a => a.Email.Value == email);
+            if (alreadyExists) continue;
+
+            var roles = await userManager.GetRolesAsync(identityUser);
+            var fullName = $"{identityUser.FirstName} {identityUser.LastName}".Trim();
+            if (string.IsNullOrWhiteSpace(fullName)) fullName = email;
+
+            var emailVo = new Email(email);
+            AdminUser? domainUser = null;
+
+            if (roles.Contains("SuperAdmin"))
+            {
+                domainUser = AdminUser.CreateSuperAdmin(fullName, emailVo);
+            }
+            else if (roles.Contains("Admin"))
+            {
+                if (identityUser.TenantId.HasValue)
+                {
+                    domainUser = AdminUser.CreateTenantAdmin(fullName, emailVo, identityUser.TenantId.Value);
+                }
+                else
+                {
+                    domainUser = AdminUser.CreatePlatformAdmin(fullName, emailVo);
+                }
+            }
+
+            if (domainUser is not null)
+            {
+                await dbContext.AdminUsers.AddAsync(domainUser);
+                logger.LogInformation("✅ Seeded domain AdminUser for {Email}", email);
+            }
+        }
+
+        await dbContext.SaveChangesAsync();
     }
 
     private async Task SeedPackagesAsync()

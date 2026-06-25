@@ -7,6 +7,7 @@ import { Pagination } from "@/components/common/Pagination"
 import { SortableHeader } from "@/components/common/SortableHeader"
 import { Modal } from "@/components/ui/Modal"
 import { formatDate, getTokenClaims } from "@/lib/utils"
+import { STATUS, activityStatus, healthLabel } from "@/lib/statuses"
 import { useTenants } from "@/lib/hooks/useTenants"
 import { useSubscriptionPlans, type SubscriptionPlan } from "@/lib/hooks/useSubscriptionPlans"
 import { adminApi } from "@/lib/api"
@@ -429,12 +430,8 @@ function PlatformView() {
                         </td>
                         <td className="px-4 py-3">
                           <StatusBadge
-                            status={t.subscriptionHealth ?? (t.isActive ? "Active" : "Suspended")}
-                            label={
-                              t.subscriptionHealth === "ExpiringSoon" && t.daysRemaining !== null
-                                ? `Expiring in ${t.daysRemaining}d`
-                                : undefined
-                            }
+                            status={t.subscriptionHealth ?? activityStatus(t.isActive)}
+                            label={healthLabel(t.subscriptionHealth ?? "", t.daysRemaining)}
                           />
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
@@ -539,8 +536,8 @@ function TenantView() {
     )
   }
 
-  const health = myTenant?.subscriptionHealth ?? (myTenant?.isActive ? "Active" : "Suspended")
-  const isExpiredOrGrace = health === "Expired" || health === "GracePeriod"
+  const health = myTenant?.subscriptionHealth ?? activityStatus(myTenant?.isActive ?? false)
+  const isExpiredOrGrace = health === STATUS.EXPIRED || health === STATUS.GRACE_PERIOD
 
   const gracePeriodEndsAt = myTenant?.subscriptionEndDate
     ? new Date(new Date(myTenant.subscriptionEndDate).getTime() + 7 * 24 * 3600 * 1000)
@@ -556,8 +553,8 @@ function TenantView() {
 
       {/* Current plan card */}
       <div className={`bg-white dark:bg-gray-900 border rounded-xl p-6 space-y-5 ${
-        health === "Expired" ? "border-red-300 dark:border-red-800"
-        : health === "GracePeriod" ? "border-orange-300 dark:border-orange-800"
+        health === STATUS.EXPIRED ? "border-red-300 dark:border-red-800"
+        : health === STATUS.GRACE_PERIOD ? "border-orange-300 dark:border-orange-800"
         : "border-(--color-brand-blue)/40"
       }`}>
         <div className="flex items-start justify-between">
@@ -573,13 +570,7 @@ function TenantView() {
           </div>
           <StatusBadge
             status={health}
-            label={
-              health === "ExpiringSoon" && myTenant?.daysRemaining != null
-                ? `Expiring in ${myTenant.daysRemaining}d`
-                : health === "GracePeriod"
-                  ? "Grace period"
-                  : undefined
-            }
+            label={healthLabel(health, myTenant?.daysRemaining ?? null)}
           />
         </div>
 
@@ -683,21 +674,21 @@ function TenantView() {
             {/* Row 4: Current status */}
             <div className="flex items-start gap-3">
               <div className="flex flex-col items-center">
-                {health === "Expired"
+                {health === STATUS.EXPIRED
                   ? <Lock size={18} className="text-red-600 shrink-0" />
                   : <Clock size={18} className="text-orange-500 shrink-0" />
                 }
               </div>
               <div>
                 <p className={`text-sm font-semibold ${
-                  health === "Expired"
+                  health === STATUS.EXPIRED
                     ? "text-red-600 dark:text-red-400"
                     : "text-orange-600 dark:text-orange-400"
                 }`}>
-                  {health === "Expired" ? "Read-only mode active" : "Grace period — renew soon"}
+                  {health === STATUS.EXPIRED ? "Read-only mode active" : "Grace period — renew soon"}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  {health === "Expired"
+                  {health === STATUS.EXPIRED
                     ? "Creating, editing, and deleting records is disabled until you renew."
                     : "All features are available. Renew now to avoid losing access."}
                 </p>
@@ -710,28 +701,28 @@ function TenantView() {
       {/* Renewal / billing panel — shown when expired or in grace period */}
       {isExpiredOrGrace ? (
         <div className={`border rounded-xl p-5 space-y-4 ${
-          health === "Expired"
+          health === STATUS.EXPIRED
             ? "bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800"
             : "bg-orange-50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-800"
         }`}>
           <div className="flex items-start gap-3">
             <AlertTriangle size={18} className={`shrink-0 mt-0.5 ${
-              health === "Expired" ? "text-red-600" : "text-orange-500"
+              health === STATUS.EXPIRED ? "text-red-600" : "text-orange-500"
             }`} />
             <div>
               <p className={`text-sm font-semibold ${
-                health === "Expired"
+                health === STATUS.EXPIRED
                   ? "text-red-800 dark:text-red-200"
                   : "text-orange-800 dark:text-orange-200"
               }`}>
-                {health === "Expired" ? "Restore Full Access" : "Renew Your Subscription Early"}
+                {health === STATUS.EXPIRED ? "Restore Full Access" : "Renew Your Subscription Early"}
               </p>
               <p className={`text-xs mt-0.5 ${
-                health === "Expired"
+                health === STATUS.EXPIRED
                   ? "text-red-700 dark:text-red-300"
                   : "text-orange-700 dark:text-orange-300"
               }`}>
-                {health === "Expired"
+                {health === STATUS.EXPIRED
                   ? `Your ${plan} plan expired on ${myTenant?.subscriptionEndDate ? formatDate(myTenant.subscriptionEndDate) : "—"}. Select a plan below to restore access.`
                   : `Your ${plan} plan has expired but you're still in the grace period. Renew now to avoid interruption.`}
               </p>

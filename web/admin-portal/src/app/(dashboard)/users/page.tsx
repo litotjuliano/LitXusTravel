@@ -1,31 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Search, Plus, Loader } from "lucide-react"
 import { motion } from "framer-motion"
 import StatusBadge from "@/components/common/StatusBadge"
 import ActionMenu from "@/components/common/ActionMenu"
+import { CreateAdminUserModal } from "@/components/modals/CreateAdminUserModal"
 import { formatDate, getTokenClaims } from "@/lib/utils"
+import { activityStatus } from "@/lib/statuses"
+import { adminApi, AdminUserListDto } from "@/lib/api"
+import { useTenants } from "@/lib/hooks/useTenants"
 import { toast } from "sonner"
-
-type AdminUser = {
-  id: string
-  name: string
-  email: string
-  role: "SuperAdmin" | "Admin"
-  scope?: "Platform" | "Tenant"
-  tenant?: string
-  createdAt: string
-  isActive: boolean
-}
-
-const MOCK_USERS: AdminUser[] = [
-  { id: "1", name: "Super Admin",         email: "superadmin@litxustravel.com", role: "SuperAdmin", createdAt: "2026-05-28", isActive: true },
-  { id: "2", name: "Platform Admin",      email: "admin@litxustravel.com",      role: "Admin", scope: "Platform",  createdAt: "2026-05-28", isActive: true },
-  { id: "3", name: "TravelPro Admin",     email: "admin@travelpro.com",         role: "Admin", scope: "Tenant", tenant: "TravelPro",     createdAt: "2026-05-29", isActive: true },
-  { id: "4", name: "Wanderlust Admin",    email: "admin@wanderlust.com",        role: "Admin", scope: "Tenant", tenant: "Wanderlust",    createdAt: "2026-05-30", isActive: true },
-  { id: "5", name: "AdventureSeek Admin", email: "admin@adventureseek.com",     role: "Admin", scope: "Tenant", tenant: "AdventureSeek", createdAt: "2026-06-01", isActive: true },
-]
 
 const ROLE_COLOR: Record<string, string> = {
   SuperAdmin: "text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-800",
@@ -34,18 +19,38 @@ const ROLE_COLOR: Record<string, string> = {
 
 export default function UsersPage() {
   const [search, setSearch] = useState("")
+  const [users, setUsers] = useState<AdminUserListDto[]>([])
+  const [loading, setLoading] = useState(true)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const { role, tenantId, email } = getTokenClaims()
-
-  // Tenant Admins only see users within their own tenant (themselves)
-  // SuperAdmin and Platform Admin see everyone
-  const visibleUsers = tenantId
-    ? MOCK_USERS.filter((u) => u.email === email)
-    : MOCK_USERS
-
   const isSuperAdmin = role === "SuperAdmin"
+  const isPlatformAdmin = !tenantId
 
-  const displayed = visibleUsers.filter(
+  const { tenants } = useTenants(1, 200)
+  const tenantNameById = Object.fromEntries(tenants.map((t) => [t.id, t.name]))
+
+  const fetchUsers = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await adminApi.getAdminUsers(tenantId ? { tenantId } : undefined)
+      let data = res.data as unknown as AdminUserListDto[]
+      // Tenant-scoped admin only sees themselves
+      if (tenantId && email) {
+        data = data.filter((u) => u.email === email)
+      }
+      setUsers(data)
+    } catch {
+      toast.error("Failed to load users")
+    } finally {
+      setLoading(false)
+    }
+  }, [tenantId, email, refreshKey]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { fetchUsers() }, [fetchUsers])
+
+  const displayed = users.filter(
     (u) =>
       !search ||
       u.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -57,11 +62,11 @@ export default function UsersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">User Management</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{displayed.length} admin users</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{users.length} admin user{users.length !== 1 ? "s" : ""}</p>
         </div>
         {isSuperAdmin && (
           <button
-            onClick={() => toast.info("Invite admin — coming soon")}
+            onClick={() => setCreateOpen(true)}
             className="flex items-center gap-2 px-4 py-2.5 bg-(--color-brand-blue) hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors"
           >
             <Plus size={16} />
@@ -81,9 +86,14 @@ export default function UsersPage() {
       </div>
 
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden">
-        {displayed.length === 0 ? (
+        {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader className="animate-spin text-gray-400 mr-2" size={18} />
+            <p className="text-sm text-gray-400">Loading users…</p>
+          </div>
+        ) : displayed.length === 0 ? (
+          <div className="py-12 text-center text-sm text-gray-400">
+            {search ? "No users match your search." : "No users found."}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -92,7 +102,7 @@ export default function UsersPage() {
                 <tr>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">User</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Role</th>
-                  {!tenantId && <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Tenant</th>}
+                  {isPlatformAdmin && <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Tenant</th>}
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Status</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Created</th>
                   <th className="px-4 py-3" />
@@ -112,17 +122,17 @@ export default function UsersPage() {
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{user.email}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-block px-2 py-0.5 rounded text-[11px] font-semibold border ${ROLE_COLOR[user.role]}`}>
-                        {user.role}{user.scope ? ` · ${user.scope}` : ""}
+                      <span className={`inline-block px-2 py-0.5 rounded text-[11px] font-semibold border ${ROLE_COLOR[user.role] ?? ROLE_COLOR.Admin}`}>
+                        {user.role}{user.scope && user.scope !== "None" ? ` · ${user.scope}` : ""}
                       </span>
                     </td>
-                    {!tenantId && (
+                    {isPlatformAdmin && (
                       <td className="px-4 py-3 text-gray-500 dark:text-gray-400">
-                        {user.tenant ?? "—"}
+                        {user.assignedTenantId ? (tenantNameById[user.assignedTenantId] ?? "—") : "—"}
                       </td>
                     )}
                     <td className="px-4 py-3">
-                      <StatusBadge status={user.isActive ? "Active" : "Suspended"} />
+                      <StatusBadge status={activityStatus(user.isActive)} />
                     </td>
                     <td className="px-4 py-3 text-gray-500 dark:text-gray-400">
                       {formatDate(user.createdAt)}
@@ -131,12 +141,6 @@ export default function UsersPage() {
                       <ActionMenu
                         items={[
                           { label: "Edit", action: () => toast.info("Edit user — coming soon") },
-                          {
-                            label: user.isActive ? "Suspend" : "Reactivate",
-                            action: () => toast.info("Update status — coming soon"),
-                            danger: user.isActive,
-                          },
-                          ...(user.role !== "SuperAdmin" ? [{ label: "Delete", action: () => toast.error("Delete user — coming soon"), danger: true }] : []),
                         ]}
                       />
                     </td>
@@ -147,7 +151,12 @@ export default function UsersPage() {
           </div>
         )}
       </div>
+
+      <CreateAdminUserModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onSuccess={() => { setCreateOpen(false); setRefreshKey((k) => k + 1) }}
+      />
     </div>
   )
 }
-

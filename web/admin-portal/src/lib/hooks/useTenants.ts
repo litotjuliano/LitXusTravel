@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { adminApi } from "@/lib/api"
 
 export interface Tenant {
@@ -39,6 +39,7 @@ export const useTenants = (
   const [tenants, setTenants] = useState<Tenant[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
   const [pagination, setPagination] = useState({
     page,
     pageSize,
@@ -76,14 +77,9 @@ export const useTenants = (
     }
 
     fetchTenants()
-  }, [page, pageSize, filters?.status, filters?.sortBy, filters?.sortOrder])
+  }, [page, pageSize, filters?.status, filters?.sortBy, filters?.sortOrder, refreshKey])
 
-  return { tenants, loading, error, pagination, refetch: () => {
-    setLoading(true)
-    // re-trigger by bumping a counter would need state — simplest: reload window or re-fetch
-    adminApi.getTenants({ page, pageSize, ...filters })
-      .then(res => { setTenants(res.data.data ?? []); if (res.data.pagination) setPagination(res.data.pagination) })
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }}
+  const refetch = useCallback(() => setRefreshKey((k) => k + 1), [])
+
+  return { tenants, loading, error, pagination, refetch }
 }

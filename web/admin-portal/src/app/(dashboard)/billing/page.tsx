@@ -8,8 +8,6 @@ import { adminApi, InvoiceDto } from "@/lib/api"
 
 type FilterTab = "All" | "Paid" | "Pending" | "Failed"
 
-const STATUS_MAP = { Paid: "Active", Pending: "Trial", Failed: "Suspended" } as const
-
 export default function BillingPage() {
   const [tenantId, setTenantId] = useState<string | undefined>(undefined)
   const [ready, setReady] = useState(false)
@@ -200,7 +198,7 @@ export default function BillingPage() {
                     <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{inv.period}</td>
                     <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">RM {inv.amount}</td>
                     <td className="px-4 py-3">
-                      <StatusBadge status={STATUS_MAP[inv.status]} label={inv.status} />
+                      <StatusBadge status={inv.status} />
                     </td>
                     <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{formatDate(inv.date)}</td>
                     <td className="px-4 py-3">
